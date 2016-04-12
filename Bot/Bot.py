@@ -5,7 +5,6 @@ import glob
 import Storage
 import discord
 import traceback
-import sys
 
 
 Config=Read.config
@@ -19,7 +18,7 @@ async def on_ready():
     print('------')
     bot.uptime = datetime.datetime.utcnow()
     load_cogs()
-    await Storage.Redis().Save()
+    await Storage.Redis().Save(False)
 
 def get_bot_uptime():
     now = datetime.datetime.utcnow()
@@ -87,10 +86,6 @@ async def on_command(command,ctx):
 @bot.event
 async def on_error(event,*args,**kwargs):
     Utils.prRed("Error!")
-    print(event)
-    print(*args)
-    print(**kwargs)
-    Utils.prCyan(sys.exc_info())
     Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
     Utils.prGreen(Current_Time)
     Utils.prRed(traceback.format_exc())

@@ -18,11 +18,11 @@ class Level():
     def __init__(self,bot):
         self.bot = bot
         loop = asyncio.get_event_loop()
-        loop.create_task(self.Redis())
+        loop.create_task(self.Redis_Data())
         self.bot.add_listener(self.message,"on_message")
 
-    async def Redis(self):#To call Redis so it can begin data.
-        self.redis = await Storage.Redis().data
+    async def Redis_Data(self):#To call Redis so it can begin data.
+        self.redis = await Storage.Redis().Start()
 
     async def message(self,msg): #waiting for player reply
         if msg.author == self.bot.user:
@@ -39,7 +39,7 @@ class Level():
         list = await self.redis.exists(self.name) #Call of name and ID to get boolean
         if list is False: # if it False, then it will update a new list for player who wasnt in level record
             await self.New_profile(msg)
-        await self.redis.hincrby(self.name,"Total Message Count",amount=1)
+        await self.redis.hincrby(self.name,"Total Message Count",increment=1)
         await self.redis.hset(self.name,"ID",player)
         await self.redis.hset(self.name,"Name",msg.author.name)
         check = await self.redis.get("{}:check".format(self.name))
@@ -49,12 +49,11 @@ class Level():
         await self.redis.hset(self.name,"Discriminator",msg.author.discriminator)
         await self.redis.hset(self.name,"Avatar",msg.author.avatar)
         xp = randint(5,10)
-        await self.redis.hincrby(self.name,"XP",amount=(xp))
-        await self.redis.hincrby(self.name,"Total_XP",amount=(xp))
-        await self.redis.hincrby(self.name,"Message Count",amount=1)
+        await self.redis.hincrby(self.name,"XP",increment=(xp))
+        await self.redis.hincrby(self.name,"Total_XP",increment=(xp))
+        await self.redis.hincrby(self.name,"Message Count",increment=1)
         Current_XP=await self.redis.hget(self.name,"XP")
         Next_XP=await self.redis.hget(self.name,"Next_XP")
-        Utils.prCyan(Next_XP)
         if int(Current_XP) >= int(Next_XP):
             level = await self.redis.hget(self.name,"Level")
             traits_check =await self.redis.hget("{}:Level:Trait".format(server),"{}".format(level))
@@ -65,19 +64,10 @@ class Level():
             Remain_XP = int(Current_XP) - int(Next_XP)
             await self.Next_Level(Remain_XP)
             await self.redis.hset("{}:Level:Trait".format(server),level,traits)
-            await self.redis.hincrby(self.name,"Total Traits Points",amount=traits)
+            await self.redis.hincrby(self.name,"Total Traits Points",increment=traits)
             print("{} Level up!".format(msg.author))
-            # self.redis.set("{}:Level:{}:check".format(server,player),'cooldown',ex=60)
-        Utils.prGreen(await self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),get=[
-                                                                                                              "{}:Level:Player:*->Name".format(server),
-                                                                                                              "{}:Level:Player:*->ID".format(server),
-                                                                                                              "{}:Level:Player:*->Level".format(server),
-                                                                                                              "{}:Level:Player:*->XP".format(server),
-                                                                                                              "{}:Level:Player:*->Next_XP".format(server),
-                                                                                                              "{}:Level:Player:*->Total_XP".format(server),
-                                                                                                              "{}:Level:Player:*->Discriminator".format(server),
-                                                                                                              "{}:Level:Player:*->Avatar".format(server),
-                                                                                                              "{}:Level:Player:*->Total_Traits_Points"],start=0,num=100,desc=True))
+            # await self.redis.set("{}:Level:{}:check".format(server,player),'cooldown',ex=60)
+
     async def New_profile(self,msg):
         print ("New Profile!")
         await self.redis.hmset(self.name,
@@ -98,7 +88,7 @@ class Level():
         New_XP = await self.Next_Exp(int(level))
         await self.redis.hset(self.name,"Next_XP",(New_XP))
         await self.redis.hset(self.name,"XP",xp)
-        await self.redis.hincrby(self.name,"Level",amount=1)
+        await self.redis.hincrby(self.name,"Level",increment=1)
 
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
     @commands.check(is_enable)

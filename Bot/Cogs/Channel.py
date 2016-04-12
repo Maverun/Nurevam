@@ -40,11 +40,11 @@ class Channel():
         self.deny.read_messages=True
         self.bot.add_listener(self.channel_status,"on_channel_delete")
         loop = asyncio.get_event_loop()
-        loop.create_task(self.Redis())
+        loop.create_task(self.Redis_Data())
     Setup()
 
-    async def Redis(self):#To call Redis so it can begin data.
-        self.redis = await Storage.Redis().data
+    async def Redis_Data(self):#To call Redis so it can begin data.
+        self.redis = await Storage.Redis().Start()
 
     async def channel_status(self,name):
         if self.Temp_Chan.get(name.name):
