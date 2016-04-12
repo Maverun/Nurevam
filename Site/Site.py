@@ -4,15 +4,13 @@ import os
 from functools import wraps
 from requests_oauthlib import OAuth2Session
 import redis
-import json
 import binascii
-from math import floor
-import datetime
-import functools
 
-db = redis.Redis(host='xxx',decode_responses=True,db=2)
+
+db = redis.Redis(host='localhost',decode_responses=True,db=2)
 
 app = Flask(__name__)
+
 
 # CSRF
 @app.before_request
@@ -44,7 +42,7 @@ def require_auth(f):
 
 def make_session(token=None, state=None, scope=None):
     pass
-    return OAuth2Session(
+    return OAuth2Session( #Need to work on this soon ASAP.
         client_id=OAUTH2_CLIENT_ID,
         token=token,
         state=state,
@@ -63,14 +61,6 @@ def index():
 @app.route('/about')
 def about():
     return render_template('about.html')
-
-@app.route('/donate')
-def donate():
-    return render_template('donate.html')
-
-@app.route('/thanks')
-def thanks():
-    return render_template('thanks.html')
 
 @app.route('/logout')
 def logout():
@@ -107,7 +97,6 @@ def level(server_ID):
                                                                                                           "{}:Level:Player:*->Discriminator".format(server_ID),
                                                                                                           "{}:Level:Player:*->Avatar".format(server_ID),
                                                                                                           "{}:Level:Player:*->Total_Traits_Points"], start=0, num=10, desc=True)
-    Total_Rank= len(db.smembers("{}:Level:Player".format(server_ID)))
     data = []
     for x in range(0,len(player_data),9):
         temp = {
