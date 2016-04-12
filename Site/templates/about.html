@@ -1,0 +1,46 @@
+{% extends 'full-page.html' %}
+{% block content %}
+<div class="jumbotron home-jumbotron">
+  <div class="container">
+    <div class="row">
+        <div class="col-md-6 animated bounceInLeft v-align">
+            {% import 'macros/plugin.html' as plugin %}
+            <h3>Star Features</h3>
+            <div class="list-group" style="color:#00bc8c; opacity:1.0;">
+                {{ plugin.view(
+                    'Levels',
+                    view='plugin_levels',
+                    no_links=True,
+                    description='Let your members gain <strong>XP</strong> and <strong>levels</strong> by participating in the chat!',
+                    server=server
+                    )}}
+                  {{ plugin.view(
+                      'AnimeAndManga',
+                      pretty_name='Anime and Manga',
+                      view='plugin_help',
+                      no_links=True,
+                      description='Search the web for your favorite animes and mangas to share with your friend!',
+                      server=server
+                      )}}
+            </div>
+        </div><!--
+    --><div class="col-md-6 text-center animated bounceInRight v-align">
+            <h2>Creator?</h2>
+		<img src="{{url_for('static', filename='img/Maverun.jpg')}}" class="img-circle"><br />
+            <p>Maverun </p>
+            <h2>Contributors</h2>
+            <div class="row">
+	    <div class="col-md-6">
+		<img src="{{url_for('static', filename='img/cookie.jpg')}}" class="img-circle" class="img-circle"><br />
+            <p><strong>Cookie</strong>,the orignal creator of Mee6. Nurevam was based of his bot. </p>
+	    </div>
+	    <div class="col-md-6">
+		<img src="https://cdn.discordapp.com/avatars/149041922051145728/692f4699701e0f5d3014c96955816a7a.jpg" class="img-circle"><br />
+		<p>This is <strong>sans</strong>. He loves archlinux and he made the Git Repo plugin.</p>
+	    </div>
+	    </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

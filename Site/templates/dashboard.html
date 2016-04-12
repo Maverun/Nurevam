@@ -1,0 +1,18 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-4">
+                {% include 'plugins.html' %}
+            </div>
+            <div class="col-md-4">
+                {% include 'actions.html' %}
+            </div>
+            <div class="col-md-4">
+                {% include 'welcome.html' %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
