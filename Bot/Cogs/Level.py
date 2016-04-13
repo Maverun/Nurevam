@@ -7,17 +7,33 @@ import Storage
 import time
 import json
 
-def is_enable(msg):
-    check = Storage.Redis().data.hget("{}:Config".format(msg.message.server.id),"Level")
-    if check == "on":
-        return True
-    else:
-        return False
+loop = asyncio.get_event_loop()
+check =""
+
+# async def check(msg):
+#     global check
+#     Redis = await Storage.Redis().Start()
+#     check = await Redis.hget("{}:Config".format(msg.message.server.id),"Level")
+#     Utils.prYellow(check)
+#     return check
+
+#
+# def is_enable():
+#     # loop.create_task(check(msg))
+#     # Redis = await Storage.Redis().Start()
+#     # check = await Redis.hget("{}:Config".format(msg.message.server.id),"Level")
+#
+#     Utils.prGreen(check)
+#     if check == "on":
+#         return True
+#     else:
+#         return False
 
 class Level():
     def __init__(self,bot):
         self.bot = bot
-        loop = asyncio.get_event_loop()
+        Utils.is_enable()
+
         loop.create_task(self.Redis_Data())
         self.bot.add_listener(self.message,"on_message")
 
@@ -31,6 +47,7 @@ class Level():
             return
         if await self.redis.hget("{}:Config".format(msg.server.id),"Level") == "off":
             return
+
         player = msg.author.id
         server = msg.server.id
         await self.redis.set('{}:Level:Server_Name'.format(server),msg.server.name)
@@ -71,14 +88,14 @@ class Level():
     async def New_profile(self,msg):
         print ("New Profile!")
         await self.redis.hmset(self.name,
-                         {"Name":msg.author,
-                          "ID":msg.author.id,
-                          "Level":1,
-                          "XP":0,
-                          "Next_XP":100,
-                          "Total_XP":0,
-                          "Message Count":0,
-                          "Total Traits Points":0})
+                         "Name",str(msg.author),
+                          "ID",str(msg.author.id),
+                          "Level",1,
+                          "XP",0,
+                          "Next_XP",100,
+                          "Total_XP",0,
+                          "Message Count",0,
+                          "Total Traits Points",0)
 
     async def Next_Exp(self,n):
         return int(100*(1.2**n))
@@ -91,7 +108,8 @@ class Level():
         await self.redis.hincrby(self.name,"Level",increment=1)
 
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
-    @commands.check(is_enable)
+    # @commands.check(is_enable)
+    # @Utils.is_enable()
     async def rank(self,msg):
         startTime = time.time()
         if msg.message.mentions != []:
@@ -124,7 +142,7 @@ class Level():
         print("Took {} seconds to calculate.".format(endTime-startTime))
 
     @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
-    @commands.check(is_enable)
+    # @commands.check(is_enable)
     async def rank_table(self,msg):
         server = msg.message.server.id
         player_data =await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),get=[
