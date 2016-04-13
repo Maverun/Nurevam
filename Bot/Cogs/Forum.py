@@ -90,10 +90,10 @@ class Forum():
         Config.update({"Second":int(second)})
         await Read.InputFiles(Config,"","Config.json")
         if int(second) <=60:
-            await self.bot.say("It is now updated. You have enter {} second".format(second))
+            await self.bot.say("It is now updated. You entered {} second".format(second))
         else:
             min = int(second)/60
-            await self.bot.say("It is now updated. You have enter {} second, which is {} min".format(second, format(min,'.2f')))
+            await self.bot.say("It is now updated. You entered {} seconds, which is {} min".format(second, format(min,'.2f')))
 
     @commands.command(name=Command["Summary_Stat"],brief="Showing a summary of user",pass_context= True)
     async def Summary_stat(self,msg,*,name: str): #Showing a summary stats of User
@@ -108,7 +108,7 @@ class Forum():
         '''
         data = await Readlinkjson("/users/{}/summary".format(name))  #Get info of that users
         if "errors" in data: #If there is error  which can be wrong user
-            await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
+            await self.bot.say("{} has not been found! Please double check case and spelling!".format(name))
             return
         summary=data["user_summary"] #Dict short for print_data format
         print_data= "Topics Created:{}\nPost Created:{}\nLikes Given:{}\nLikes Received:{}\nDays Visited:{}\nPosts Read:{}".format(summary["topic_count"],
@@ -162,11 +162,11 @@ class Forum():
         Bio:
         """
         if " " in name:
-            await self.bot.say("There is space in! There is no such name that have space in! Please Try again!")
+            await self.bot.say("There is space in! Names have no spaces in it, please Try again!")
             return
         read= await Readlinkjson("/users/{}".format(name))
         if "errors" in read: #If there is error  which can be wrong user
-            await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
+            await self.bot.say("{} has not been found! Please double check case and spelling!".format(name))
             return
         data =read["user"]
         data_array=[]

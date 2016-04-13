@@ -65,7 +65,7 @@ class Myanimelist():
             elif int(answer.content) <= len(data): #Check if it below in list range so it dont split out of error about out of range
                 await self.bot.say(data[int(answer.content)-1])
             else:
-                await self.bot.say("You enter a number that is out of range!")
+                await self.bot.say("You entered a number that is out of range!")
 
     @commands.command(name=Command["Anime"],brief="Allow to search anime and give info of it from Myanimelist database",pass_context=True)
     async def Anime(self,msg,*,name:str):
