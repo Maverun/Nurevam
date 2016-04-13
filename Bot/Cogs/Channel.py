@@ -55,11 +55,11 @@ class Channel():
     @commands.check(check_roles)
     @commands.group(name=Command["Channel"],brief="Main command of sub for channel related.",pass_context=True,invoke_without_command=True)
     async def Channel(self,msg):
-        await self.bot.say("\n\nYou need to enter subcommand in!")
+        await self.bot.say("\n\nYou need to enter a subcommand in!")
 
     @commands.check(is_enable)
     @commands.check(check_roles)
-    @Channel.command(name=Command["Create_Channel"],brief="Allow to create a temp channel for relative topic.",pass_context=True,invoke_without_command=True)
+    @Channel.command(name=Command["Create_Channel"],brief="Allows you to create a temp channel for a relative topic.",pass_context=True,invoke_without_command=True)
     async def Create_Channel(self,msg,*,name:str):
         '''
         Allow User to make a channel.
@@ -69,7 +69,7 @@ class Channel():
         print(msg.message.server)
         server_id = msg.message.server.id
         if self.Temp_Count == await self.redis.hget("{}:Channel:Config".format(server_id),"limit"): #Checking Total channel that already created and compare to atually limit to see
-            await self.bot.say("There is already limit channel! Please wait!")
+            await self.bot.say("There is already limited channel! Please wait!")
             return
         name = name.replace(" ","-").lower() #to prevert error due to space not allow in channel name
         check = discord.utils.find(lambda c:c.name == name, msg.message.server.channels) #Check if there is exist one, so that user can create one if there is none
@@ -77,13 +77,13 @@ class Channel():
             data= await self.bot.create_channel(msg.message.server,name) #Create channel
             await self.bot.edit_channel_permissions(data,msg.message.server.roles[0],deny=self.deny) #remove @everyone from this channel
             await self.bot.edit_channel_permissions(data,msg.message.author,allow=self.allow) #Invite person to view this channel
-            await self.bot.say("{} have now been created.".format(name)) #To info that this channel is created
+            await self.bot.say("{} has now been created.".format(name)) #To info that this channel is created
             self.Temp_Chan.update({server_id:{name:{"Name":data,"Creator":msg.message.author.id}}}) #Channel Name have Channel ID and Creator (Creator ID)
             self.Temp_Count +=1 #add 1 to "Total atm" so we can keep maintain to limit channel
             loop = asyncio.get_event_loop()
             loop.call_later(int(await self.redis.hget("{}:Channel:Config".format(server_id),"Time")), lambda: loop.create_task(self.Timeout(server_id,name))) #Time for channel to be gone soon
         else:
-            await self.bot.say("It is already exist, try again!")
+            await self.bot.say("It already exists, try again!")
 
     @commands.check(is_enable)
     @Channel.command(name=Command["Join_Channel"],brief="Allow user to join channel",pass_context=True,invoke_without_command=True)
@@ -98,12 +98,12 @@ class Channel():
             await self.bot.edit_channel_permissions(self.Temp_Chan[msg.message.server.id][name]["Name"],msg.message.author,allow=self.allow)
             await self.bot.say("You can now view and chat in {}".format(name))
         else:
-            await self.bot.say("I am afraid that didn't exist, please double check spelling and case")
+            await self.bot.say("I am afraid that this channel doesn't exist, please double check spelling and case before retrying")
 
 
     @commands.check(is_enable)
     @commands.check(check_roles)
-    @Channel.command(name=Command["Delete_Channel"],brief="Allow user or mod delete channel",pass_context=True,invoke_without_command=True)
+    @Channel.command(name=Command["Delete_Channel"],brief="Allow user or mod to delete channel",pass_context=True,invoke_without_command=True)
     async def Delete_Channel(self,msg,*,name:str): #Allow Admin/Mod or Creator of that channel delete it
         """
         Allow creator delete that certain channel that he have created.
@@ -121,11 +121,11 @@ class Channel():
                     break
             if msg.message.author.id == self.Temp_Chan[msg.message.server.id][name]["Creator"] or mod_bool is True:
                 await self.bot.delete_channel(self.Temp_Chan[msg.message.server.id][name]["Name"])
-                await self.bot.say("{} is now delete.".format(name))
+                await self.bot.say("{} has now been deleted.".format(name))
             else:
-                await self.bot.say("You do not have right to delete this!\nYou need to be either creator of {} or mod".format(name))
+                await self.bot.say("You do not have right to delete this!\nYou need to be either creator of {} or moderator".format(name))
         else:
-            await self.bot.say("{} does not exist! Please double check spelling".format(name))
+            await self.bot.say("{} does not exist! Please double check spelling and case".format(name))
 
     async def Timeout(self,id,name): #Timer, first it will warning user that they have X amount to talk here for while.
         if name not in self.Temp_Chan[id]:
