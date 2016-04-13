@@ -118,10 +118,10 @@ class Level():
             player = msg.message.author
         if await self.redis.exists("{}:Level:Player:{}".format(msg.message.server.id,player.id)) is False:
             if player != msg.message.author:
-                await self.bot.say("{} seem to be not a ranked yet, Tell that person to talk more!".format(player.mention))
+                await self.bot.say("{} doesn't seem to be ranked yet, Tell him to talk more!".format(player.mention))
                 return
             else:
-                await self.bot.say("I am sorry, it seem you are not in a rank list! Talk more!")
+                await self.bot.say("I am sorry, it seems you are not in the ranking! Talk more!")
                 return
         print(player)
         counter =0

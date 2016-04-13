@@ -47,9 +47,9 @@ class Mod():
                     await self.bot.delete_message(message)
                     counter +=1
             if found:
-                await self.bot.say("```py\nI have clean {} message from role call {}```".format(counter,name))
+                await self.bot.say("```py\nI cleaned {} message from the  {} role```".format(counter,name))
             else:
-                await self.bot.say("I cannot find that roles! Please try again.")
+                await self.bot.say("I could not find this role! Please try again.")
 
 
     @cleanup.command(name="person",brief="Allow to clear that user's message",pass_context=True,invoke_without_command=True)
@@ -63,7 +63,7 @@ class Mod():
                 if message.author.id == name.id:
                     await self.bot.delete_message(message)
                     counter +=1
-            await self.bot.say("```py\nI have clean {} message from {}```".format(counter,name))
+            await self.bot.say("```py\nI cleaned {} message from {}```".format(counter,name))
 
 
 def setup(bot):
