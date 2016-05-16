@@ -4,9 +4,14 @@
 }
 
 .beta-badge{
-    background-color: #006687;
+    background-color: #404040;
 }
 
+bootstrap-tagsinput{
+    width:100% !important;}
+
+label-info{
+    background-color:#008cba!important;}
 .dashboard-nav{
     margin-bottom: 0;
 }
@@ -31,7 +36,7 @@
 }
 
 .home-jumbotron{
-    background-color: #404040;
+    background-color: #1d1d1d;
     min-height: 100%;
     min-height: 100vh;
     display: flex;
@@ -72,14 +77,20 @@
 }
 
 .btn-home{
-    background-color: #006687;
+    background-color: #3b5998;
+    color:#cfcfcf;
 }
 .btn-home:hover{
-    background-color: #006687;
+    background-color: #8b9dc3;
     color:#FFF;
 }
 .btn-about{
-    background-color: #006687;
+    background-color: #3b5998;
+    color:#cfcfcf
+}
+.btn-about:hover{
+    background-color: #8b9dc3;
+    color:#FFF;
 }
 .v-align {
     float: none;
@@ -88,7 +99,7 @@
 }
 
 .home-body{
-    background-color: #008cba;
+    background-color: #404040;
     color:#FFF;
     overflow: hidden;
 }

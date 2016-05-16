@@ -13,7 +13,16 @@
               </div>
             </div>
             <div class="col-md-9">
-                <h1>Leaderboard</h1>
+                <h1>Leaderboard
+                    {% if is_admin %}
+                        <small><a class="btn btn-warning btn-xs reset-all" href="{{url_for('reset_all_players', server_id=server['id'])}}">RESET ALL</a></small>
+                        {% if is_private %}
+                            <small><a class="btn btn-warning btn-xs private" href="{{url_for('private_server', server_id=server['id'],bool=0)}}">Private from Leaderboard</a></small>
+                        {% else %}
+                            <small><a class="btn btn-primary btn-xs private" href="{{url_for('private_server', server_id=server['id'],bool=1)}}">Public from Leaderboard</a></small>
+                        {% endif %}
+                    {% endif %}
+                </h1>
                 <div class="list-group">
                 {% for player in players %}
                 <div class="list-group-item">
@@ -29,7 +38,7 @@
                         {%endif%}
                       </div>
                       <div class="col-md-4 col-sm-4 col-xs-5">
-                          <h3>{{player['Name']}} <small>#{{player['Discriminator']}}</small></h3>
+                          <h3><a href="/profile/{{player['ID']}}/{{server['id']}}">{{player['Name']}}</a>  <small>#{{player['Discriminator']}}</small></h3>
                       </div>
                       <div class="col-md-4 col-sm-4 col-xs-4">
                           <center><h5>{{player['XP']}} / {{player['Next_XP']}} <strong>XP</strong> [{{player['Total_XP']}} total]</h5></center>
@@ -40,7 +49,7 @@
                       <div class="col-md-2 col-sm-2 col-xs-2">
 			      <h3>Level {{player['Level']}}
 				      {% if is_admin %}
-				<small><a class="reset" href="{{url_for('reset_player', player_id=player['id'], server_id=server.id)}}">reset</a></small>
+				<small><a class="reset" href="{{url_for('reset_player', player_id=player['ID'], server_id=server['id'])}}">reset</a></small>
 				      {% endif %}
 			      </h3>
                       </div>
@@ -57,6 +66,20 @@
 	 e.preventDefault();
 	 var $link = $(this);
 	 bootbox.confirm("Do you really want to reset this player's xp? He will lose his level :'(", function (confirmation) {
+		 confirmation && document.location.assign($link.attr('href'));
+	 });
+ });
+ $('.reset-all').click(function(e) {
+	e.preventDefault();
+	var $link = $(this);
+	bootbox.confirm("Do you really want to reset EVERYONE's xp? EVERYONE will lose their levels :'(", function (confirmation) {
+		confirmation && document.location.assign($link.attr('href'));
+	});
+});
+ $('.private').click(function(e) {
+	 e.preventDefault();
+	 var $link = $(this);
+	 bootbox.confirm("It will set either private or public, It is only for leaderboard for all across server.", function (confirmation) {
 		 confirmation && document.location.assign($link.attr('href'));
 	 });
  });

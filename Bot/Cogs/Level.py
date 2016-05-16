@@ -1,91 +1,100 @@
 from discord.ext import commands
 from random import randint
-from .Utils import Utils
+from .utils import utils
 import asyncio
 import discord
-import Storage
 import time
-import json
 
-loop = asyncio.get_event_loop()
-check =""
+def is_enable(msg): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(msg, "level")
 
-# async def check(msg):
-#     global check
-#     Redis = await Storage.Redis().Start()
-#     check = await Redis.hget("{}:Config".format(msg.message.server.id),"Level")
-#     Utils.prYellow(check)
-#     return check
-
-#
-# def is_enable():
-#     # loop.create_task(check(msg))
-#     # Redis = await Storage.Redis().Start()
-#     # check = await Redis.hget("{}:Config".format(msg.message.server.id),"Level")
-#
-#     Utils.prGreen(check)
-#     if check == "on":
-#         return True
-#     else:
-#         return False
+def is_cooldown(msg):
+    redis = utils.redis
+    config = redis.get("{}:Level:{}:rank:check".format(msg.message.server.id,msg.message.author.id))
+    if config is None:
+        return True
+    else:
+        return False
 
 class Level():
     def __init__(self,bot):
         self.bot = bot
-        Utils.is_enable()
+        self.redis = bot.db.redis
+        self.bot.say_edit = bot.says_edit
 
-        loop.create_task(self.Redis_Data())
-        self.bot.add_listener(self.message,"on_message")
+    async def is_ban(self,msg):
+        is_ban_member = await self.redis.smembers("{}:Level:banned_members".format(msg.server.id))
+        is_ban_role = await self.redis.smembers("{}:Level:banned_roles".format(msg.server.id))
+        for role in msg.author.roles:
+            if role.id in is_ban_role:
+                return True
+        if msg.author.id in is_ban_member:
+            return True
+        return False
 
-    async def Redis_Data(self):#To call Redis so it can begin data.
-        self.redis = await Storage.Redis().Start()
-
-    async def message(self,msg): #waiting for player reply
+    async def on_message(self,msg): #waiting for player reply
         if msg.author == self.bot.user:
             return
         if msg.channel.is_private:
             return
-        if await self.redis.hget("{}:Config".format(msg.server.id),"Level") == "off":
+        if await self.is_ban(msg) is True:
             return
-
-        player = msg.author.id
-        server = msg.server.id
-        await self.redis.set('{}:Level:Server_Name'.format(server),msg.server.name)
-        await self.redis.set('{}:Level:Server_Icon'.format(server),msg.server.icon)
-        self.name="{}:Level:Player:{}".format(server,player)
-        list = await self.redis.exists(self.name) #Call of name and ID to get boolean
-        if list is False: # if it False, then it will update a new list for player who wasnt in level record
-            await self.New_profile(msg)
-        await self.redis.hincrby(self.name,"Total Message Count",increment=1)
-        await self.redis.hset(self.name,"ID",player)
-        await self.redis.hset(self.name,"Name",msg.author.name)
-        check = await self.redis.get("{}:check".format(self.name))
-        if check: #If it true, return, it haven't cool down yet
+        if await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "off":
             return
-        await self.redis.sadd("{}:Level:Player".format(server),player)
-        await self.redis.hset(self.name,"Discriminator",msg.author.discriminator)
-        await self.redis.hset(self.name,"Avatar",msg.author.avatar)
-        xp = randint(5,10)
-        await self.redis.hincrby(self.name,"XP",increment=(xp))
-        await self.redis.hincrby(self.name,"Total_XP",increment=(xp))
-        await self.redis.hincrby(self.name,"Message Count",increment=1)
-        Current_XP=await self.redis.hget(self.name,"XP")
-        Next_XP=await self.redis.hget(self.name,"Next_XP")
-        if int(Current_XP) >= int(Next_XP):
-            level = await self.redis.hget(self.name,"Level")
-            traits_check =await self.redis.hget("{}:Level:Trait".format(server),"{}".format(level))
-            if traits_check is not None:
-                traits = traits_check
-            else:
-                traits = randint(1,3)
-            Remain_XP = int(Current_XP) - int(Next_XP)
-            await self.Next_Level(Remain_XP)
-            await self.redis.hset("{}:Level:Trait".format(server),level,traits)
-            await self.redis.hincrby(self.name,"Total Traits Points",increment=traits)
-            print("{} Level up!".format(msg.author))
-            # await self.redis.set("{}:Level:{}:check".format(server,player),'cooldown',ex=60)
+        elif await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "on":
+            #Getting ID
+            player = msg.author.id
+            server = msg.server.id
+            await self.redis.set('{}:Level:Server_Name'.format(server),msg.server.name)
+            if msg.server.icon:
+                await self.redis.set('{}:Level:Server_Icon'.format(server),msg.server.icon)
+            self.name="{}:Level:Player:{}".format(server,player)
+            list = await self.redis.exists(self.name) #Call of name and ID to get boolean
+            if list is False: # if it False, then it will update a new list for player who wasnt in level record
+                await self.new_profile(msg)
+            await self.redis.hincrby(self.name,"Total Message Count",increment=1)
+            await self.redis.hset(self.name,"ID",player)
+            await self.redis.hset(self.name,"Name",msg.author.name)
+            check = await self.redis.get("{}:Level:{}:xp:check".format(server,player))
+            if check: #If it true, return, it haven't cool down yet
+                return
+            #If Cooldown expire, Add xp and stuff
+            await self.redis.sadd("{}:Level:Player".format(server),player)
+            await self.redis.hset(self.name,"Discriminator",msg.author.discriminator)
+            if msg.author.avatar:
+                await self.redis.hset(self.name,"Avatar",msg.author.avatar)
+            xp = randint(5,10)
+            await self.redis.hincrby(self.name,"XP",increment=(xp))
+            await self.redis.hincrby(self.name,"Total_XP",increment=(xp))
+            await self.redis.hincrby(self.name,"Message Count",increment=1)
+            current_xp=await self.redis.hget(self.name,"XP")
+            Next_XP=await self.redis.hget(self.name,"Next_XP")
+            if int(current_xp) >= int(Next_XP):
+                level = await self.redis.hget(self.name,"Level")
+                traits_check =await self.redis.hget("{}:Level:Trait".format(server),"{}".format(level))
+                if traits_check is not None:
+                    traits = traits_check
+                else:
+                    traits = randint(1,3)
+                Remain_XP = int(current_xp) - int(Next_XP)
+                await self.next_Level(Remain_XP)
+                await self.redis.hset("{}:Level:Trait".format(server),level,traits)
+                await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
+                print("{} Level up!".format(msg.author))
+                announce = await self.redis.hgetall("{}:Level:Config".format(server))
+                print(announce)
+                if announce.get("announce",False) == "on":
+                    print("whisper")
+                    if announce.get("whisper",False) == "on":
+                        await self.bot.send_message(msg.author,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
+                        print("send reply")
+                    else:
+                        print("UN WHISPER")
+                        await self.bot.send_message(msg.channel,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
+                        print("send publics")
+            await self.redis.set("{}:Level:{}:xp:check".format(server,player),'cooldown',expire=60)
 
-    async def New_profile(self,msg):
+    async def new_profile(self, msg): #New Profile
         print ("New Profile!")
         await self.redis.hmset(self.name,
                          "Name",str(msg.author),
@@ -95,86 +104,90 @@ class Level():
                           "Next_XP",100,
                           "Total_XP",0,
                           "Message Count",0,
-                          "Total Traits Points",0)
+                          "Total_Traits_Points",0)
 
-    async def Next_Exp(self,n):
-        return int(100*(1.2**n))
 
-    async def Next_Level(self,xp):
+    async def next_Level(self, xp):
         level = await self.redis.hget(self.name,"Level")
-        New_XP = await self.Next_Exp(int(level))
-        await self.redis.hset(self.name,"Next_XP",(New_XP))
+        new_xp = int(100 * (1.2 ** int(level)))
+        await self.redis.hset(self.name,"Next_XP", (new_xp))
         await self.redis.hset(self.name,"XP",xp)
         await self.redis.hincrby(self.name,"Level",increment=1)
 
+
+#########################################################################
+#     _____                                                       _     #
+#    / ____|                                                     | |    #
+#   | |        ___    _ __ ___    _ __ ___     __ _   _ __     __| |    #
+#   | |       / _ \  | '_ ` _ \  | '_ ` _ \   / _` | | '_ \   / _` |    #
+#   | |____  | (_) | | | | | | | | | | | | | | (_| | | | | | | (_| |    #
+#    \_____|  \___/  |_| |_| |_| |_| |_| |_|  \__,_| |_| |_|  \__,_|    #
+#                                                                       #
+#########################################################################
+
+
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
-    # @commands.check(is_enable)
-    # @Utils.is_enable()
+    @commands.check(is_enable)
+    @commands.check(is_cooldown)
     async def rank(self,msg):
-        startTime = time.time()
+        server =msg.message.server.id
         if msg.message.mentions != []:
             player = msg.message.mentions[0]
         else:
             player = msg.message.author
+        if await self.is_ban(msg.message) is True:
+            await self.bot.say_edit("I am sorry, but you are banned, if you think this is wrong, please info server owner")
+            return
         if await self.redis.exists("{}:Level:Player:{}".format(msg.message.server.id,player.id)) is False:
             if player != msg.message.author:
-                await self.bot.say("{} doesn't seem to be ranked yet, Tell him to talk more!".format(player.mention))
+                await self.bot.say_edit("{} seem to be not a ranked yet, Tell that person to talk more!".format(player.mention))
                 return
             else:
-                await self.bot.say("I am sorry, it seems you are not in the ranking! Talk more!")
+                await self.bot.say_edit("I am sorry, it seem you are not in a rank list! Talk more!")
                 return
-        print(player)
-        counter =0
-        rank_positon=1
-        info = await self.redis.keys("{}:Level:Player:*".format(msg.message.server.id))
-        player_Total_XP = await self.redis.hget("{}:Level:Player:{}".format(msg.message.server.id,player.id),"Total_XP")
-        for num in info:
-            if num != "{}:Level:Player:{}".format(msg.message.server.id,player.id):
-                counter +=1
-                compare=await self.redis.hget(num,"Total_XP")
-                if int(player_Total_XP) <= int(compare):
-                    rank_positon +=1
-        Player_Data= await self.redis.hgetall("{}:Level:Player:{}".format(msg.message.server.id,player.id))
-        await self.bot.say("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{} | Traits: {}\n```".format(player.name.lower(),Player_Data["Level"],
-                                                                                                                     Player_Data["XP"],Player_Data["Next_XP"],
-                                                                                                                     Player_Data["Total_XP"],rank_positon,counter,Player_Data["Total Traits Points"]))
-        endTime=time.time()
-        print("Took {} seconds to calculate.".format(endTime-startTime))
+        data =await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
+        data = list(reversed(data))
+        player_rank = data.index(player.id)+1
+        player_data= await self.redis.hgetall("{}:Level:Player:{}".format(msg.message.server.id,player.id))
+        # await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{} | Traits: {}\n```".format(player.name.lower(),player_data["Level"],
+        #                                                                                                              player_data["XP"],player_data["Next_XP"],
+        #                                                                                                              player_data["Total_XP"],player_rank,len(data),player_data["Total_Traits_Points"]))
+        await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{}\n```".format(player.name.lower(),player_data["Level"],
+                                                                                                                     player_data["XP"],player_data["Next_XP"],
+                                                                                                                     player_data["Total_XP"],player_rank,len(data)))
+        cooldown=await self.redis.hget("{}:Level:Config".format(server),"rank_cooldown")
+        if cooldown is None:
+            return
+        if int(cooldown) == 0:
+            return
+        await self.redis.set("{}:Level:{}:rank:check".format(server,msg.message.author.id),'cooldown',expire=int(cooldown))
 
-    @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
+
+
+    # @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
     # @commands.check(is_enable)
-    async def rank_table(self,msg):
-        server = msg.message.server.id
-        player_data =await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),get=[
-                                                                                                              "{}:Level:Player:*->Name".format(server),
-                                                                                                              "{}:Level:Player:*->ID".format(server),
-                                                                                                              "{}:Level:Player:*->Level".format(server),
-                                                                                                              "{}:Level:Player:*->XP".format(server),
-                                                                                                              "{}:Level:Player:*->Next_XP".format(server),
-                                                                                                              "{}:Level:Player:*->Total_XP".format(server),
-                                                                                                              "{}:Level:Player:*->Discriminator".format(server),
-                                                                                                              "{}:Level:Player:*->Avatar".format(server),
-                                                                                                              "{}:Level:Player:*->Total_Traits_Points"],start=0,num=10,desc=True)
-        Total_Rank= len(self.redis.smembers("{}:Level:Player".format(server)))
-        data = []
-        counter=0
-        for x in range(0,len(player_data),9):
-            print (x)
-            # temp = {
-            #     "Name":player_data[x],
-            #     "ID":player_data[x+1],
-            #     "Level":int(player_data[x+2]),
-            #     "XP":int(player_data[x+3]),
-            #     "Next_XP":int(player_data[x+4]),
-            #     "Total_XP":int(player_data[x+5]),
-            #     "Discriminator":player_data[x+6],
-            #     "Avatar":player_data[x+7],
-            #     "Total_Traits":player_data[x+8]
-            # }
-            #Those are for Website
-            counter+=1
-            data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {} | Rank: {}/{}\n".format(counter,player_data[x],player_data[x+2],player_data[x+3],player_data[x+4],player_data[x+5],counter,Total_Rank))
-        await self.bot.say("```xl\n{}\n```".format("".join(data)))
+    # async def rank_table(self,msg):
+    #     server = msg.message.server.id
+    #     player_data =await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+    #                                                                          "{}:Level:Player:*->Level".format(server),
+    #                                                                          "{}:Level:Player:*->XP".format(server),
+    #                                                                          "{}:Level:Player:*->Next_XP".format(server),
+    #                                                                          "{}:Level:Player:*->Total_XP".format(server),
+    #                                                                          by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
+    #     player_data=list(reversed(player_data))
+    #     data = []
+    #     counter=0
+    #     for x in range(0,len(player_data),5):
+    #         counter+=1
+    #         data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
+    #         if counter == 10:
+    #             break
+    #     await self.bot.say_edit("```xl\n{}\n```".format("".join(data)))
+
+    @commands.command(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True)
+    @commands.check(is_enable)
+    async def level_link(self,msg):
+        await self.bot.say("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
 
 def setup(bot):
     bot.add_cog(Level(bot))

@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Nurevam is a powerful and easy to use discord bot !">
+    <meta name="description" content="Nurevam, a discord bot!">
     <meta name="author" content="Maverun">
-    <link rel="shortcut icon" type="image/png" href="{{url_for('static', filename='img/favico.png')}}"/>
+    <link rel="shortcut icon" type="image/png" href="{{url_for('static', filename='img/146076208897954.png')}}"/>
 
     <title>{{ title or 'Nurevam : the Discord bot !'}}</title>
 
@@ -16,8 +16,10 @@
     <link href="{{ url_for('static', filename='css/animate.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/morphext.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+    <link href="{{ url_for('static', filename='css/bootstrap-tagsinput.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-tagsinput-typeahead.css') }}" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
   </head>
 
   <body>
@@ -37,11 +39,12 @@
       </div>
     </nav>
     {% block content %}{% endblock %}
-
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="{{url_for('static', filename='js/morphext.min.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/bloodhound.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"></script>
   </body>
 </html>

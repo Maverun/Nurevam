@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Lato:400,700,400italic");
+q@import url("https://fonts.googleapis.com/css?family=Lato:400,700,400italic");
 /*!
  * bootswatch v3.3.6
  * Homepage: http://bootswatch.com
@@ -2560,7 +2560,7 @@ output {
   font-size: 15px;
   line-height: 1.42857143;
   color: #464545;
-  background-color: #ffffff;
+  background-color: #e0e0e0;
   background-image: none;
   border: 1px solid #f1f1f1;
   border-radius: 4px;
@@ -4596,7 +4596,7 @@ fieldset[disabled] .navbar-default .btn-link:focus {
   color: #cccccc;
 }
 .navbar-inverse {
-  background-color: #404040;
+  background-color: #303030;
   border-color: transparent;
 }
 .navbar-inverse .navbar-brand {
@@ -4927,7 +4927,7 @@ a.label:focus {
   vertical-align: middle;
   white-space: nowrap;
   text-align: center;
-  background-color: #464545;
+  background-color: #f47835;
   border-radius: 10px;
 }
 .badge:empty {
@@ -4965,7 +4965,7 @@ a.badge:focus {
 .jumbotron {
   padding-top: 30px;
   padding-bottom: 30px;
-  margin-bottom: 30px;
+  margin-bottom: 0px;
   color: inherit;
   background-color: #303030;
 }

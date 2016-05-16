@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-md-7 col-sm-12 animated bounceInLeft">
             <h3>Introducing <strong>Nurevam</strong> the <img src="{{ url_for('static', filename='img/discord-logo.svg') }}" class="discord-logo2"> bot </h3>
-            <h1>Release your <span id="rotating">!power,!mana,!chakra,!skill,!pros</span></h1>
+            <h3>Total Server: {{info['Server']}}, Total Member: {{info['Member']}}</h3>
             <h2>for everyone in your <img src="{{ url_for('static', filename='img/discord.svg') }}" class="discord-logo1"> server</h2>
             <p>
                 <a href="{{url_for('login')}}" class="btn btn-home btn-lg">Add to discord</a>
