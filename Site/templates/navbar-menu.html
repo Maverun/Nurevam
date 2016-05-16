@@ -1,0 +1,24 @@
+<div id="navbar" class="navbar-collapse collapse">
+  <ul class="nav navbar-nav pull-right">
+    <li><a href="{{url_for('index')}}">Home</a></li>
+    <li><a href="{{url_for('about')}}">About</a></li>
+    <li><a href="#" class="dropdown-toggle" data-toggle="dropdown" id="community">Community <b class="caret"></b></a>
+        <ul class="dropdown-menu" aria-labelledby="community">
+        <li><a href="https://discord.gg/010erZHcMcH15gTLZ" target="_blank">Discord</a></li>
+        <!--<li><a target="_blank" href="https://github.com/Maverun/Nurevam">Github</a></li>-->
+      </ul>
+    </li>
+    <li><a href="{{url_for('server_levels')}}">Server Leaderboard</a></li>
+    {% if session['user'] is defined %}
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <img src="{{session['user']|avatar}}" class="profile-image img-circle"> {{session['user']['username']}} <b class="caret"></b></a>        <ul class="dropdown-menu">
+            <li><a href="{{url_for('select_server')}}">Servers</a></li>
+            <li><a href="{{url_for('logout')}}"><i class="fa fa-sign-out"></i> Sign-out</a></li>
+        </ul>
+    </li>
+    {% else %}
+    <li><a href="{{url_for('login')}}"><i class="fa fa-sign-in"></i> Login</a></li>
+    {% endif %}
+  </ul>
+</div>

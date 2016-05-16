@@ -1,0 +1,4 @@
+flask
+requests_oauthlib
+redis
+gunicorn

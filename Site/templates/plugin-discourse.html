@@ -1,0 +1,60 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>Discourse <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="discourse" method="POST" action="{{url_for('update_discourse', server_id=server['id'])}}">
+                <h5>Empty</h5>
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="domain">Domain link</label>
+                    <input class="form-control input-lg" name="domain" value="{{config['domain']}}" type="text"
+                           id="domain">
+                </div>
+                <div class="well well-sm">
+                    <strong>Enter the Domain link here</strong>: for example https://discuss.moe
+                </div>
+
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="api_key">API Key</label>
+                    <input class="form-control input-lg" name="api_key" value="{{config['api_key']}}" type="text"
+                           id="api_key">
+                </div>
+                <div class="well well-sm">
+                    <strong>Enter API Key</strong>
+                </div>
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="username">Username</label>
+                    <input class="form-control input-lg" name="username" value="{{config['username']}}" type="text"
+                           id="username">
+                </div>
+                <div class="well well-sm">
+                    <strong>Enter the username</strong>
+                </div>
+                <div>
+                    <label class="control-label" for="channel_name">Channel for posting info</label>
+                    <select class="input-lg form-control" name="channel">
+                        {% for channel in guild_channel %}
+                        <option value="{{channel.id}}" {%if channel.id== welcome_channel%} selected{%endif%}>
+                            #{{channel.name}}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="well well-sm">
+                        Note,make sure Nurevam are able to speak on that channel!
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

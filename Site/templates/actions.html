@@ -1,0 +1,12 @@
+<h3>Actions</h3>
+<div class="list-group">
+  <a href="{{url_for('select_server')}}" class="list-group-item">
+    <h4 class="list-group-item-heading">Change server</h4>
+    <p class="list-group-item-text">Go back to your server list.</p>
+  </a>
+  <a href="{{url_for('core',server_id=server.id)}}" class ="list-group-item">
+    <h4 class="list-group-item-heading">Config</h4>
+    <p class="list-group-item-text">allow to change unqiue setting.</p>
+
+  </a>
+</div>
