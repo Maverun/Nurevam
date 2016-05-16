@@ -80,22 +80,17 @@ class Level():
                 await self.next_Level(Remain_XP)
                 await self.redis.hset("{}:Level:Trait".format(server),level,traits)
                 await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
-                print("{} Level up!".format(msg.author))
+                utils.prCyan("{} Level up!".format(msg.author))
                 announce = await self.redis.hgetall("{}:Level:Config".format(server))
-                print(announce)
                 if announce.get("announce",False) == "on":
                     print("whisper")
                     if announce.get("whisper",False) == "on":
                         await self.bot.send_message(msg.author,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
-                        print("send reply")
                     else:
-                        print("UN WHISPER")
                         await self.bot.send_message(msg.channel,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
-                        print("send publics")
             await self.redis.set("{}:Level:{}:xp:check".format(server,player),'cooldown',expire=60)
 
     async def new_profile(self, msg): #New Profile
-        print ("New Profile!")
         await self.redis.hmset(self.name,
                          "Name",str(msg.author),
                           "ID",str(msg.author.id),
@@ -125,6 +120,10 @@ class Level():
 #                                                                       #
 #########################################################################
 
+    @commands.command(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True)
+    @commands.check(is_enable)
+    async def level_link(self,msg):
+        await self.bot.say("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
 
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
     @commands.check(is_enable)
@@ -176,18 +175,40 @@ class Level():
     #                                                                          by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
     #     player_data=list(reversed(player_data))
     #     data = []
+    #     to_print=[]
     #     counter=0
+    #     lvl=[]
+    #     total=[]
+    #     xp1=[]
+    #     xp2=[]
+    #     name=[]
+    #     # utils.prCyan(player_data)
+    #     # for i,elem in enumerate(player_data):
+    #     #     utils.prYellow(i)
+    #     #     utils.prPurple(elem)
     #     for x in range(0,len(player_data),5):
     #         counter+=1
-    #         data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
+    #         data.append([counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
+    #         lvl.append(player_data[x+3])
+    #         total.append(player_data[x])
+    #         xp1.append(player_data[x+2])
+    #         xp2.append(player_data[x+1])
+    #         name.append(player_data[x+4])
+    #         # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
     #         if counter == 10:
     #             break
-    #     await self.bot.say_edit("```xl\n{}\n```".format("".join(data)))
+    #     print(max(name))
+    #     print(max(xp1))
+    #     print(data)
+    #     for i,elem in enumerate(data):
+    #         utils.prYellow(i)
+    #         utils.prPurple(elem)
+    #         to_print.append("{}.{:>{name}} | Level: {:>{level}} | EXP: {:>{first}}/{:>{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
+    #                                                                                                                       name=len(max(name)),level=len(str(max(lvl))),
+    #                                                                                                                       first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
+    #                                                                                                                       total=len(str(max(list(map(int,total)))))))
+    #     await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
 
-    @commands.command(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True)
-    @commands.check(is_enable)
-    async def level_link(self,msg):
-        await self.bot.say("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
 
 def setup(bot):
     bot.add_cog(Level(bot))

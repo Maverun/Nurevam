@@ -19,7 +19,7 @@ class Discourse(): #Discourse, a forums types.
                 if resp.status == 200:
                     return await resp.json()
                 elif resp.status == 404:
-                    return True
+                    return False
 
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
@@ -125,7 +125,7 @@ class Discourse(): #Discourse, a forums types.
 
     @commands.command(name="bio",brief="Give a bio of that user",pass_context=True)
     @commands.check(is_enable)
-    async def Bio(self,ctx,*,name:str):
+    async def Bio(self,ctx,name:str):
         """
         Give a info of Username
         Username:
@@ -139,11 +139,9 @@ class Discourse(): #Discourse, a forums types.
         if " " in name:
             await self.bot.say("There is space in! There is no such name that have space in! Please Try again!")
             return
-        print(name)
-        print(ctx.message.server.id)
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"])
-        if read: #If there is error  which can be wrong user
+        if not read: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
         data =read["user"]
