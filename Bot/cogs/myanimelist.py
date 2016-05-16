@@ -1,5 +1,5 @@
 from discord.ext import commands
-from .utils import Read, utils
+from .utils import utils
 from xml.etree import ElementTree
 import aiohttp
 def synopis(term):
