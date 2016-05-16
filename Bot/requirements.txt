@@ -1,0 +1,4 @@
+# Latest discord.py
+git+https://github.com/Rapptz/discord.py@async
+aioredis
+redis
