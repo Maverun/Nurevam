@@ -675,7 +675,7 @@ def server_levels():
                 total = sum(player_total)
                 level = int(math.log(total/100,3))
                 next_xp = int(100*3**(level+1))
-                enable_level.append([server_list[server_id],server_icon[server_id],server_id,
+                enable_level.append([server_list[server_id],server_icon.get(server_id),server_id,
                                      total,next_xp,(100*(float(total)/float(next_xp))),level])
     enable_level=sorted(enable_level,key=lambda enable_level:enable_level[4],reverse=True)
     return render_template('server_level.html',title="Server Leaderboard",server_list=enable_level)
