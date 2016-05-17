@@ -1,6 +1,2 @@
 *.pyc
-Bot/Cogs/Chat_Log.py
-Bot/Config.json
-Bot/Cogs/repl.py
-Bot/Cogs/Tools.py
 envfile.list
