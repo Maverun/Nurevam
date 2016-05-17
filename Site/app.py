@@ -3,6 +3,7 @@ jsonify, make_response, flash, abort, Response
 from itsdangerous import JSONWebSignatureSerializer
 from requests_oauthlib import OAuth2Session
 from functools import wraps
+import logging
 import random
 import redis
 import os
@@ -467,6 +468,64 @@ def update_discourse(server_id):
 
     return redirect(url_for('plugin_discourse',server_id=server_id))
 
+# #Channel
+# @app.route("/dashboard/<int:server_id>/channel")
+# @plugin_page('channel')
+# def plugin_channel(server_id):
+#     config = db.hgetall("{}:Channel:Config".format(server_id))
+#
+#     db_admin_role = db.smembers('{}:Channel:admin_roles'.format(server_id)) or []
+#     db_user_roles = db.smembers('{}:Channel:user_roles'.format(server_id)) or []
+#     get_role = resource_get("/guilds/{}".format(server_id))
+#     guild_roles = get_role['roles']
+#     admin_role = list(filter(lambda r:r['name'] in db_admin_role or r['id'] in db_admin_role,guild_roles))
+#     user_role = list(filter(lambda r: r['name'] in db_user_roles or r['id'] in db_user_roles,guild_roles))
+#     time = db.hget('{}:Channel:Config'.format(server_id),"time") or 0
+#     limit = db.hget('{}:Channel:Config'.format(server_id),"limit") or 0
+#     warning = db.hget("{}:Channel:Config".format(server_id),"warning") or 0
+#     return {
+#         'config':config,
+#         'admin_roles': admin_role,
+#         'user_roles': user_role,
+#         'guild_roles':guild_roles,
+#         'time': time,
+#         'limit':limit,
+#         'warning':warning
+#     }
+#
+# @app.route('/dashboard/<int:server_id>/channel/update',methods=['POST'])
+# @plugin_method
+# def update_channel(server_id):
+#     time = request.form.get('time')
+#     limit = request.form.get("limit")
+#     warning = request.form.get("warning")
+#     admin_roles = request.form.get('admin_roles').split(',')
+#     user_roles = request.form.get('user_roles').split(',')
+#     print(time)
+#     print(limit)
+#     print(warning)
+#     print(admin_roles)
+#     print(user_roles)
+#     try:
+#         time = int(time)
+#     except ValueError:
+#         flash('The time that you provided isn\'t an integer!', 'warning')
+#         return redirect(url_for('plugin_channel', server_id=server_id))
+#     try:
+#         limit = int(limit)
+#     except ValueError:
+#         flash('The limit for channel that you provided isn\'t an integer!', 'warning')
+#         return redirect(url_for('plugin_channel', server_id=server_id))
+#     try:
+#         warning = int(warning)
+#     except ValueError:
+#         flash('The warning for channel that you provided isn\'t an integer!', 'warning')
+#         return redirect(url_for('plugin_channel', server_id=server_id))
+#
+#     db.hmset("{}:Channel:Config".format(server_id),{"time":time,"limit":limit,"warning":warning,"admin":admin_roles,"user":user_roles})
+#     flash('Settings updated!', 'success')
+#
+#     return redirect(url_for('plugin_channel',server_id=server_id))
 #Level
 @app.route('/dashboard/<int:server_id>/levels')
 @plugin_page('level')
@@ -700,6 +759,13 @@ def profile(player_id,server_id):
 #
 #     print(dem)
 #     return json.dumps(answer,sort_keys=True,indent=2)
+
+
+@app.before_first_request
+def setup_logging():
+    # In production mode, add log handler to sys.stderr.
+    app.logger.addHandler(logging.StreamHandler())
+    app.logger.setLevel(logging.INFO)
 
 if __name__=='__main__':
     app.debug = True
