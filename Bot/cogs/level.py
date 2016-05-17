@@ -163,51 +163,46 @@ class Level():
 
 
 
-    # @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
-    # @commands.check(is_enable)
-    # async def rank_table(self,msg):
-    #     server = msg.message.server.id
-    #     player_data =await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
-    #                                                                          "{}:Level:Player:*->Level".format(server),
-    #                                                                          "{}:Level:Player:*->XP".format(server),
-    #                                                                          "{}:Level:Player:*->Next_XP".format(server),
-    #                                                                          "{}:Level:Player:*->Total_XP".format(server),
-    #                                                                          by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
-    #     player_data=list(reversed(player_data))
-    #     data = []
-    #     to_print=[]
-    #     counter=0
-    #     lvl=[]
-    #     total=[]
-    #     xp1=[]
-    #     xp2=[]
-    #     name=[]
-    #     # utils.prCyan(player_data)
-    #     # for i,elem in enumerate(player_data):
-    #     #     utils.prYellow(i)
-    #     #     utils.prPurple(elem)
-    #     for x in range(0,len(player_data),5):
-    #         counter+=1
-    #         data.append([counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
-    #         lvl.append(player_data[x+3])
-    #         total.append(player_data[x])
-    #         xp1.append(player_data[x+2])
-    #         xp2.append(player_data[x+1])
-    #         name.append(player_data[x+4])
-    #         # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
-    #         if counter == 10:
-    #             break
-    #     print(max(name))
-    #     print(max(xp1))
-    #     print(data)
-    #     for i,elem in enumerate(data):
-    #         utils.prYellow(i)
-    #         utils.prPurple(elem)
-    #         to_print.append("{}.{:>{name}} | Level: {:>{level}} | EXP: {:>{first}}/{:>{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-    #                                                                                                                       name=len(max(name)),level=len(str(max(lvl))),
-    #                                                                                                                       first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
-    #                                                                                                                       total=len(str(max(list(map(int,total)))))))
-    #     await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
+    @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
+    @commands.check(is_enable)
+    async def rank_table(self,msg):
+        server = msg.message.server.id
+        player_data =await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+                                                                             "{}:Level:Player:*->Level".format(server),
+                                                                             "{}:Level:Player:*->XP".format(server),
+                                                                             "{}:Level:Player:*->Next_XP".format(server),
+                                                                             "{}:Level:Player:*->Total_XP".format(server),
+                                                                             by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
+        player_data=list(reversed(player_data))
+        data = []
+        to_print=[]
+        counter=0
+        lvl=[]
+        total=[]
+        xp1=[]
+        xp2=[]
+        name=[]
+        for x in range(0,len(player_data),5):
+            counter+=1
+            if len(str(counter)) == 1:
+                count = "0" + str(counter)
+            else:
+                count = counter
+            data.append([count,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
+            lvl.append(player_data[x+3])
+            total.append(player_data[x])
+            xp1.append(player_data[x+2])
+            xp2.append(player_data[x+1])
+            name.append(len(player_data[x+4]))
+            # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
+            if counter == 10:
+                break
+        for i,elem in enumerate(data):
+            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}}/{:>{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
+                                                                                                                          name=max(name),level=len(str(max(lvl))),
+                                                                                                                          first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
+                                                                                                                          total=len(str(max(list(map(int,total)))))))
+        await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
 
 
 def setup(bot):

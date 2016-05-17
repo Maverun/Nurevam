@@ -39,8 +39,9 @@ class Discourse(): #Discourse, a forums types.
                     break
                 elif get_post is None:
                     continue
-            if get_post is None:
+            if get_post is None or get_post is False:
                 continue
+            utils.prYellow(get_post)
             bool = True #so it dont get error if there is empty string, which hence set this true
             data.append("{}\t\tAuthor:{}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
         if bool:
