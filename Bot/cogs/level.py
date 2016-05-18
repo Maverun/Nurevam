@@ -48,7 +48,7 @@ class Level():
             await self.redis.set('{}:Level:Server_Name'.format(server),msg.server.name)
             if msg.server.icon:
                 await self.redis.set('{}:Level:Server_Icon'.format(server),msg.server.icon)
-            self.name="{}:Level:Player:{}".format(server,player)
+            self.name = "{}:Level:Player:{}".format(server,player)
             list = await self.redis.exists(self.name) #Call of name and ID to get boolean
             if list is False: # if it False, then it will update a new list for player who wasnt in level record
                 await self.new_profile(msg)
@@ -129,7 +129,7 @@ class Level():
     @commands.check(is_enable)
     @commands.check(is_cooldown)
     async def rank(self,msg):
-        server =msg.message.server.id
+        server = msg.message.server.id
         if msg.message.mentions != []:
             player = msg.message.mentions[0]
         else:
@@ -144,17 +144,17 @@ class Level():
             else:
                 await self.bot.say_edit("I am sorry, it seem you are not in a rank list! Talk more!")
                 return
-        data =await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
+        data = await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
         data = list(reversed(data))
         player_rank = data.index(player.id)+1
-        player_data= await self.redis.hgetall("{}:Level:Player:{}".format(msg.message.server.id,player.id))
+        player_data = await self.redis.hgetall("{}:Level:Player:{}".format(msg.message.server.id,player.id))
         # await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{} | Traits: {}\n```".format(player.name.lower(),player_data["Level"],
         #                                                                                                              player_data["XP"],player_data["Next_XP"],
         #                                                                                                              player_data["Total_XP"],player_rank,len(data),player_data["Total_Traits_Points"]))
         await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{}\n```".format(player.name.lower(),player_data["Level"],
                                                                                                                      player_data["XP"],player_data["Next_XP"],
                                                                                                                      player_data["Total_XP"],player_rank,len(data)))
-        cooldown=await self.redis.hget("{}:Level:Config".format(server),"rank_cooldown")
+        cooldown = await self.redis.hget("{}:Level:Config".format(server),"rank_cooldown")
         if cooldown is None:
             return
         if int(cooldown) == 0:
@@ -167,7 +167,7 @@ class Level():
     @commands.check(is_enable)
     async def rank_table(self,msg):
         server = msg.message.server.id
-        player_data =await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+        player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
                                                                              "{}:Level:Player:*->Level".format(server),
                                                                              "{}:Level:Player:*->XP".format(server),
                                                                              "{}:Level:Player:*->Next_XP".format(server),
@@ -175,15 +175,15 @@ class Level():
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
         player_data=list(reversed(player_data))
         data = []
-        to_print=[]
-        counter=0
-        lvl=[]
-        total=[]
-        xp1=[]
-        xp2=[]
-        name=[]
+        to_print = []
+        counter = 0
+        lvl = []
+        total = []
+        xp1 = []
+        xp2 = []
+        name = []
         for x in range(0,len(player_data),5):
-            counter+=1
+            counter += 1
             if len(str(counter)) == 1:
                 count = "0" + str(counter)
             else:
@@ -193,13 +193,13 @@ class Level():
             total.append(player_data[x])
             xp1.append(player_data[x+2])
             xp2.append(player_data[x+1])
-            name.append(len(player_data[x+4]))
+            name.append(player_data[x+4])
             # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
             if counter == 10:
                 break
         for i,elem in enumerate(data):
-            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}}/{:>{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-                                                                                                                          name=max(name),level=len(str(max(lvl))),
+            to_print.append("{:<2}|{:<{name}s} | Level: {:>{level}d} | EXP: {:>{first}d} / {:<{second}d} | Total XP: {:>{total}d}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
+                                                                                                                          name=len(max(name, key=len)),level=len(str(max(lvl))),
                                                                                                                           first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
                                                                                                                           total=len(str(max(list(map(int,total)))))))
         await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
