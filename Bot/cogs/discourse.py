@@ -22,6 +22,7 @@ class Discourse(): #Discourse, a forums types.
         #Two replace, one with https and one with http...
         headers = {"Host": domain.replace("http://","").replace("https://","")}
         link = "{}.json?api_key={}&api_username={}".format(link,api,username)
+        utils.prCyan(link)
         with aiohttp.ClientSession() as discourse:
             async with discourse.get(link,headers=headers) as resp:
                 if resp.status == 200:
@@ -33,33 +34,35 @@ class Discourse(): #Discourse, a forums types.
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
+        id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
+        if id_post is None:
+            return
+        id_post=int(id_post)
         utils.prPurple(server_id)
         config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
-        id_post = int(await self.redis.get("{}:Discourse:ID".format(server_id)))
+
         counter = 0
         data=[]
         bool = False
         while True:
             counter +=1
             get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
-            utils.prLightPurple(get_post)
             if get_post[0] is False:
                 #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
-                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'],config["domain"])
                 if get_post[1] == 404 or get_post[1]==410:
                     break
                 elif get_post[1] == 200 or get_post[1] == 403:
                     continue
-            if get_post is None:
-                continue
-            utils.prYellow(get_post)
-            get_post=get_post[1]
-            bool = True #so it dont get error if there is empty string, which hence set this true
-            data.append("{}\t\tAuthor:{}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
+            # if get_post is None:
+            #     continue
+            elif get_post[0] is True:
+                utils.prLightPurple(get_post)
+                get_post=get_post[1]
+                bool = True #so it dont get error if there is empty string, which hence set this true
+                data.append("{}\t\tAuthor: {}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
         if bool:
             await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
             await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
-            utils.prPurple("\n".join(data))
 
 
     async def timer(self):
@@ -114,7 +117,7 @@ class Discourse(): #Discourse, a forums types.
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
-        data = data[0]
+        data = data[1]
         stat=data["about"]["stats"]
         await self.bot.say("""
         ```xl
@@ -156,12 +159,12 @@ class Discourse(): #Discourse, a forums types.
             await self.bot.say("There is space in! There is no such name that have space in! Please Try again!")
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
-        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"])
+        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
         utils.prLightPurple(read)
         if not read: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
-        read= read[0]
+        read= read[1]
         data =read["user"]
         data_array=[]
         data_array.append("**Username**: {}".format(data["username"]))
