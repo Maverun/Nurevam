@@ -3,6 +3,7 @@ from .utils import utils
 
 import asyncio
 import aiohttp
+import requests
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
 
@@ -10,20 +11,28 @@ class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
+        print("Starting up Discourse")
         loop = asyncio.get_event_loop()
         loop.create_task(self.timer())
+        print("Load")
 
-    async def get_data(self,link,api,username):
-        with aiohttp.ClientSession() as session:
-            async with session.get("{}.json?api_key={}&api_username={}".format(link,api,username)) as resp:
+
+    async def get_data(self,link,api,username,domain):
+        #Using headers so it can support both http/1 and http/2
+        headers = {"Host": domain.replace("http://","")}
+        link = "{}.json?api_key={}&api_username={}".format(link,api,username)
+        with aiohttp.ClientSession() as discourse:
+            async with discourse.get(link,headers=headers) as resp:
                 if resp.status == 200:
-                    return await resp.json()
-                elif resp.status == 404:
-                    return False
+                    return [True,await resp.json()]
+                else:
+                    return [False,resp.status]
+
 
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
+        utils.prPurple(server_id)
         config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
         id_post = int(await self.redis.get("{}:Discourse:ID".format(server_id)))
         counter = 0
@@ -31,17 +40,22 @@ class Discourse(): #Discourse, a forums types.
         bool = False
         while True:
             counter +=1
-            get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'])
-            if get_post is True:
+            get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
+            utils.prLightPurple(get_post)
+            if get_post[0] is False:
+                utils.prCyan("First False")
                 #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
-                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'])
-                if get_post is True:
+                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'],config["domain"])
+                if get_post[1] == 404:
+                    print("Final chance {}".format(get_post))
                     break
-                elif get_post is None:
+                elif get_post[1] == 200:
+                    print("Final Chance {}".format(get_post))
                     continue
-            if get_post is None or get_post is False:
+            if get_post is None:
                 continue
             utils.prYellow(get_post)
+            get_post=get_post[1]
             bool = True #so it dont get error if there is empty string, which hence set this true
             data.append("{}\t\tAuthor:{}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
         if bool:
@@ -51,6 +65,7 @@ class Discourse(): #Discourse, a forums types.
 
 
     async def timer(self):
+        utils.prPurple("Starting time")
         while True:
             for server in self.bot.servers:
                 await self.post(server.id)
@@ -79,7 +94,8 @@ class Discourse(): #Discourse, a forums types.
         Posts Read:
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
-        data = await self.get_data("{}/users/{}/summary".format(config["domain"],name),config["api_key"],config['username'])  #Get info of that users
+        data = await self.get_data("{}/users/{}/summary".format(config["domain"],name),config["api_key"],config['username'],config["domain"])  #Get info of that users
+        data = data[1]
         if "errors" in data: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
@@ -99,7 +115,8 @@ class Discourse(): #Discourse, a forums types.
         Show a table of Topics,Posts, New Users, Active Users, Likes for All Time, Last 7 Days and Lasts 30 Days
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
-        data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"]) #Read files from link Main page/about
+        data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
+        data = data[0]
         stat=data["about"]["stats"]
         await self.bot.say("""
         ```xl
@@ -142,9 +159,11 @@ class Discourse(): #Discourse, a forums types.
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"])
+        utils.prLightPurple(read)
         if not read: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
+        read= read[0]
         data =read["user"]
         data_array=[]
         data_array.append("**Username**: {}".format(data["username"]))
