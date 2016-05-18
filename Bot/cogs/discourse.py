@@ -3,7 +3,7 @@ from .utils import utils
 
 import asyncio
 import aiohttp
-import requests
+
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
 
