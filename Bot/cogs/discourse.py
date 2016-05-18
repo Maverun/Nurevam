@@ -19,7 +19,8 @@ class Discourse(): #Discourse, a forums types.
 
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
-        headers = {"Host": domain.replace("http://","")}
+        #Two replace, one with https and one with http...
+        headers = {"Host": domain.replace("http://","").replace("https://","")}
         link = "{}.json?api_key={}&api_username={}".format(link,api,username)
         with aiohttp.ClientSession() as discourse:
             async with discourse.get(link,headers=headers) as resp:
@@ -46,10 +47,8 @@ class Discourse(): #Discourse, a forums types.
                 #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                 get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'],config["domain"])
                 if get_post[1] == 404:
-                    print("Final chance {}".format(get_post))
                     break
                 elif get_post[1] == 200 or get_post[1] == 403:
-                    print("Final Chance {}".format(get_post))
                     continue
             if get_post is None:
                 continue

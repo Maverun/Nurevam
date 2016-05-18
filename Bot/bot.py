@@ -93,8 +93,8 @@ async def send_cmd_help(ctx):
 
 @bot.event
 async def on_command_error(error,ctx):
-    print(error)
-    print(ctx.message.clean_content)
+    # print(error)
+    # print(ctx.message.clean_content)
     if isinstance(error, commands.MissingRequiredArgument):
         await send_cmd_help(ctx)
     elif isinstance(error,commands.BadArgument):
@@ -103,8 +103,6 @@ async def on_command_error(error,ctx):
 @bot.event
 async def on_error(event,*args,**kwargs):
     Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
-    utils.prYellow(*args)
-    print(**kwargs)
     utils.prRed(Current_Time)
     utils.prRed("Error!")
     utils.prRed(traceback.format_exc())
