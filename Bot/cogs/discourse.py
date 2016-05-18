@@ -46,7 +46,7 @@ class Discourse(): #Discourse, a forums types.
             if get_post[0] is False:
                 #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                 get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'],config["domain"])
-                if get_post[1] == 404 or get_post==410:
+                if get_post[1] == 404 or get_post[1]==410:
                     break
                 elif get_post[1] == 200 or get_post[1] == 403:
                     continue
