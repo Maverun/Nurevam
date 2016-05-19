@@ -41,7 +41,7 @@
                     <label class="control-label" for="channel_name">Channel for posting info</label>
                     <select class="input-lg form-control" name="channel">
                         {% for channel in guild_channel %}
-                        <option value="{{channel.id}}" {%if channel.id== welcome_channel%} selected{%endif%}>
+                        <option value="{{channel.id}}" {%if channel.id== discourse_channel%} selected{%endif%}>
                             #{{channel.name}}
                         </option>
                         {% endfor %}

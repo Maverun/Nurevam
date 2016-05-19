@@ -22,7 +22,6 @@ class Discourse(): #Discourse, a forums types.
         #Two replace, one with https and one with http...
         headers = {"Host": domain.replace("http://","").replace("https://","")}
         link = "{}.json?api_key={}&api_username={}".format(link,api,username)
-        utils.prCyan(link)
         with aiohttp.ClientSession() as discourse:
             async with discourse.get(link,headers=headers) as resp:
                 if resp.status == 200:
@@ -38,9 +37,7 @@ class Discourse(): #Discourse, a forums types.
         if id_post is None:
             return
         id_post=int(id_post)
-        utils.prPurple(server_id)
         config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
-
         counter = 0
         data=[]
         bool = False
