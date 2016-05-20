@@ -32,8 +32,6 @@ class Events():
         #Server setting
         await self.redis.hset("{}:Config:Delete_MSG".format(server.id),"core","off")
 
-
-
     async def on_server_remove(self,server): #IF bot left or no longer in that server. It will remove this
         print("\033[91m<EVENT LEFT>:\033[94m[{}:\033[96m({})\033[92m -- {}\033[00m".format(self.Time(), str(server.id), str(server.name)))
         utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.servers), len(set(self.bot.get_all_members()))))
@@ -60,7 +58,7 @@ class Events():
         if before.avatar != after.avatar:
             if after.avatar is None:
                 return
-            print("\033[97m<Event Member Update Avatar>:\033[94m{}:\033[92m[{} ||| {}\033[00m".format(self.Time(), after.name, after.id))
+            print("\033[97m<Event Member Update Avatar>:\033[94m{}:\033[92m{} ||| {}\033[00m".format(self.Time(), after.name, after.id))
             await self.redis.hset("Info:Icon",after.id,after.avatar)
         if before.name != after.name:
             print("\033[97m<Event Member Update Name>:\033[94m{}:\033[93mBefore:{} |||\033[92mAfter:{} ||| {}\033[00m".format(self.Time(),before.name,after.name, after.id))

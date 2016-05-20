@@ -9,6 +9,7 @@ import asyncio
 import inspect
 import re
 
+
 description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=description,pm_help=False)
 bot.db= storage.Redis()
