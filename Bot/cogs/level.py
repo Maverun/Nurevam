@@ -198,8 +198,8 @@ class Level():
             if counter == 10:
                 break
         for i,elem in enumerate(data):
-            to_print.append("{:<2}|{:<{name}s} | Level: {:>{level}d} | EXP: {:>{first}d} / {:<{second}d} | Total XP: {:>{total}d}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-                                                                                                                          name=len(max(name, key=len)),level=len(str(max(lvl))),
+            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
+                                                                                                                          name=len(max(name, key=len)),level=len(str(max(list(map(int,lvl))))),
                                                                                                                           first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
                                                                                                                           total=len(str(max(list(map(int,total)))))))
         await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))

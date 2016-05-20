@@ -1,8 +1,12 @@
 from discord.ext import commands
 from .utils import utils
-
 import asyncio
 import aiohttp
+
+import datetime
+
+def is_owner(msg): #Checking if you are owner of bot
+    return msg.message.author.id == "105853969175212032"
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
@@ -11,11 +15,13 @@ class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
-        print("Starting up Discourse")
         loop = asyncio.get_event_loop()
         loop.create_task(self.timer())
-        print("Load")
 
+    def write_files(self,text):
+        time= datetime.datetime.now().strftime("%b/%d/%Y %H:%M:%S")
+        with open("discourse_log.txt","a") as f:
+            f.write("{}:{}\n".format(time,text))
 
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
@@ -29,38 +35,39 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     return [False,resp.status]
 
-
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
-        utils.prPurple(server_id)
+        id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
+        if id_post is None:
+            return
+        id_post=int(id_post)
         config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
-        id_post = int(await self.redis.get("{}:Discourse:ID".format(server_id)))
         counter = 0
         data=[]
         bool = False
         while True:
-            counter +=1
-            get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
-            utils.prLightPurple(get_post)
-            if get_post[0] is False:
-                #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
-                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter+1),config['api_key'],config['username'],config["domain"])
-                if get_post[1] == 404 or get_post[1]==410:
-                    break
-                elif get_post[1] == 200 or get_post[1] == 403:
-                    continue
-            if get_post is None:
+            try:
+                counter +=1
+                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
+                self.write_files("{}:{}".format(config["domain"],get_post))
+                if get_post[0] is False:
+                    #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
+                    if get_post[1] == 404 or get_post[1]==410:
+                        break
+                    elif get_post[1] == 200 or get_post[1] == 403:
+                        continue
+                elif get_post[0] is True:
+                    get_post=get_post[1]
+                    bool = True #so it dont get error if there is empty string, which hence set this true
+                    data.append("{}\t\tAuthor: {}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
+            except:
+                utils.prRed("Failed to get Discourse site!")
                 continue
-            utils.prYellow(get_post)
-            get_post=get_post[1]
-            bool = True #so it dont get error if there is empty string, which hence set this true
-            data.append("{}\t\tAuthor:{}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
         if bool:
             await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
             await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
-            utils.prPurple("\n".join(data))
-
+            utils.prLightPurple("\n".join(data))
 
     async def timer(self):
         utils.prPurple("Starting time")
@@ -114,7 +121,7 @@ class Discourse(): #Discourse, a forums types.
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
-        data = data[0]
+        data = data[1]
         stat=data["about"]["stats"]
         await self.bot.say("""
         ```xl
@@ -156,12 +163,12 @@ class Discourse(): #Discourse, a forums types.
             await self.bot.say("There is space in! There is no such name that have space in! Please Try again!")
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
-        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"])
+        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
         utils.prLightPurple(read)
         if not read: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
-        read= read[0]
+        read= read[1]
         data =read["user"]
         data_array=[]
         data_array.append("**Username**: {}".format(data["username"]))
@@ -175,6 +182,14 @@ class Discourse(): #Discourse, a forums types.
         if "bio_raw" in data:
             data_array.append("**Bio**: \n```\n{}\n```".format(data["bio_raw"]))
         await self.bot.say("\n".join(data_array))
+
+
+#Testing to see how it goes
+    @commands.command(pass_context=True)
+    @commands.check(is_owner)
+    async def get_files(self,ctx):
+        with open("discourse_log.txt","rb") as f:
+            await self.bot.send_file(ctx.message.author,f)
 
 def setup(bot):
     bot.add_cog(Discourse(bot))

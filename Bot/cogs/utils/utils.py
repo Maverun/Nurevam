@@ -44,15 +44,17 @@ def is_enable(msg,Cogs):
     pass
 
 ######################Checking if Role is able######################################
-def check_roles(msg,Cogs,Roles):
+def check_roles(msg,Cogs,Get_Roles):
     data = redis
     try:
-        Roles= data.hgetall("{}:{}:Config".format(msg.message.server.id,Cogs))
+        Roles= data.smembers("{}:{}:{}".format(msg.message.server.id,Cogs,Get_Roles))
         checking=msg.message.author.roles
         for name in checking:
-            if str(name) == Roles:
-                return True
-    except:
+            for role in Roles:
+                if role == name.id:
+                    return True
+    except Exception as e:
+        prRed("ERROR\n{}".format(e))
         return False
 #####################Checking if it cooldown#####################################
 def is_cooldown(msg):
