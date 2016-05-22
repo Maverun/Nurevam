@@ -110,11 +110,7 @@ async def on_error(event,*args,**kwargs):
     error =  '```py\n{}\n```'.format(traceback.format_exc())
     await bot.send_message(bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
-# @bot.command(name="test")
-# async def test():
-#     api = OsuApi("aa79ee8dd3dd29757b848085063f4447947e5328", connector=aiohttp)
-#     results = await api.get_user("peppy")
-#     await bot.say("PP rank is {0}".format(results[0].pp_rank))
+
 
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))

@@ -1,8 +1,8 @@
 from discord.ext import commands
 from .utils import utils
+import traceback
 import asyncio
 import aiohttp
-
 import datetime
 
 def is_owner(msg): #Checking if you are owner of bot
@@ -62,12 +62,15 @@ class Discourse(): #Discourse, a forums types.
                     bool = True #so it dont get error if there is empty string, which hence set this true
                     data.append("{}\t\tAuthor: {}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
             except:
-                utils.prRed("Failed to get Discourse site!")
-                continue
+                utils.prRed("Failed to get Discourse site!\n{}\n{}".format(config["domain"],get_post[1]))
+                break
         if bool:
-            await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
-            await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
-            utils.prLightPurple("\n".join(data))
+            try:
+                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
+                await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
+                utils.prLightPurple("\n".join(data))
+            except:
+                error =  '```py\n{}\n```'.format(traceback.format_exc())
 
     async def timer(self):
         utils.prPurple("Starting time")
@@ -123,7 +126,20 @@ class Discourse(): #Discourse, a forums types.
         data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
         data = data[1]
         stat=data["about"]["stats"]
-        await self.bot.say("```xl\n┌──────────────┬──────────┬──────────────┬──────────────┐\n│              │ All Time │ Lasts 7 Days │ Last 30 Days │\n├──────────────┼──────────┼──────────────┼──────────────┤\n│ Topics       │{0:^10}│{1:^14}│{2:^14}│\n├──────────────┼──────────┼──────────────┼──────────────┤\n│ Posts        │{3:^10}│{4:^14}│{5:^14}│\n├──────────────┼──────────┼──────────────┼──────────────┤\n│ New Users    │{6:^10}│{7:^14}│{8:^14}│\n├──────────────┼──────────┼──────────────┼──────────────┤\n│ Active Users │    —     │{9:^14}│{10:^14}│\n├──────────────┼──────────┼──────────────┼──────────────┤\n│ Likes        │{11:^10}│{12:^14}│{13:^14}│\n└──────────────┴──────────┴──────────────┴──────────────┘\n```".format(
+        await self.bot.say("```xl"
+                           "\n┌──────────────┬──────────┬──────────────┬──────────────┐\n"
+                           "│              │ All Time │ Lasts 7 Days │ Last 30 Days │"
+                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
+                           "\n│ Topics       │{0:^10}│{1:^14}│{2:^14}│"
+                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
+                           "\n│ Posts        │{3:^10}│{4:^14}│{5:^14}│"
+                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
+                           "\n│ New Users    │{6:^10}│{7:^14}│{8:^14}│"
+                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
+                           "\n│ Active Users │    —     │{9:^14}│{10:^14}│"
+                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
+                           "\n│ Likes        │{11:^10}│{12:^14}│{13:^14}│"
+                           "\n└──────────────┴──────────┴──────────────┴──────────────┘\n```".format(
                    stat["topic_count"],stat["topics_7_days"],stat["topics_30_days"],
                    stat["post_count"],stat["posts_7_days"],stat["posts_30_days"],
                    stat["user_count"],stat["users_7_days"],stat["users_30_days"],

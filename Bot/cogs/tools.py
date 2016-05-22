@@ -5,8 +5,6 @@ import discord
 import asyncio
 import traceback
 
-def is_owner(msg): #Checking if you are owner of bot
-    return msg.message.author.id == "105853969175212032"
 
 def list_cogs(): #Check a list and load it
     cogs = glob.glob("cogs/*.py")
@@ -32,7 +30,7 @@ class Tools():
 
     #Load/Unload/Reload cogs
     @commands.command(hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def load(self,*, module : str):
         """Loads a module
         Example: load cogs.mod"""
@@ -49,7 +47,7 @@ class Tools():
             await self.bot.say("Enabled.".format(module))
 
     @commands.command(hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def unload(self,*, module : str):
         """Unloads a module
         Example: unload cogs.mod"""
@@ -65,7 +63,7 @@ class Tools():
             await self.bot.say("Module disabled.")
 
     @commands.command(name="reload",hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def _reload(self,*, module : str):
         """Reloads a module
         Example: reload cogs.mod"""
@@ -84,7 +82,7 @@ class Tools():
             await self.bot.say("Module reloaded.")
 
     @commands.command(name="reload-all",hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def reload_all(self):
         """Reload all modules"""
         cogs = list_cogs()
@@ -100,7 +98,7 @@ class Tools():
 
 
     @commands.command(pass_context=True, hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def debug(self,ctx, *, code : str):
         """Evaluates code."""
         code = code.strip('` ')
@@ -122,7 +120,7 @@ class Tools():
         await self.bot.say(python.format(result))
 
     @commands.command(name="server",pass_context=True,hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def Check_Server(self,ctx):
         cogs = list_cogs()
         print(cogs)
@@ -137,7 +135,7 @@ class Tools():
             await self.redis.hmset("{}:Config:Delete_MSG".format(name.id),"core","off")
 
     @commands.command(name="enable",pass_context=True,hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def Enable(self,ctx,*,Cogs):
         print(Cogs)
         check = await self.redis.hget("{}:Config:cogs".format(ctx.message.server.id),Cogs)
@@ -148,7 +146,7 @@ class Tools():
             await self.bot.say("It is already enable.")
 
     @commands.command(name="disable",pass_context=True,hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def Disable(self,ctx,*,Cogs):
         print(Cogs)
         check = await self.redis.hget("{}:Config:cogs".format(ctx.message.server.id),Cogs)
@@ -159,7 +157,7 @@ class Tools():
             await self.bot.say("It is already disable.")
 
     @commands.command(name="RESET",pass_context=True,hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def RESET(self,ctx):
         await self.bot.say("```diff\n-WARNING! DOING THIS WILL COMPLETE RESET ALL DATABASE! ARE YOU SURE!?-\n```")
         answer = await self.bot.wait_for_message(timeout=5,author=ctx.message.author)
@@ -171,7 +169,7 @@ class Tools():
             return
 
     @commands.command(name="get-all-icon-name",pass_context=True,hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def get_all(self,ctx):
         info = await self.update_all()
         await self.bot.say("Collect {}".format(info))
@@ -196,7 +194,7 @@ class Tools():
             await asyncio.sleep(3600)
 
     @commands.command(name="List-server",hidden=True)
-    @commands.check(is_owner)
+    @commands.check(utils.is_owner)
     async def list_server(self):
         for server in self.bot.servers:
             print(server)
