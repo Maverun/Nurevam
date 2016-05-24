@@ -15,6 +15,8 @@ class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
+        self.counter= 0
+        self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         loop = asyncio.get_event_loop()
         loop.create_task(self.timer())
 
@@ -70,13 +72,22 @@ class Discourse(): #Discourse, a forums types.
                 await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
                 utils.prLightPurple("\n".join(data))
             except:
+                Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
+                await self.bot.send_message(self.bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
     async def timer(self):
         utils.prPurple("Starting time")
+        counter_loops = 0
         while True:
+            if counter_loops ==100:
+                self.counter +=1
+                utils.prPurple("Discourse Loops check! {}".format(self.counter))
+                counter_loops = 0
+            self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
             for server in self.bot.servers:
                 await self.post(server.id)
+            counter_loops+=1
             await asyncio.sleep(10)
 
 #########################################################################
@@ -190,6 +201,12 @@ class Discourse(): #Discourse, a forums types.
     async def get_files(self,ctx):
         with open("discourse_log.txt","rb") as f:
             await self.bot.send_file(ctx.message.author,f)
+
+    @commands.command()
+    @commands.check(is_owner)
+    async def get_time(self):
+        current_time=datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
+        await self.bot.say("```py\n{}\n{}\n```".format(current_time,self.time))
 
 def setup(bot):
     bot.add_cog(Discourse(bot))

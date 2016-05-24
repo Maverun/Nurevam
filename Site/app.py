@@ -389,7 +389,7 @@ def plugin_welcome(server_id):
     get_channel = resource_get("/guilds/{}/channels".format(server_id))
     print(get_channel)
     channel = list(filter(lambda c: c['type']!='voice',get_channel))
-    delete_msg = db.hget("{}:Welcome:Message","delete_msg") or 0
+    delete_msg = db.hget("{}:Welcome:Message".format(server_id),"delete_msg") or 0
     if config.get("channel",False) is False:
         welcome_channel=server_id
     else:
@@ -559,9 +559,9 @@ def plugin_mod(server_id):
 def update_mod(server_id):
     admin_roles = request.form.get('admin_roles').split(',')
     print(admin_roles)
-    db.delete("{}:Channel:admin_roles".format(server_id))
+    db.delete("{}:Mod:admin_roles".format(server_id))
     if len(admin_roles)>0:
-        db.sadd("{}:Channel:admin_roles".format(server_id),*admin_roles)
+        db.sadd("{}:Mod:admin_roles".format(server_id),*admin_roles)
     return redirect(url_for('plugin_mod',server_id=server_id))
 
 #Level

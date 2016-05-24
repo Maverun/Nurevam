@@ -11,7 +11,6 @@
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
 
-
                     <label class="control-label" for="time"><strong>Channel</strong> time expire</label>
                     <input class="form-control input-lg" name="time"
                            value="{% if time is defined %}{{time}}{%else%}0{%endif%}" ype="text" id="time">
@@ -96,6 +95,9 @@
 
                     </script>
                     <br/>
+                    <div class ="well well-sm">
+                        <h5>Please note, that this plugin require a manage channel, and maybe above most role due to recent new update(blame dev for this)</h5>
+                    </div>
                     <button type="submit" class="btn btn-primary">Update</button>
                 </div>
             </form>
