@@ -1,0 +1,107 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>Channel <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="channel" method="POST" action="{{url_for('update_channel', server_id=server['id'])}}">
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+
+
+                    <label class="control-label" for="time"><strong>Channel</strong> time expire</label>
+                    <input class="form-control input-lg" name="time"
+                           value="{% if time is defined %}{{time}}{%else%}0{%endif%}" ype="text" id="time">
+                    <div class="well well-sm">
+                        There will be time set, once time up, channel will delete.
+                        I would recommend having at 1 hours (3600 second) is best ideal.
+                    </div>
+
+                    <label class="control-label" for="warning"><strong>Warning</strong> time</label>
+                    <input class="form-control input-lg" name="warning"
+                           value="{% if warning is defined %}{{warning}}{%else%}0{%endif%}" ype="text" id="warning">
+                    <div class="well well-sm">
+                        Once Time is up, it will give a warning to chat that how many second they have.
+                        Once warning time second is up, it will finally delete channel.
+                    </div>
+
+                    <label class="control-label" for="limit"><strong>Limit</strong> Total</label>
+                    <input class="form-control input-lg" name="limit"
+                           value="{% if limit is defined %}{{limit}}{%else%}0{%endif%}" ype="text" id="limit">
+                    <div class="well well-sm">
+                        The total set of how many channel you want for user created.
+                    </div>
+
+                    <label class="control-label" for="admin_roles">Admin Role</label>
+                    <input type="text" data-role="tagsinput" name="admin_roles" class="admin_roles"/><br/>
+                    <div class="well well-sm">
+                        Admin Role, that allow delete channel even if not creator of channel.
+                    </div>
+                    <script>
+				$(function() {
+				var roles = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_roles|tojson|safe}}
+                                });
+                                roles.initialize();
+                                var elt = $('.admin_roles');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'roles',
+                                        displayKey: 'name',
+                                        source: roles.ttAdapter()
+                                    }
+                                });
+                                {% for role in admin_roles %}
+                                    elt.tagsinput('add', {{role|tojson|safe}});
+                                {% endfor %}
+				});
+
+
+                    </script>
+
+                    <label class="control-label" for="user_roles">User Role</label>
+                    <input type="text" data-role="tagsinput" name="user_roles" class="user_roles"/><br/>
+                    <div class="well well-sm">
+                        Allow which user that can use to create channel. (Create only)
+                    </div>
+                    <script>
+				$(function() {
+				var roles = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_roles|tojson|safe}}
+                                });
+                                roles.initialize();
+                                var elt = $('.user_roles');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'roles',
+                                        displayKey: 'name',
+                                        source: roles.ttAdapter()
+                                    }
+                                });
+                                {% for role in user_roles %}
+                                    elt.tagsinput('add', {{role|tojson|safe}});
+                                {% endfor %}
+				});
+
+                    </script>
+                    <br/>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+{% endblock %}

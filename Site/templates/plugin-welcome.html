@@ -18,6 +18,11 @@
                     mention use <strong>
                     {user_mention}</strong>, <strong><{server}</strong> is server name of your.
                 </div>
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="delete_msg">Custom time to delete message</label>
+                    <input class="form-control input-lg" name="delete_msg" value="{{delete_msg}}" type="text" id="delete_msg">
+                </div>
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="whisper" {% if config["whisper"] =="on" %} checked {% endif %}>
