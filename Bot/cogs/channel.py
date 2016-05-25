@@ -22,6 +22,7 @@ class Channel():
     def __init__(self,bot):
         self.bot = bot
         self.redis=bot.db.redis
+        self.bot.say_edit = bot.says_edit
         self.Temp_Chan={} #Making a Dict so it can track of channel in
         self.Temp_Count=0 #To count how many channel for limit
         self.allow=discord.Permissions.none()
@@ -55,7 +56,7 @@ class Channel():
         print(msg.message.server)
         server_id = msg.message.server.id
         if self.Temp_Count == int(await self.redis.hget("{}:Channel:Config".format(server_id),"limit")): #Checking Total channel that already created and compare to atually limit to see
-            await self.bot.say("There is already limit channel! Please wait!")
+            await self.bot.say_edit("There is already limit channel! Please wait!")
             return
         name = name.replace(" ","-").lower() #to prevert error due to space not allow in channel name
         check = discord.utils.find(lambda c:c.name == name, msg.message.server.channels) #Check if there is exist one, so that user can create one if there is none
@@ -65,13 +66,13 @@ class Channel():
             await self.bot.edit_channel_permissions(data,msg.message.server.me,allow=self.allow_bot)
             await self.bot.edit_channel_permissions(data,msg.message.server.roles[0],deny=self.deny) #remove @everyone from this channel
             await self.bot.edit_channel_permissions(data,msg.message.author,allow=self.allow) #Invite person to view this channel
-            await self.bot.say("{} have now been created.".format(name.replace("-"," "))) #To info that this channel is created
+            await self.bot.say_edit("{} have now been created.".format(name.replace("-"," "))) #To info that this channel is created
             self.Temp_Chan.update({server_id:{name:{"Name":data,"Creator":msg.message.author.id}}}) #channel Name have channel ID and Creator (Creator ID)
             self.Temp_Count +=1 #add 1 to "Total atm" so we can keep maintain to limit channel
             loop = asyncio.get_event_loop()
             loop.call_later(int(await self.redis.hget("{}:Channel:Config".format(server_id),"time")), lambda: loop.create_task(self.timeout(server_id, name))) #Time for channel to be gone soon
         else:
-            await self.bot.say("It is already exist, try again!")
+            await self.bot.say_edit("It is already exist, try again!")
 
     @commands.check(is_enable)
     @channel.command(name="join", brief="Allow user to join channel", pass_context=True, invoke_without_command=True)
@@ -84,9 +85,9 @@ class Channel():
             return
         if name in self.Temp_Chan[msg.message.server.id]: #To ensure if channel still exist and in the list
             await self.bot.edit_channel_permissions(self.Temp_Chan[msg.message.server.id][name]["Name"],msg.message.author,allow=self.allow)
-            await self.bot.say("You can now view and chat in {}".format(name.replace("-"," ")))
+            await self.bot.say_edit("You can now view and chat in {}".format(name.replace("-"," ")))
         else:
-            await self.bot.say("I am afraid that didn't exist, please double check spelling and case")
+            await self.bot.say_edit("I am afraid that didn't exist, please double check spelling and case")
 
 
     @commands.check(is_enable)
@@ -109,11 +110,11 @@ class Channel():
                     break
             if msg.message.author.id == self.Temp_Chan[msg.message.server.id][name]["Creator"] or mod_bool is True:
                 await self.bot.delete_channel(self.Temp_Chan[msg.message.server.id][name]["Name"])
-                await self.bot.say("{} is now delete.".format(name.replace("-"," ")))
+                await self.bot.say_edit("{} is now delete.".format(name.replace("-"," ")))
             else:
-                await self.bot.say("You do not have right to delete this!\nYou need to be either creator of {} or mod".format(name))
+                await self.bot.say_edit("You do not have right to delete this!\nYou need to be either creator of {} or mod".format(name))
         else:
-            await self.bot.say("{} does not exist! Please double check spelling".format(name))
+            await self.bot.say_edit("{} does not exist! Please double check spelling".format(name))
 
     async def timeout(self, id, name): #Timer, first it will warning user that they have X amount to talk here for while.
         if name not in self.Temp_Chan[id]:

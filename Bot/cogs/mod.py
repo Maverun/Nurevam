@@ -62,8 +62,8 @@ class Mod():
     @commands.check(check_roles)
     async def person(self,ctx,user: discord.Member,*,limit: int = 100):
         def delete_player(m):
-                return m.id == user.id
-
+                return m.author.id == user.id
+        print(user.id)
         counter = await self.bot.purge_from(ctx.message.channel,check=delete_player,limit=limit)
         await self.bot.say("```py\nI have clean {} message from {}```".format(len(counter),user.name))
 

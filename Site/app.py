@@ -352,6 +352,8 @@ def core(server_id): #UNQIUE SETTING FOR SERVER
         'icon':db.get("{}:Level:Server_Icon".format(server_id))
     }
     delete_msg = db.hgetall("{}:Config:Delete_MSG".format(server_id))
+    if delete_msg.get("welcome",False):
+        delete_msg.pop("welcome")
     whisper = db.get("{}:Config:Whisper".format(server_id))
     command_prefix = db.get("{}:Config:CMD_Prefix".format(server_id))
     if command_prefix is None:
@@ -636,8 +638,6 @@ def update_levels(server_id):
         db.hset('{}:Level:Config'.format(server_id),"announce", enable)
 
         db.hset('{}:Level:Config'.format(server_id),"whisper", whisp)
-
-        db.hset('{}:Config:Delete_MSG'.format(server_id),"cogs.level",delete_msg)
 
         flash('Settings updated!', 'success')
 
