@@ -64,7 +64,7 @@ class Discourse(): #Discourse, a forums types.
                     bool = True #so it dont get error if there is empty string, which hence set this true
                     data.append("{}\t\tAuthor: {}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
             except:
-                utils.prRed("Failed to get Discourse site!\n{}\n{}".format(config["domain"]))
+                utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
                 await self.bot.send_message(self.bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
@@ -92,7 +92,7 @@ class Discourse(): #Discourse, a forums types.
             for server in self.bot.servers:
                 await self.post(server.id)
             counter_loops+=1
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
 
 #########################################################################
 #     _____                                                       _     #
