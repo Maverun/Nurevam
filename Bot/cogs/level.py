@@ -188,7 +188,7 @@ class Level():
             return [row[i] for row in matrix]
         # debug: await self.bot.say_edit("0> %s\n1> %s\n2> %s\n3> %s\n4> %s\n" % (column(struct_player_data, 0), column(struct_player_data, 1), column(struct_player_data, 2), column(struct_player_data, 3), column(struct_player_data, 4)))
         for row in range(0, len(struct_player_data)):
-            to_print.append("{:>{index}d}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(len(struct_player_data)-row, struct_player_data[row][0], struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4], index=len(str(len(struct_player_data))), name=len(max(column(struct_player_data, 0), key=len)),level=len(str(max(column(struct_player_data, 1)))), first=len(str(max(column(struct_player_data, 2)))),second=len(str(max(column(struct_player_data, 3)))), total=len(str(max(column(struct_player_data, 4))))))
+            to_print.append("{:>{index}d}│{:<{name}} │ Level: {:>{level}} │ EXP: {:>{first}} / {:<{second}} │ Total XP: {:>{total}}\n".format(len(struct_player_data)-row, struct_player_data[row][0], struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4], index=len(str(len(struct_player_data))), name=len(max(column(struct_player_data, 0), key=len)),level=len(str(max(column(struct_player_data, 1)))), first=len(str(max(column(struct_player_data, 2)))),second=len(str(max(column(struct_player_data, 3)))), total=len(str(max(column(struct_player_data, 4))))))
         await self.bot.say_edit("```xl\n{}\n```".format("".join(reversed(to_print))))
 
 
