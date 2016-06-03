@@ -213,12 +213,12 @@ class Level():
 
         repi = rep.find(u"function(e,t){e.exports={")
         if repi == -1:
-            return Response("Can\'t find pattern start in file.", delete_after=15)
+            return await self.bot.say_edit("Can\'t find pattern start in file.")
         rep = rep[repi+24:] #24 is length of find string to "{"
         
         repi = rep.find(u"}},function(e,t){e.exports=[{")
         if repi == -1:
-            return Response("Can\'t find pattern exit in file.", delete_after=15)
+            return await self.bot.say_edit("Can\'t find pattern exit in file.")
         rep = rep[:repi+1] # 1 to } in }}
 
         rep = re.sub(r"\w+\:\[", u"", rep)                  #1 del word:[
@@ -286,14 +286,14 @@ class Level():
         #extra borders
         to_print.append("╔{0:═>{index}}╤{0:═>{name_m}}═╤════════{0:═>{level}}═╤══════{0:═>{first}}═══{0:═>{second}}═╤═══════════{0:═>{total}}═╗\n".format(
             '', index=len(str(len(struct_player_data))),
-            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
             level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
             first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
             second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
             total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
         to_print.insert(0, "╚{0:═>{index}}╧{0:═>{name_m}}═╧════════{0:═>{level}}═╧══════{0:═>{first}}═══{0:═>{second}}═╧═══════════{0:═>{total}}═╝\n".format(
             '', index=len(str(len(struct_player_data))),
-            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
             level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
             first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
             second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
@@ -301,14 +301,14 @@ class Level():
         """ single border
         to_print.append("┌{0:─>{index}}┬{0:─>{name_m}}─┬────────{0:─>{level}}─┬──────{0:─>{first}}───{0:─>{second}}─┬───────────{0:─>{total}}─┐\n".format(
             '', index=len(str(len(struct_player_data))),
-            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
             level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
             first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
             second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
             total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
         to_print.insert(0, "└{0:─>{index}}┴{0:─>{name_m}}─┴────────{0:─>{level}}─┴──────{0:─>{first}}───{0:─>{second}}─┴───────────{0:─>{total}}─┘\n".format(
             '', index=len(str(len(struct_player_data))),
-            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
             level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
             first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
             second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
