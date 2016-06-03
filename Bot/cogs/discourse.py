@@ -4,9 +4,8 @@ import traceback
 import asyncio
 import aiohttp
 import datetime
+import discord
 
-def is_owner(msg): #Checking if you are owner of bot
-    return msg.message.author.id == "105853969175212032"
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
@@ -52,7 +51,10 @@ class Discourse(): #Discourse, a forums types.
             try:
                 counter +=1
                 get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
-                self.write_files("{}:{}".format(config["domain"],get_post))
+                if str(get_post[1]).isdigit():
+                    self.write_files("{}:[{}]".format(config["domain"],get_post,id_post+counter))
+                else:
+                    self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
                 if get_post[0] is False:
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
@@ -67,7 +69,9 @@ class Discourse(): #Discourse, a forums types.
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
-                await self.bot.send_message(self.bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+                user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
+
+                await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
                 break
         if bool:
@@ -78,7 +82,9 @@ class Discourse(): #Discourse, a forums types.
             except:
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
-                await self.bot.send_message(self.bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+                user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
+
+                await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
     async def timer(self):
         utils.prPurple("Starting time")
@@ -200,14 +206,14 @@ class Discourse(): #Discourse, a forums types.
 
 
 #Testing to see how it goes
-    @commands.command(pass_context=True)
-    @commands.check(is_owner)
+    @commands.command(pass_context=True,hidden=True)
+    @commands.check(utils.is_owner)
     async def get_files(self,ctx):
         with open("discourse_log.txt","rb") as f:
             await self.bot.send_file(ctx.message.author,f)
 
-    @commands.command()
-    @commands.check(is_owner)
+    @commands.command(hidden=True)
+    @commands.check(utils.is_owner)
     async def get_time(self):
         current_time=datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         await self.bot.say("```py\n{}\n{}\n```".format(current_time,self.time))

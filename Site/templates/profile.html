@@ -3,9 +3,9 @@
 <div class="container">
     {% if is_owner %}
         {% if is_private %}
-            <small><a class="btn btn-warning btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id)}}">Private</a></small>
+            <small><a class="btn btn-warning btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id,bool=0)}}">Private</a></small>
         {% else %}
-            <small><a class="btn btn-primary btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id)}}">Public</a></small>
+            <small><a class="btn btn-primary btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id,bool=1)}}">Public</a></small>
         {% endif %}
     {% endif %}
     {% if is_private and not is_owner %}

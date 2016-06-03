@@ -11,7 +11,8 @@
             <h3>Core </h3>
             {% include 'flash.html' %}
                 <form id="welcome" method="POST" action="{{url_for('update_core', server_id=server['id'])}}">
-                <h4>Those are plugins that you can enable to allow message be auto delete. It will take 30 second for message delete if that command reply by bot from relative plugins that is enabled.</h4>
+                <h4>Those are plugins that you can enable to allow message be auto delete. It will take 30 second for message delete if that command reply by bot from relative plugins that is enabled.
+                P.S If you want bot delete user command as well, give bot a permission of manage message as well!</h4>
                 <div class="well well-sm">
                     <div class="checkbox">
                         {% for key in config_delete %}

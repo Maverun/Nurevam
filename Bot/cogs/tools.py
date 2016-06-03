@@ -34,7 +34,7 @@ class Tools():
     async def load(self,*, module : str):
         """Loads a module
         Example: load cogs.mod"""
-        module = module.strip()
+        module ="cogs."+module.strip()
         if not module in list_cogs():
             await self.bot.say("{} doesn't exist.".format(module))
             return
@@ -51,7 +51,7 @@ class Tools():
     async def unload(self,*, module : str):
         """Unloads a module
         Example: unload cogs.mod"""
-        module = module.strip()
+        module ="cogs."+module.strip()
         if not module in list_cogs():
             await self.bot.say("That module doesn't exist.")
             return
@@ -67,7 +67,7 @@ class Tools():
     async def _reload(self,*, module : str):
         """Reloads a module
         Example: reload cogs.mod"""
-        module = module.strip()
+        module ="cogs."+module.strip()
         if not module in list_cogs():
             await self.bot.say("This module doesn't exist.".format(module))
             return

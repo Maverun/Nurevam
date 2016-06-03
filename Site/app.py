@@ -749,17 +749,20 @@ def private_server(server_id,bool):
         db.delete("{}:Level:Private".format(server_id))
     return redirect(url_for('levels', server_id=server_id))
 
-@app.route('/profile/private_set/<int:player_id>/<int:server_id>')
+@app.route('/profile/private_set/<int:player_id>/<int:server_id>/<int:bool>')
 @plugin_method
-def private_profile(server_id,player_id):
-    for player_id in db.smembers("{}:Level:Player:Private".format(server_id)):
-        db.srem("{}:Level:Player:Private".format(server_id),player_id)
-        return redirect(url_for('profile', server_id=server_id,player_id=player_id))
-    else:
+def private_profile(server_id,player_id,bool):
+    print("okay")
+    print(bool)
+    if bool == 1:
         db.sadd("{}:Level:Player:Private".format(server_id),player_id)
-        return redirect(url_for('profile', server_id=server_id,player_id=player_id))
+        print("add!")
+    else:
+        print("remove")
+        db.srem("{}:Level:Player:Private".format(server_id),player_id)
+    return redirect(url_for('profile', server_id=server_id,player_id=player_id))
 
-@app.route('/profile/<int:player_id>/<int:server_id>')
+@app.route('/profile/<string:player_id>/<int:server_id>')
 def profile(player_id,server_id):
     #Checking if is owner of that site
     is_owner = False
@@ -767,10 +770,13 @@ def profile(player_id,server_id):
         user_id =get_user(session['api_token'])['id']
 
         is_owner = str(player_id) == str(user_id)
-    is_private=False #checking if psge is private or not.
-    for id in db.smembers("{}:Level:Player:Private".format(server_id)):
-        if player_id == id:
-            is_private=True
+    # is_private=False #checking if page is private or not.
+    is_private=player_id in db.smembers("{}:Level:Player:Private".format(server_id))
+    # print(player_id in db.smembers("{}:Level:Player:Private".format(server_id)))
+    # for id in db.smembers("{}:Level:Player:Private".format(server_id)):
+    #     if player_id == id:
+    #         is_private=True
+    # print(is_private)
     server = {
     'id':server_id,
     'name':db.get("{}:Level:Server_Name".format(server_id)),
