@@ -80,7 +80,7 @@ class Level():
                 await self.next_Level(Remain_XP)
                 await self.redis.hset("{}:Level:Trait".format(server),level,traits)
                 await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
-                utils.prCyan("{} Level up!".format(msg.author))
+                utils.prCyan("{} - {} - {} ({}) Level up!".format(msg.server.id,server,msg.author,player))
                 announce = await self.redis.hgetall("{}:Level:Config".format(server))
                 if announce.get("announce",False) == "on":
                     print("whisper")
