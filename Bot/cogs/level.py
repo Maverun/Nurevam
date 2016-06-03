@@ -4,7 +4,12 @@ from .utils import utils
 import asyncio
 import discord
 import time
-from numpy import reshape as npr # http://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
+
+from numpy import reshape as npr
+import urllib.request
+import re
+try: import simplejson as json
+except ImportError: import json
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "level")
@@ -179,16 +184,135 @@ class Level():
                                                                              "{}:Level:Player:*->Next_XP".format(server),
                                                                              "{}:Level:Player:*->Total_XP".format(server),
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
-        # debug: await self.bot.say_edit("From> %s" % player_data)
         struct_player_data = npr(player_data, (-1, 5))
+        struct_player_data = struct_player_data[-10:]
         del player_data[:]
-        # debug: await self.bot.say_edit("To> %s" % struct_player_data)
         to_print = []
+
         def column(matrix, i):
             return [row[i] for row in matrix]
-        # debug: await self.bot.say_edit("0> %s\n1> %s\n2> %s\n3> %s\n4> %s\n" % (column(struct_player_data, 0), column(struct_player_data, 1), column(struct_player_data, 2), column(struct_player_data, 3), column(struct_player_data, 4)))
+
+        ###storage https://discordapp.com/assets/72635fda0f6d2188e224.js
+        ##local file (2 lines):
+        #with open('repchars.json', 'r', encoding="utf8") as rep_file:
+        #    rep = json.load(rep_file)
+
+        ##web file (38 lines):
+        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+            'Accept-Encoding': 'none',
+            'Accept-Language': 'en-US,en;q=0.8',
+            'Connection': 'keep-alive'}
+        req = urllib.request.Request("https://discordapp.com/assets/72635fda0f6d2188e224.js", headers=hdr)
+        f = urllib.request.urlopen(req)
+        rep = f.read().decode('utf-8')
+        s = rep.split('\n')
+        rep = '{}{}'.format(s[51], s[52])
+        del s
+
+        repi = rep.find(u"function(e,t){e.exports={")
+        if repi == -1:
+            return Response("Can\'t find pattern start in file.", delete_after=15)
+        rep = rep[repi+24:] #24 is length of find string to "{"
+        
+        repi = rep.find(u"}},function(e,t){e.exports=[{")
+        if repi == -1:
+            return Response("Can\'t find pattern exit in file.", delete_after=15)
+        rep = rep[:repi+1] # 1 to } in }}
+
+        rep = re.sub(r"\w+\:\[", u"", rep)                  #1 del word:[
+        rep = re.sub(r"[\[\]]", u"", rep)                   #2 del []
+        rep = re.sub(r"\},\{", u",", rep)                   #3 rep },{ to ,
+        rep = re.sub(r",surrogates", u"", rep)              #4 del ,surrogates
+        rep = re.sub(r"\{+", u"{", rep)                     #5 rep {{ to {
+        rep = re.sub(r"\}+", u"}", rep)                     #6 rep }} to }
+        rep = re.sub(r"hasDiversity:!0,", u"", rep)         #7 del hasDiversity:!0,
+        rep = re.sub(r"\"[^ℹ]\w+\",", u"", rep)             #8 del multiple smile condition
+        rep = re.sub(r"(\")(\w{3,})(\")", r"\1:\2:\3", rep) #9 rep "smile" to ":smile:"
+
+        rep = json.loads(rep)
+        ret = {}
+        for k in rep:
+            ret[rep[k]] = k
+        rep = ret
+        del ret
+        #end web reading
+
+        lenname = [0] * len(struct_player_data)
+        lenu = [0] * len(struct_player_data)
+        ml = 0
+        rep = dict((re.escape(k), v) for k, v in rep.items())
+        pattern = re.compile("|".join(rep.keys()))
         for row in range(0, len(struct_player_data)):
-            to_print.append("{:>{index}d}│{:<{name}} │ Level: {:>{level}} │ EXP: {:>{first}} / {:<{second}} │ Total XP: {:>{total}}\n".format(len(struct_player_data)-row, struct_player_data[row][0], struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4], index=len(str(len(struct_player_data))), name=len(max(column(struct_player_data, 0), key=len)),level=len(str(max(column(struct_player_data, 1)))), first=len(str(max(column(struct_player_data, 2)))),second=len(str(max(column(struct_player_data, 3)))), total=len(str(max(column(struct_player_data, 4))))))
+            struct_player_data[row][0] = pattern.sub(lambda m: rep[re.escape(m.group(0))], struct_player_data[row][0])
+
+            lenname[row] = [m.end(0) - m.start(0) for m in re.finditer(u'[\u0300-\u036f\uff9f]+', struct_player_data[row][0])]
+            if lenname[row] == []:
+                if len(struct_player_data[row][0]) > ml:
+                    ml = len(struct_player_data[row][0])
+                lenname[row] = 0
+            else:
+                if len(struct_player_data[row][0])-sum(lenname[row]) > ml:
+                    ml = len(struct_player_data[row][0]) - sum(lenname[row])
+                lenname[row] = len(struct_player_data[row][0]) - sum(lenname[row])
+
+            lenu[row] = [m.end(0) - m.start(0) for m in re.finditer(u'[\u0530-\uffff\U00010000-\U0001F9FF]+', struct_player_data[row][0])]
+            if lenu[row] == []:
+                lenu[row] = 0
+            else:
+                lenu[row] = sum(lenu[row])
+                if lenu[row]%3 == 1:
+                    lenu[row] -= 1
+                elif lenu[row]%3 == 2:
+                    lenu[row] -= 2
+
+        for row in range(0, len(struct_player_data)):
+            if lenname[row] == 0: 
+                lenname[row] = ml
+            else:
+                if len(struct_player_data[row][0]) < ml:
+                    lenname[row] = ml - len(struct_player_data[row][0]) + lenname[row]
+
+            to_print.append("║{:0>{index}d}│{:<{name}s}{:>{name2}s} │ Level: {:>{level}} │ EXP: {:>{first}} / {:<{second}} │ Total XP: {:>{total}} ║\n".format(
+                len(struct_player_data)-row, struct_player_data[row][0], '',
+                struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4],
+                index=len(str(len(struct_player_data))),
+                name=ml, name2=ml - lenname[row] + int(round((int(max(lenu)) - lenu[row]) / 2.5)),
+                level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+                first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+                second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+                total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
+        #extra borders
+        to_print.append("╔{0:═>{index}}╤{0:═>{name_m}}═╤════════{0:═>{level}}═╤══════{0:═>{first}}═══{0:═>{second}}═╤═══════════{0:═>{total}}═╗\n".format(
+            '', index=len(str(len(struct_player_data))),
+            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
+        to_print.insert(0, "╚{0:═>{index}}╧{0:═>{name_m}}═╧════════{0:═>{level}}═╧══════{0:═>{first}}═══{0:═>{second}}═╧═══════════{0:═>{total}}═╝\n".format(
+            '', index=len(str(len(struct_player_data))),
+            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
+        """ single border
+        to_print.append("┌{0:─>{index}}┬{0:─>{name_m}}─┬────────{0:─>{level}}─┬──────{0:─>{first}}───{0:─>{second}}─┬───────────{0:─>{total}}─┐\n".format(
+            '', index=len(str(len(struct_player_data))),
+            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
+        to_print.insert(0, "└{0:─>{index}}┴{0:─>{name_m}}─┴────────{0:─>{level}}─┴──────{0:─>{first}}───{0:─>{second}}─┴───────────{0:─>{total}}─┘\n".format(
+            '', index=len(str(len(struct_player_data))),
+            name_m=ml * 2 - lenname[0] + int(round((int(max(lenu)) - lenu[0]) / 2.5)),
+            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))"""
         await self.bot.say_edit("```xl\n{}\n```".format("".join(reversed(to_print))))
 
 
