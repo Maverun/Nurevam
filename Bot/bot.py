@@ -15,20 +15,22 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=d
 bot.db= storage.Redis()
 
 async def say_edit(msg):
-    key = str(inspect.getmodule(inspect.currentframe().f_back.f_code))
-    regex = re.compile(r"(cogs.[a-zA-Z]*)")
-    get = re.search(regex,key)
-    if get:
-        word = await bot.say(msg)
-        check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(word.server.id))
-        if len(check)>0:
-            if check[get.groups()[0][5:]] == "on":
-                await asyncio.sleep(30)
-                await bot.delete_message(word)
-    else:
-        print("NONE")
-    return
-
+    try:
+        key = str(inspect.getmodule(inspect.currentframe().f_back.f_code))
+        regex = re.compile(r"(cogs.[a-zA-Z]*)")
+        get = re.search(regex,key)
+        if get:
+            word = await bot.say(msg)
+            check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(word.server.id))
+            if len(check)>0:
+                if check[get.groups()[0][5:]] == "on":
+                    await asyncio.sleep(30)
+                    await bot.delete_message(word)
+        else:
+            print("NONE")
+        return
+    except:
+        utils.prRed(traceback.format_exc())
 bot.says_edit=say_edit
 
 @bot.event
@@ -108,13 +110,10 @@ async def on_error(event,*args,**kwargs):
     utils.prRed("Error!")
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
-    await bot.send_message(bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+    user=discord.utils.get(bot.get_all_members(),id="105853969175212032")
+    await bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
-# @bot.command(name="test")
-# async def test():
-#     api = OsuApi("aa79ee8dd3dd29757b848085063f4447947e5328", connector=aiohttp)
-#     results = await api.get_user("peppy")
-#     await bot.say("PP rank is {0}".format(results[0].pp_rank))
+
 
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))

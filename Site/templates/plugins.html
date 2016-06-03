@@ -10,6 +10,14 @@
     enabled_plugins=enabled_plugins
     )}}
     {{plugin.view(
+    'channel',
+    pretty_name="Channel",
+    view='plugin_channel',
+    description='A Temporary Channel for time limit! Allow user create serect room with friend to talk thing!',
+    server=server,
+    enabled_plugins=enabled_plugins
+    )}}
+    {{plugin.view(
     'discourse',
     pretty_name="Discourse",
     view='plugin_discourse',
@@ -22,6 +30,14 @@
     pretty_name="Levels",
     view='plugin_levels',
     description='Let your members gain <strong>XP</strong> and <strong>levels</strong> by participating in the chat !',
+    server=server,
+    enabled_plugins=enabled_plugins
+    )}}
+    {{plugin.view(
+    'mod',
+    pretty_name="Mod",
+    view='plugin_mod',
+    description='A simple mod command,allow to clean message! Be it itself,role,person or all!',
     server=server,
     enabled_plugins=enabled_plugins
     )}}

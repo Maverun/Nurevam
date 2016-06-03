@@ -30,6 +30,10 @@ def redis_connection():
     global redis
     redis = redis.Redis(host=OS_Get("Redis"),decode_responses=True)
 
+
+def is_owner(msg): #Checking if you are owner of bot
+    return msg.message.author.id == "105853969175212032"
+
 ############Checking if cogs for that server is enable or disable##########
 def is_enable(msg,Cogs):
     data = redis

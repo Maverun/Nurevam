@@ -80,7 +80,7 @@ class Level():
                 await self.next_Level(Remain_XP)
                 await self.redis.hset("{}:Level:Trait".format(server),level,traits)
                 await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
-                utils.prCyan("{} Level up!".format(msg.author))
+                utils.prCyan("{} - {} - {} ({}) Level up!".format(msg.server.id,server,msg.author,player))
                 announce = await self.redis.hgetall("{}:Level:Config".format(server))
                 if announce.get("announce",False) == "on":
                     print("whisper")
@@ -120,10 +120,15 @@ class Level():
 #                                                                       #
 #########################################################################
 
-    @commands.command(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True)
+    @commands.group(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True,invoke_without_command=True)
     @commands.check(is_enable)
     async def level_link(self,msg):
         await self.bot.say("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
+
+    @level_link.command(name="server",brief="Show a link of all server's leaderboard",pass_context=True)
+    @commands.check(is_enable)
+    async def server_level_link(self,msg):
+        await self.bot.say("Check this out!\nhttp://nurevam.site/server/levels".format(msg.message.server.id))
 
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
     @commands.check(is_enable)

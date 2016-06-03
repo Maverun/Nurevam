@@ -352,6 +352,8 @@ def core(server_id): #UNQIUE SETTING FOR SERVER
         'icon':db.get("{}:Level:Server_Icon".format(server_id))
     }
     delete_msg = db.hgetall("{}:Config:Delete_MSG".format(server_id))
+    if delete_msg.get("welcome",False):
+        delete_msg.pop("welcome")
     whisper = db.get("{}:Config:Whisper".format(server_id))
     command_prefix = db.get("{}:Config:CMD_Prefix".format(server_id))
     if command_prefix is None:
@@ -387,7 +389,9 @@ def plugin_welcome(server_id):
         get_message=default_message
     config = db.hgetall("{}:Welcome:Message".format(server_id))
     get_channel = resource_get("/guilds/{}/channels".format(server_id))
+    print(get_channel)
     channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    delete_msg = db.hget("{}:Welcome:Message".format(server_id),"delete_msg") or 0
     if config.get("channel",False) is False:
         welcome_channel=server_id
     else:
@@ -396,7 +400,8 @@ def plugin_welcome(server_id):
         'guild_channel':channel,
         "welcome_channel":welcome_channel,
         'message':get_message,
-        'config':config
+        'config':config,
+        'delete_msg':delete_msg
     }
 
 @app.route('/dashboard/<int:server_id>/welcome/update', methods=['POST'])
@@ -405,12 +410,20 @@ def update_welcome(server_id):
     welcome_message = request.form.get('message')
     channel = request.form.get('channel')
     whisper_options = request.form.get('whisper')
+    delete_msg=request.form.get('delete_msg')
     if len(welcome_message) >= 2000 or welcome_message == "":
         flash("The welcome message need to be between 1-2000!",'warning')
     else:
+        try:
+            delete_msg = int(delete_msg)
+            print(delete_msg)
+        except ValueError:
+            flash('The delete message that you provided isn\'t an integer!', 'warning')
+            return redirect(url_for('plugin_welcome', server_id=server_id))
         db.hset('{}:Welcome:Message'.format(server_id),'message',welcome_message)
         db.hset('{}:Welcome:Message'.format(server_id),'channel',channel)
         db.hset('{}:Welcome:Message'.format(server_id),'whisper',whisper_options)
+        db.hset('{}:Welcome:Message'.format(server_id),'delete_msg',delete_msg)
         flash('Settings updated!', 'success')
 
     return redirect(url_for('plugin_welcome', server_id=server_id))
@@ -468,64 +481,91 @@ def update_discourse(server_id):
 
     return redirect(url_for('plugin_discourse',server_id=server_id))
 
-# #Channel
-# @app.route("/dashboard/<int:server_id>/channel")
-# @plugin_page('channel')
-# def plugin_channel(server_id):
-#     config = db.hgetall("{}:Channel:Config".format(server_id))
-#
-#     db_admin_role = db.smembers('{}:Channel:admin_roles'.format(server_id)) or []
-#     db_user_roles = db.smembers('{}:Channel:user_roles'.format(server_id)) or []
-#     get_role = resource_get("/guilds/{}".format(server_id))
-#     guild_roles = get_role['roles']
-#     admin_role = list(filter(lambda r:r['name'] in db_admin_role or r['id'] in db_admin_role,guild_roles))
-#     user_role = list(filter(lambda r: r['name'] in db_user_roles or r['id'] in db_user_roles,guild_roles))
-#     time = db.hget('{}:Channel:Config'.format(server_id),"time") or 0
-#     limit = db.hget('{}:Channel:Config'.format(server_id),"limit") or 0
-#     warning = db.hget("{}:Channel:Config".format(server_id),"warning") or 0
-#     return {
-#         'config':config,
-#         'admin_roles': admin_role,
-#         'user_roles': user_role,
-#         'guild_roles':guild_roles,
-#         'time': time,
-#         'limit':limit,
-#         'warning':warning
-#     }
-#
-# @app.route('/dashboard/<int:server_id>/channel/update',methods=['POST'])
-# @plugin_method
-# def update_channel(server_id):
-#     time = request.form.get('time')
-#     limit = request.form.get("limit")
-#     warning = request.form.get("warning")
-#     admin_roles = request.form.get('admin_roles').split(',')
-#     user_roles = request.form.get('user_roles').split(',')
-#     print(time)
-#     print(limit)
-#     print(warning)
-#     print(admin_roles)
-#     print(user_roles)
-#     try:
-#         time = int(time)
-#     except ValueError:
-#         flash('The time that you provided isn\'t an integer!', 'warning')
-#         return redirect(url_for('plugin_channel', server_id=server_id))
-#     try:
-#         limit = int(limit)
-#     except ValueError:
-#         flash('The limit for channel that you provided isn\'t an integer!', 'warning')
-#         return redirect(url_for('plugin_channel', server_id=server_id))
-#     try:
-#         warning = int(warning)
-#     except ValueError:
-#         flash('The warning for channel that you provided isn\'t an integer!', 'warning')
-#         return redirect(url_for('plugin_channel', server_id=server_id))
-#
-#     db.hmset("{}:Channel:Config".format(server_id),{"time":time,"limit":limit,"warning":warning,"admin":admin_roles,"user":user_roles})
-#     flash('Settings updated!', 'success')
-#
-#     return redirect(url_for('plugin_channel',server_id=server_id))
+#Channel
+@app.route("/dashboard/<int:server_id>/channel")
+@plugin_page('channel')
+def plugin_channel(server_id):
+    config = db.hgetall("{}:Channel:Config".format(server_id))
+
+    db_admin_role = db.smembers('{}:Channel:admin_roles'.format(server_id)) or []
+    db_user_roles = db.smembers('{}:Channel:user_roles'.format(server_id)) or []
+    get_role = resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+    admin_role = list(filter(lambda r:r['name'] in db_admin_role or r['id'] in db_admin_role,guild_roles))
+    user_role = list(filter(lambda r: r['name'] in db_user_roles or r['id'] in db_user_roles,guild_roles))
+    time = db.hget('{}:Channel:Config'.format(server_id),"time") or 0
+    limit = db.hget('{}:Channel:Config'.format(server_id),"limit") or 0
+    warning = db.hget("{}:Channel:Config".format(server_id),"warning") or 0
+    return {
+        'config':config,
+        'admin_roles': admin_role,
+        'user_roles': user_role,
+        'guild_roles':guild_roles,
+        'time': time,
+        'limit':limit,
+        'warning':warning
+    }
+
+@app.route('/dashboard/<int:server_id>/channel/update',methods=['POST'])
+@plugin_method
+def update_channel(server_id):
+    time = request.form.get('time')
+    limit = request.form.get("limit")
+    warning = request.form.get("warning")
+    admin_roles = request.form.get('admin_roles').split(',')
+    user_roles = request.form.get('user_roles').split(',')
+    print(time)
+    print(limit)
+    print(warning)
+    print(admin_roles)
+    print(user_roles)
+    try:
+        time = int(time)
+    except ValueError:
+        flash('The time that you provided isn\'t an integer!', 'warning')
+        return redirect(url_for('plugin_channel', server_id=server_id))
+    try:
+        limit = int(limit)
+    except ValueError:
+        flash('The limit for channel that you provided isn\'t an integer!', 'warning')
+        return redirect(url_for('plugin_channel', server_id=server_id))
+    try:
+        warning = int(warning)
+    except ValueError:
+        flash('The warning for channel that you provided isn\'t an integer!', 'warning')
+        return redirect(url_for('plugin_channel', server_id=server_id))
+
+    db.hmset("{}:Channel:Config".format(server_id),{"time":time,"limit":limit,"warning":warning})
+    db.delete("{}:Channel:admin_roles".format(server_id))
+    if len(admin_roles)>0:
+        db.sadd("{}:Channel:admin_roles".format(server_id),*admin_roles)
+    db.delete("{}:Channel:user_roles".format(server_id))
+    if len(user_roles)>0:
+        db.sadd("{}:Channel:user_roles".format(server_id),*user_roles)
+    flash('Settings updated!', 'success')
+
+    return redirect(url_for('plugin_channel',server_id=server_id))
+
+#Mod
+@app.route('/dashboard/<int:server_id>/mod')
+@plugin_page('mod')
+def plugin_mod(server_id):
+    db_admin_role= db.smembers('{}:Mod:admin_roles'.format(server_id)) or []
+    get_role = resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+    admin_role = list(filter(lambda r:r['name'] in db_admin_role or r['id'] in db_admin_role,guild_roles))
+    return{"admin_roles":admin_role,"guild_roles":guild_roles}
+
+@app.route('/dashboard/<int:server_id>/mod/update',methods=['POST'])
+@plugin_method
+def update_mod(server_id):
+    admin_roles = request.form.get('admin_roles').split(',')
+    print(admin_roles)
+    db.delete("{}:Mod:admin_roles".format(server_id))
+    if len(admin_roles)>0:
+        db.sadd("{}:Mod:admin_roles".format(server_id),*admin_roles)
+    return redirect(url_for('plugin_mod',server_id=server_id))
+
 #Level
 @app.route('/dashboard/<int:server_id>/levels')
 @plugin_page('level')
@@ -540,6 +580,7 @@ def plugin_levels(server_id):
     db_banned_members = db.smembers('{}:Level:banned_members'.format(server_id)) or []
     db_banned_roles = db.smembers('{}:Level:banned_roles'.format(server_id)) or []
     get_role = resource_get("/guilds/{}".format(server_id))
+    print(get_role)
     guild_roles = get_role['roles']
     get_member = resource_get("/guilds/{}/members?&limit=1000".format(server_id))
     guild_members=[]
@@ -597,8 +638,6 @@ def update_levels(server_id):
         db.hset('{}:Level:Config'.format(server_id),"announce", enable)
 
         db.hset('{}:Level:Config'.format(server_id),"whisper", whisp)
-
-        db.hset('{}:Config:Delete_MSG'.format(server_id),"cogs.level",delete_msg)
 
         flash('Settings updated!', 'success')
 
@@ -673,7 +712,11 @@ def server_levels():
                 for player_id in db.smembers("{}:Level:Player".format(server_id)): #Get every player's total XP
                     player_total.append(int(db.hget("{}:Level:Player:{}".format(server_id,player_id),"Total_XP")))
                 total = sum(player_total)
-                level = int(math.log(total/100,3))
+                print("{}-{} total xp is {}".format(server_id,server_list[server_id],total))
+                try:
+                    level = int(math.log(total/100,3))
+                except:
+                    level = 0
                 next_xp = int(100*3**(level+1))
                 enable_level.append([server_list[server_id],server_icon.get(server_id),server_id,
                                      total,next_xp,(100*(float(total)/float(next_xp))),level])
@@ -706,17 +749,20 @@ def private_server(server_id,bool):
         db.delete("{}:Level:Private".format(server_id))
     return redirect(url_for('levels', server_id=server_id))
 
-@app.route('/profile/private_set/<int:player_id>/<int:server_id>')
+@app.route('/profile/private_set/<int:player_id>/<int:server_id>/<int:bool>')
 @plugin_method
-def private_profile(server_id,player_id):
-    for player_id in db.smembers("{}:Level:Player:Private".format(server_id)):
-        db.srem("{}:Level:Player:Private".format(server_id),player_id)
-        return redirect(url_for('profile', server_id=server_id,player_id=player_id))
-    else:
+def private_profile(server_id,player_id,bool):
+    print("okay")
+    print(bool)
+    if bool == 1:
         db.sadd("{}:Level:Player:Private".format(server_id),player_id)
-        return redirect(url_for('profile', server_id=server_id,player_id=player_id))
+        print("add!")
+    else:
+        print("remove")
+        db.srem("{}:Level:Player:Private".format(server_id),player_id)
+    return redirect(url_for('profile', server_id=server_id,player_id=player_id))
 
-@app.route('/profile/<int:player_id>/<int:server_id>')
+@app.route('/profile/<string:player_id>/<int:server_id>')
 def profile(player_id,server_id):
     #Checking if is owner of that site
     is_owner = False
@@ -724,10 +770,13 @@ def profile(player_id,server_id):
         user_id =get_user(session['api_token'])['id']
 
         is_owner = str(player_id) == str(user_id)
-    is_private=False #checking if psge is private or not.
-    for id in db.smembers("{}:Level:Player:Private".format(server_id)):
-        if player_id == id:
-            is_private=True
+    # is_private=False #checking if page is private or not.
+    is_private=player_id in db.smembers("{}:Level:Player:Private".format(server_id))
+    # print(player_id in db.smembers("{}:Level:Player:Private".format(server_id)))
+    # for id in db.smembers("{}:Level:Player:Private".format(server_id)):
+    #     if player_id == id:
+    #         is_private=True
+    # print(is_private)
     server = {
     'id':server_id,
     'name':db.get("{}:Level:Server_Name".format(server_id)),
