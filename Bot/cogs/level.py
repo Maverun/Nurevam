@@ -4,6 +4,7 @@ from .utils import utils
 import asyncio
 import discord
 import time
+from numpy import reshape as npr # http://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "level")
@@ -178,35 +179,16 @@ class Level():
                                                                              "{}:Level:Player:*->Next_XP".format(server),
                                                                              "{}:Level:Player:*->Total_XP".format(server),
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
-        player_data=list(reversed(player_data))
-        data = []
+        # debug: await self.bot.say_edit("From> %s" % player_data)
+        struct_player_data = npr(player_data, (-1, 5))
+        del player_data[:]
+        # debug: await self.bot.say_edit("To> %s" % struct_player_data)
         to_print = []
-        counter = 0
-        lvl = []
-        total = []
-        xp1 = []
-        xp2 = []
-        name = []
-        for x in range(0,len(player_data),5):
-            counter += 1
-            if len(str(counter)) == 1:
-                count = "0" + str(counter)
-            else:
-                count = counter
-            data.append([count,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
-            lvl.append(player_data[x+3])
-            total.append(player_data[x])
-            xp1.append(player_data[x+2])
-            xp2.append(player_data[x+1])
-            name.append(player_data[x+4])
-            # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
-            if counter == 10:
-                break
-        for i,elem in enumerate(data):
-            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-                                                                                                                          name=len(max(name, key=len)),level=len(str(max(list(map(int,lvl))))),
-                                                                                                                          first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
-                                                                                                                          total=len(str(max(list(map(int,total)))))))
+        def column(matrix, i):
+            return [row[i] for row in matrix]
+        # debug: await self.bot.say_edit("0> %s\n1> %s\n2> %s\n3> %s\n4> %s\n" % (column(struct_player_data, 0), column(struct_player_data, 1), column(struct_player_data, 2), column(struct_player_data, 3), column(struct_player_data, 4)))
+        for row in range(0, len(struct_player_data)):
+            to_print.append("{:>{index}d}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(row, struct_player_data[row][0], struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4], index=len(str(len(struct_player_data))), name=len(max(column(struct_player_data, 0), key=len)),level=len(str(max(column(struct_player_data, 1)))), first=len(str(max(column(struct_player_data, 2)))),second=len(str(max(column(struct_player_data, 3)))), total=len(str(max(column(struct_player_data, 4))))))
         await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
 
 
