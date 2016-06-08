@@ -274,45 +274,41 @@ class Level():
                 if len(struct_player_data[row][0]) < ml:
                     lenname[row] = ml - len(struct_player_data[row][0]) + lenname[row]
 
-            to_print.append("║{:0>{index}d}│{:<{name}s}{:>{name2}s} │ Level: {:>{level}} │ EXP: {:>{first}} / {:<{second}} │ Total XP: {:>{total}} ║\n".format(
+            to_print.append("║ {:>{index}d} │ {:<{name}s}{:>{name2}s} │ {:>{level}} │ {:>{first}} / {:<{second}} │ {:>{total}} ║\n".format(
                 len(struct_player_data)-row, struct_player_data[row][0], '',
                 struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4],
-                index=len(str(len(struct_player_data))),
+                index=max(list((len(str(len(struct_player_data))), 4))),
                 name=ml, name2=ml - lenname[row] + int(round((int(max(lenu)) - lenu[row]) / 2.5)),
-                level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
+                level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
                 first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
                 second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
-                total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
-        #extra borders
-        to_print.append("╔{0:═>{index}}╤{0:═>{name_m}}═╤════════{0:═>{level}}═╤══════{0:═>{first}}═══{0:═>{second}}═╤═══════════{0:═>{total}}═╗\n".format(
-            '', index=len(str(len(struct_player_data))),
+                total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        #header
+        to_print.append("╠═{0:═>{index}}═╪═{0:═>{name_m}}═╪═{0:═>{level}}═╪═{0:═>{exp}}═╪═{0:═>{total}}═╣\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
             name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
-            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
-            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
-            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
-            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
-        to_print.insert(0, "╚{0:═>{index}}╧{0:═>{name_m}}═╧════════{0:═>{level}}═╧══════{0:═>{first}}═══{0:═>{second}}═╧═══════════{0:═>{total}}═╝\n".format(
-            '', index=len(str(len(struct_player_data))),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.append("║ {0:>{index}} │ {1:<{name_m}} │ {2:>{level}} │ {3:^{exp}} │ {4:>{total}} ║\n".format(
+            'Rank', 'Name', 'Level', 'EXP', 'Total EXP',
+            index=max(list((len(str(len(struct_player_data))), 4))),
             name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
-            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
-            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
-            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
-            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
-        """ single border
-        to_print.append("┌{0:─>{index}}┬{0:─>{name_m}}─┬────────{0:─>{level}}─┬──────{0:─>{first}}───{0:─>{second}}─┬───────────{0:─>{total}}─┐\n".format(
-            '', index=len(str(len(struct_player_data))),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.append("╔═{0:═>{index}}═╤═{0:═>{name_m}}═╤═{0:═>{level}}═╤═{0:═>{exp}}═╤═{0:═>{total}}═╗\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
             name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
-            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
-            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
-            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
-            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))
-        to_print.insert(0, "└{0:─>{index}}┴{0:─>{name_m}}─┴────────{0:─>{level}}─┴──────{0:─>{first}}───{0:─>{second}}─┴───────────{0:─>{total}}─┘\n".format(
-            '', index=len(str(len(struct_player_data))),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.insert(0, "╚═{0:═>{index}}═╧═{0:═>{name_m}}═╧═{0:═>{level}}═╧═{0:═>{exp}}═╧═{0:═>{total}}═╝\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
             name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
-            level=len(str(max(list(map(int,column(struct_player_data, 1)))))),
-            first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
-            second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
-            total=len(str(max(list(map(int,column(struct_player_data, 4))))))))"""
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
         await self.bot.say_edit("```xl\n{}\n```".format("".join(reversed(to_print))))
 
 
