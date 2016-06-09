@@ -52,7 +52,7 @@ class Discourse(): #Discourse, a forums types.
                 counter +=1
                 get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
                 if str(get_post[1]).isdigit():
-                    self.write_files("{}:[{}]".format(config["domain"],get_post,id_post+counter))
+                    self.write_files("{}:[{}]-{}".format(config["domain"],get_post,id_post+counter))
                 else:
                     self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
                 if get_post[0] is False:
@@ -70,8 +70,13 @@ class Discourse(): #Discourse, a forums types.
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
                 user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
-
-                await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+                if len(error) >2000: #so it can nicely send me a error message.
+                    error_1=error[:1900]
+                    error_2=error[1900:]
+                    await self.bot.say(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_1)
+                    await self.bot.say(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_2)
+                else:
+                    await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
                 break
         if bool:

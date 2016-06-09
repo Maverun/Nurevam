@@ -74,10 +74,13 @@ class Events():
 
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
-                utils.prGreen("<Event Send> {} : {} ||| ({}) ||| {}".format(self.Time(), msg.author.name, msg.author.id, msg.clean_content))
+                utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, msg.clean_content))
 
     async def on_command_completion(self,command,ctx):
+        if command.cog_name is None:
+            return
         try:
+            print(command.cog_name)
             check = await self.bot.db.redis.hgetall("{}:Config:Delete_MSG".format(ctx.message.server.id))
             if len(check)>0:
                 if check.get(command.cog_name.lower(),None) == "on":
