@@ -74,7 +74,11 @@ class Events():
 
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
-                utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, msg.clean_content))
+                if msg.channel.is_private:
+                    utils.prCyan("PRIVATE")
+                    utils.prGreen("<Event Send> {} : {} |||{}".format(self.Time(), msg.author.name, msg.clean_content))
+                else:
+                    utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, msg.clean_content))
 
     async def on_command_completion(self,command,ctx):
         if command.cog_name is None:

@@ -113,8 +113,6 @@ async def on_error(event,*args,**kwargs):
     user=discord.utils.get(bot.get_all_members(),id="105853969175212032")
     await bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
-
-
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))
 
