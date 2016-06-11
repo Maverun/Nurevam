@@ -58,6 +58,7 @@ class Discourse(): #Discourse, a forums types.
                 if get_post[0] is False:
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
+                        counter -=1
                         break
                     elif get_post[1] == 200 or get_post[1] == 403:
                         continue
