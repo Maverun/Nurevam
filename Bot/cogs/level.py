@@ -5,6 +5,12 @@ import asyncio
 import discord
 import time
 
+from numpy import reshape as npr
+import urllib.request
+import re
+try: import simplejson as json
+except ImportError: import json
+
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "level")
 
@@ -178,36 +184,132 @@ class Level():
                                                                              "{}:Level:Player:*->Next_XP".format(server),
                                                                              "{}:Level:Player:*->Total_XP".format(server),
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
-        player_data=list(reversed(player_data))
-        data = []
+        struct_player_data = npr(player_data, (-1, 5))
+        struct_player_data = struct_player_data[-10:]
+        del player_data[:]
         to_print = []
-        counter = 0
-        lvl = []
-        total = []
-        xp1 = []
-        xp2 = []
-        name = []
-        for x in range(0,len(player_data),5):
-            counter += 1
-            if len(str(counter)) == 1:
-                count = "0" + str(counter)
+
+        def column(matrix, i):
+            return [row[i] for row in matrix]
+
+        ###storage https://discordapp.com/assets/72635fda0f6d2188e224.js
+        ##local file (2 lines):
+        #with open('repchars.json', 'r', encoding="utf8") as rep_file:
+        #    rep = json.load(rep_file)
+
+        ##web file (38 lines):
+        hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+            'Accept-Encoding': 'none',
+            'Accept-Language': 'en-US,en;q=0.8',
+            'Connection': 'keep-alive'}
+        req = urllib.request.Request("https://discordapp.com/assets/72635fda0f6d2188e224.js", headers=hdr)
+        f = urllib.request.urlopen(req)
+        rep = f.read().decode('utf-8')
+        s = rep.split('\n')
+        rep = '{}{}'.format(s[51], s[52])
+        del s
+
+        repi = rep.find(u"function(e,t){e.exports={")
+        if repi == -1:
+            return await self.bot.say_edit("Can\'t find pattern start in file.")
+        rep = rep[repi+24:] #24 is length of find string to "{"
+        
+        repi = rep.find(u"}},function(e,t){e.exports=[{")
+        if repi == -1:
+            return await self.bot.say_edit("Can\'t find pattern exit in file.")
+        rep = rep[:repi+1] # 1 to } in }}
+
+        rep = re.sub(r"\w+\:\[", u"", rep)                  #1 del word:[
+        rep = re.sub(r"[\[\]]", u"", rep)                   #2 del []
+        rep = re.sub(r"\},\{", u",", rep)                   #3 rep },{ to ,
+        rep = re.sub(r",surrogates", u"", rep)              #4 del ,surrogates
+        rep = re.sub(r"\{+", u"{", rep)                     #5 rep {{ to {
+        rep = re.sub(r"\}+", u"}", rep)                     #6 rep }} to }
+        rep = re.sub(r"hasDiversity:!0,", u"", rep)         #7 del hasDiversity:!0,
+        rep = re.sub(r"\"[^ℹ]\w+\",", u"", rep)             #8 del multiple smile condition
+        rep = re.sub(r"(\")(\w{3,})(\")", r"\1:\2:\3", rep) #9 rep "smile" to ":smile:"
+
+        rep = json.loads(rep)
+        ret = {}
+        for k in rep:
+            ret[rep[k]] = k
+        rep = ret
+        del ret
+        #end web reading
+
+        lenname = [0] * len(struct_player_data)
+        lenu = [0] * len(struct_player_data)
+        ml = 0
+        rep = dict((re.escape(k), v) for k, v in rep.items())
+        pattern = re.compile("|".join(rep.keys()))
+        for row in range(0, len(struct_player_data)):
+            struct_player_data[row][0] = pattern.sub(lambda m: rep[re.escape(m.group(0))], struct_player_data[row][0])
+
+            lenname[row] = [m.end(0) - m.start(0) for m in re.finditer(u'[\u0300-\u036f\uff9f]+', struct_player_data[row][0])]
+            if lenname[row] == []:
+                if len(struct_player_data[row][0]) > ml:
+                    ml = len(struct_player_data[row][0])
+                lenname[row] = 0
             else:
-                count = counter
-            data.append([count,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
-            lvl.append(player_data[x+3])
-            total.append(player_data[x])
-            xp1.append(player_data[x+2])
-            xp2.append(player_data[x+1])
-            name.append(player_data[x+4])
-            # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
-            if counter == 10:
-                break
-        for i,elem in enumerate(data):
-            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-                                                                                                                          name=len(max(name, key=len)),level=len(str(max(list(map(int,lvl))))),
-                                                                                                                          first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
-                                                                                                                          total=len(str(max(list(map(int,total)))))))
-        await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
+                if len(struct_player_data[row][0])-sum(lenname[row]) > ml:
+                    ml = len(struct_player_data[row][0]) - sum(lenname[row])
+                lenname[row] = len(struct_player_data[row][0]) - sum(lenname[row])
+
+            lenu[row] = [m.end(0) - m.start(0) for m in re.finditer(u'[\u0530-\uffff\U00010000-\U0001F9FF]+', struct_player_data[row][0])]
+            if lenu[row] == []:
+                lenu[row] = 0
+            else:
+                lenu[row] = sum(lenu[row])
+                if lenu[row]%3 == 1:
+                    lenu[row] -= 1
+                elif lenu[row]%3 == 2:
+                    lenu[row] -= 2
+
+        for row in range(0, len(struct_player_data)):
+            if lenname[row] == 0: 
+                lenname[row] = ml
+            else:
+                if len(struct_player_data[row][0]) < ml:
+                    lenname[row] = ml - len(struct_player_data[row][0]) + lenname[row]
+
+            to_print.append("║ {:>{index}d} │ {:<{name}s}{:>{name2}s} │ {:>{level}} │ {:>{first}} / {:<{second}} │ {:>{total}} ║\n".format(
+                len(struct_player_data)-row, struct_player_data[row][0], '',
+                struct_player_data[row][1], struct_player_data[row][2], struct_player_data[row][3], struct_player_data[row][4],
+                index=max(list((len(str(len(struct_player_data))), 4))),
+                name=ml, name2=ml - lenname[row] + int(round((int(max(lenu)) - lenu[row]) / 2.5)),
+                level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+                first=len(str(max(list(map(int,column(struct_player_data, 2)))))),
+                second=len(str(max(list(map(int,column(struct_player_data, 3)))))),
+                total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        #header
+        to_print.append("╠═{0:═>{index}}═╪═{0:═>{name_m}}═╪═{0:═>{level}}═╪═{0:═>{exp}}═╪═{0:═>{total}}═╣\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.append("║ {0:>{index}} │ {1:<{name_m}} │ {2:>{level}} │ {3:^{exp}} │ {4:>{total}} ║\n".format(
+            'Rank', 'Name', 'Level', 'EXP', 'Total EXP',
+            index=max(list((len(str(len(struct_player_data))), 4))),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.append("╔═{0:═>{index}}═╤═{0:═>{name_m}}═╤═{0:═>{level}}═╤═{0:═>{exp}}═╤═{0:═>{total}}═╗\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        to_print.insert(0, "╚═{0:═>{index}}═╧═{0:═>{name_m}}═╧═{0:═>{level}}═╧═{0:═>{exp}}═╧═{0:═>{total}}═╝\n".format(
+            '', index=max(list((len(str(len(struct_player_data))), 4))),
+            name_m=ml + int(round((int(max(lenu)) - int(min(lenu))) / 2.5)),
+            level=max(list((len(str(max(list(map(int,column(struct_player_data, 1)))))), 5))),
+            exp=len(str(max(list(map(int,column(struct_player_data, 2)))))) + len(str(max(list(map(int,column(struct_player_data, 3)))))) + 3,
+            total=max(list((len(str(max(list(map(int,column(struct_player_data, 4)))))), 9)))))
+        await self.bot.say_edit("```xl\n{}\n```".format("".join(reversed(to_print))))
 
 
 def setup(bot):
