@@ -192,7 +192,7 @@ class Discourse(): #Discourse, a forums types.
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
         utils.prLightPurple(read)
-        if not read: #If there is error  which can be wrong user
+        if read[1] == 404: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
         read= read[1]

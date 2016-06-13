@@ -42,6 +42,7 @@ async def on_ready():
             bot.uptime = datetime.datetime.utcnow()
     utils.redis_connection()
     load_cogs()
+    bot.commands["help"].hidden = True
 
 @bot.event
 async def on_message(msg): #For help commands.
