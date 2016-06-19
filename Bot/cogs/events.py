@@ -1,7 +1,9 @@
+from discord.ext import commands
 from .utils import utils
-import datetime
 import traceback
-
+import datetime
+import discord
+import sys
 class Events():
     def __init__(self,bot):
         self.bot = bot
@@ -62,7 +64,7 @@ class Events():
         if before.name != after.name:
             print("\033[97m<Event Member Update Name>: \033[94m {}:\033[93m Before : {} |||\033[92m After : {} ||| {}\033[00m".format(self.Time(),before.name,after.name, after.id))
             await self.redis.hset("Info:Name",after.id,after.name)
-            await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=10) #To stop multi update
+        await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=10) #To stop multi update
 
     async def on_command(self,command,ctx):
         if ctx.message.channel.is_private:
@@ -93,6 +95,30 @@ class Events():
             utils.prRed("Failed to delete user command - {}  - {}\n".format(ctx.message.server.name,ctx.message.server.id))
             utils.prRed(traceback.format_exc())
 
+    async def send_cmd_help(self,ctx):
+        if ctx.invoked_subcommand:
+            pages = self.bot.formatter.format_help_for(ctx,ctx.invoked_subcommand)
+            for page in pages:
+                await self.bot.send_message(ctx.message.channel, page.replace("\n","fix\n",1))
+        else:
+            pages = self.bot.formatter.format_help_for(ctx,ctx.command)
+            for page in pages:
+                await self.bot.send_message(ctx.message.channel,page.replace("\n","fix\n",1))
+
+    async def on_command_error(self,error,ctx):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await self.send_cmd_help(ctx)
+        elif isinstance(error,commands.BadArgument):
+            await self.send_cmd_help(ctx)
+        elif isinstance(error, commands.CommandInvokeError):
+            errors = traceback.format_exception(type(error), error, error.__traceback__)
+            Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
+            utils.prRed(Current_Time)
+            utils.prRed("Error!")
+            traceback.print_exception(type(error), error, error.__traceback__)
+            cog_error =  '```fix\nCogs:{}\tCommand:{}\n{}```'.format(ctx.command.cog_name,ctx.command,error)
+            user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
+            await self.bot.send_message(user, "```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors)))
 
 def setup(bot):
     bot.add_cog(Events(bot))

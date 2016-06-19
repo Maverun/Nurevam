@@ -9,7 +9,6 @@ import asyncio
 import inspect
 import re
 
-
 description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=description,pm_help=False)
 bot.db= storage.Redis()
@@ -85,25 +84,6 @@ def list_cogs():
         clean.append("cogs." + c.split("\\")[1].replace(".py", ""))
     return clean
 
-async def send_cmd_help(ctx):
-    if ctx.invoked_subcommand:
-        pages = bot.formatter.format_help_for(ctx,ctx.invoked_subcommand)
-        for page in pages:
-            await bot.send_message(ctx.message.channel, page.replace("\n","fix\n",1))
-    else:
-        pages = bot.formatter.format_help_for(ctx,ctx.command)
-        for page in pages:
-            await bot.send_message(ctx.message.channel,page.replace("\n","fix\n",1))
-
-@bot.event
-async def on_command_error(error,ctx):
-    # print(error)
-    # print(ctx.message.clean_content)
-    if isinstance(error, commands.MissingRequiredArgument):
-        await send_cmd_help(ctx)
-    elif isinstance(error,commands.BadArgument):
-        await send_cmd_help(ctx)
-
 @bot.event
 async def on_error(event,*args,**kwargs):
     Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
@@ -112,7 +92,7 @@ async def on_error(event,*args,**kwargs):
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
     user=discord.utils.get(bot.get_all_members(),id="105853969175212032")
-    await bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+    await bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
 
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))

@@ -4,6 +4,7 @@ import glob
 import discord
 import asyncio
 import traceback
+import datetime
 
 
 def list_cogs(): #Check a list and load it
@@ -180,7 +181,8 @@ class Tools():
             if data.avatar != None:
                 await self.redis.hset("Info:Icon",data.id,data.avatar)
             await self.redis.hset("Info:Name",data.id,data.name)
-        utils.prCyan("Update {} of icon,name!".format(len(info)))
+        current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
+        utils.prCyan("{}: Update {} of icon,name!".format(current_Time,len(info)))
         server = self.bot.servers
         for x in server:
             if x.icon != None:

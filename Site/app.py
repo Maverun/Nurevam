@@ -657,7 +657,7 @@ def levels(server_id):
         is_private=True
     print(is_private)
     #Check if server and plugins are in
-    server_check = db.hget("Info:Server",str(server_id))
+    server_check = db.hget("Info:Server",server_id)
     if server_check is None:
         return redirect(url_for('index'))
     plugin_check = db.hget("{}:Config:Cogs".format(server_id),"level")
@@ -666,8 +666,8 @@ def levels(server_id):
 
     server = {
         'id':server_id,
-        'name':db.get("{}:Level:Server_Name".format(server_id)),
-        'icon':db.get("{}:Level:Server_Icon".format(server_id))
+        'name':server_check,
+        'icon':db.hget("Info:Server_Icon",server_id)
     }
     total_member = len(db.smembers("{}:Level:Player".format(server_id)))
     player_data = db.sort("{}:Level:Player".format(server_id), by="{}:Level:Player:*->Total_XP".format(server_id), get=[
@@ -800,7 +800,9 @@ def profile(player_id,server_id):
             data.append("{} - {}".format(x,y))
     icon = db.hget("Info:Icon",player_id)
     name = db.hget("Info:Name",player_id)
-    return render_template("profile.html",data=data,icon=icon,name=name,player_id=player_id,server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),is_owner=is_owner,is_private=is_private)
+    return render_template("profile.html",data=data,icon=icon,name=name,player_id=player_id,
+                           server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
+                           description="{} Profile".format(name),is_owner=is_owner,is_private=is_private)
 
 
 # @app.route('/test')
