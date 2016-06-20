@@ -16,6 +16,7 @@ class Mod():
     """
     def __init__(self, bot):
         self.bot = bot
+        self.bot.say_edit = bot.says_edit
 
     def delete_mine(self,m):
         return m.author == self.bot.user
@@ -48,8 +49,6 @@ class Mod():
     async def roles(self,ctx,role : discord.Role,*,limit: int=100):
         def delete_role(m):
             return role.id in [r.id for r in m.author.roles]
-        print(role)
-        print(role.name)
         try:
             counter =await self.bot.purge_from(ctx.message.channel,limit=limit,check=delete_role)
             await self.bot.say("```py\nClean up message: {} from {}\n```".format(len(counter),role.name))
@@ -63,7 +62,6 @@ class Mod():
     async def person(self,ctx,user: discord.Member,*,limit: int = 100):
         def delete_player(m):
                 return m.author.id == user.id
-        print(user.id)
         counter = await self.bot.purge_from(ctx.message.channel,check=delete_player,limit=limit)
         await self.bot.say("```py\nI have clean {} message from {}```".format(len(counter),user.name))
 
@@ -71,7 +69,8 @@ class Mod():
     @commands.check(is_enable)
     @commands.check(check_roles)
     async def all(self,ctx,*,limit: int=100):
-            await self.bot.purge_from(ctx.message.channel,limit=limit)
+        counter = await self.bot.purge_from(ctx.message.channel,limit=limit)
+        await self.bot.say_edit("```py\nI have clean {}```".format(len(counter)))
 
 def setup(bot):
     bot.add_cog(Mod(bot))

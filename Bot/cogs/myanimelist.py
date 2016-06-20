@@ -19,6 +19,7 @@ class Myanimelist():
     def __init__(self, bot):
         self.bot = bot
         self.redis = bot.db.redis
+        self.bot.say_edit = bot.says_edit
 
     async def get_data(self, category, name):
         with aiohttp.ClientSession(auth=aiohttp.BasicAuth(login=utils.OS_Get("MAL_USERNAME"),
@@ -65,18 +66,18 @@ class Myanimelist():
         else:  # if there is more than one of data, it will ask user which one do they want
             def digit_check(num):  # to ensure that answer is int
                 return num.content.isdigit()
-
-            await self.bot.say("```{}```\nWhich number?".format("\n".join(name_data)))
+            asking = await self.bot.say("```{}```\nWhich number?".format("\n".join(name_data)))
             answer = await self.bot.wait_for_message(timeout=15, author=msg.message.author, check=digit_check)
+            await self.bot.delete_message(asking)
+            await self.bot.delete_message(answer)
             if answer is None:  # if user didnt reply any or not, it will print this
-                await self.bot.say("You took too long, try again!")
+                await self.bot.says_edit("You took too long, try again!")
                 return
             elif int(answer.content) <= len(
                     data):  # Check if it below in list range so it dont split out of error about out of range
-                print(data[int(answer.content)])
-                await self.bot.say(data[int(answer.content) - 1])
+                await self.bot.says_edit(data[int(answer.content) - 1])
             else:
-                await self.bot.say("You enter a number that is out of range!")
+                await self.bot.says_edit("You enter a number that is out of range!")
 
     @commands.check(is_enable)
     @commands.command(name="anime", brief="Allow to search anime info rom Myanimelist database",pass_context=True)

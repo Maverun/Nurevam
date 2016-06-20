@@ -201,7 +201,24 @@ class Tools():
         for server in self.bot.servers:
             print(server)
 
-
+    @commands.command(name="temp",hidden=True,pass_context=True)
+    @commands.check(utils.is_owner)
+    async def acivity(self,ctx):
+        server = ctx.message.server.id
+        player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+                                                                     "{}:Level:Player:*->Total Message Count".format(server),
+                                                                     by="{}:Level:Player:*->Total Message Count".format(server),offset=0,count=-1)
+        player_data = list(reversed(player_data))
+        msg=[]
+        for x in range(0,len(player_data),2):
+            msg.append("{},{}\n".format(player_data[x+1],player_data[x]))
+        with open("acivity.txt","w",encoding='utf-8') as f:
+            for x in msg:
+                print(x)
+                f.write(x)
+        with open("acivity.txt","rb") as r:
+            await self.bot.upload(r)
+        #     f.write(player_data)
     # @commands.group(name="Test",pass_context=True,invoke_without_command=True)
     # async def test(self,ctx):
     #     await self.bot.say("Test 1")
