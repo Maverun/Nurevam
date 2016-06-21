@@ -5,6 +5,7 @@ import discord
 import asyncio
 import traceback
 import datetime
+import inspect
 
 
 def list_cogs(): #Check a list and load it
@@ -100,23 +101,30 @@ class Tools():
 
     @commands.command(pass_context=True, hidden=True)
     @commands.check(utils.is_owner)
-    async def debug(self,ctx, *, code : str):
+    async def debug(self, ctx, *, code : str):
         """Evaluates code."""
         code = code.strip('` ')
         python = '```py\n{}\n```'
         result = None
 
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'message': ctx.message,
+            'server': ctx.message.server,
+            'channel': ctx.message.channel,
+            'author': ctx.message.author
+        }
+
+        env.update(globals())
+
         try:
-            result = eval(code)
+            result = eval(code, env)
+            if inspect.isawaitable(result):
+                result = await result
         except Exception as e:
             await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
-            print(e)
-            print(traceback.format_exc())
-
             return
-
-        if asyncio.iscoroutine(result):
-            result = await result
 
         await self.bot.say(python.format(result))
 
@@ -198,10 +206,13 @@ class Tools():
     @commands.command(name="List-server",hidden=True)
     @commands.check(utils.is_owner)
     async def list_server(self):
+        info = [r.name for r in self.bot.servers]
         for server in self.bot.servers:
-            print(server)
+            name = str(server)
+            owner = str(server.owner.name)
+            print("Server:{0:<{first}}\tOwner: {1}".format(name,owner,first=len(max(info,key=len))))
 
-    @commands.command(name="temp",hidden=True,pass_context=True)
+    @commands.command(hidden=True,pass_context=True)
     @commands.check(utils.is_owner)
     async def acivity(self,ctx):
         server = ctx.message.server.id
@@ -218,19 +229,6 @@ class Tools():
                 f.write(x)
         with open("acivity.txt","rb") as r:
             await self.bot.upload(r)
-        #     f.write(player_data)
-    # @commands.group(name="Test",pass_context=True,invoke_without_command=True)
-    # async def test(self,ctx):
-    #     await self.bot.say("Test 1")
-    #
-    # @test.group(name="1",pass_context=True,invoke_without_command=True)
-    # async def test1(self,ctx):
-    #     await self.bot.say("Test 2")
-    #
-    # @test1.command(name="2",pass_context=True,invoke_without_command=True)
-    # async def test2(self,ctx):
-    #     await self.bot.say("Test 3")
-
 
 def setup(bot):
     bot.add_cog(Tools(bot))

@@ -79,7 +79,7 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
-                break
+                return
         if bool:
             try:
                 await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
@@ -89,8 +89,8 @@ class Discourse(): #Discourse, a forums types.
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
                 user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
-
                 await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+                return
 
     async def timer(self):
         utils.prPurple("Starting time")
