@@ -116,7 +116,7 @@ class Events():
             utils.prRed(Current_Time)
             utils.prRed("Error!")
             traceback.print_exception(type(error), error, error.__traceback__)
-            cog_error =  '```fix\nCogs:{}\tCommand:{}\n{}```'.format(ctx.command.cog_name,ctx.command,error)
+            cog_error =  '```fix\nCogs:{}\tCommand:{}\tAuthor:{}#{}\n{}```'.format(ctx.command.cog_name,ctx.command,ctx.message.author.name,ctx.message.author.discriminator,error)
             user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
             await self.bot.send_message(user, "```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors)))
 

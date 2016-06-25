@@ -22,7 +22,7 @@ async def say_edit(msg):
             word = await bot.say(msg)
             check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(word.server.id))
             if len(check)>0:
-                if check[get.groups()[0][5:]] == "on":
+                if check.get(get.groups()[0][5:]):
                     await asyncio.sleep(30)
                     await bot.delete_message(word)
         else:

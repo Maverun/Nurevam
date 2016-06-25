@@ -2,6 +2,7 @@ from discord.ext import commands
 from .utils import utils
 from xml.etree import ElementTree
 import aiohttp
+
 def synopis(term):
     if len(term) >= 1500:
         return term[:1500]+"..."
