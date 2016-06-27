@@ -216,13 +216,16 @@ class Tools():
     @commands.check(utils.is_owner)
     async def acivity(self,ctx):
         server = ctx.message.server.id
-        player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+        player_data = await  self.redis.sort("{}:Level:Player".format(server),
+                                                                     "{}:Level:Player:*->Name".format(server),
                                                                      "{}:Level:Player:*->Total Message Count".format(server),
+                                                                     "{}:Level:Player:*->ID".format(server),
                                                                      by="{}:Level:Player:*->Total Message Count".format(server),offset=0,count=-1)
         player_data = list(reversed(player_data))
         msg=[]
-        for x in range(0,len(player_data),2):
-            msg.append("{},{}\n".format(player_data[x+1],player_data[x]))
+        print(player_data)
+        for x in range(0,len(player_data),3):
+            msg.append("{},{},{}\n".format(player_data[x],player_data[x+2],player_data[x+1]))
         with open("acivity.txt","w",encoding='utf-8') as f:
             for x in msg:
                 print(x)
