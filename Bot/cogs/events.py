@@ -88,9 +88,8 @@ class Events():
         try:
             print(command.cog_name)
             check = await self.bot.db.redis.hgetall("{}:Config:Delete_MSG".format(ctx.message.server.id))
-            if len(check)>0:
-                if check.get(command.cog_name.lower(),None) == "on":
-                    await self.bot.delete_message(ctx.message)
+            if check.get(command.cog_name.lower()) == "on":
+                await self.bot.delete_message(ctx.message)
         except:
             utils.prRed("Failed to delete user command - {}  - {}\n".format(ctx.message.server.name,ctx.message.server.id))
             utils.prRed(traceback.format_exc())
