@@ -82,7 +82,13 @@ class Discourse(): #Discourse, a forums types.
                 return
         if bool:
             try:
-                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
+                if len("\n".join(data)) >=1500:
+                    first= data[:int(len(data)/2)]
+                    second = data[int(len(data)/2):]
+                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(first))
+                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(second))
+                else:
+                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
                 await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
                 utils.prLightPurple("\n".join(data))
             except:
