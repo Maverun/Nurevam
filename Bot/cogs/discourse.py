@@ -62,6 +62,7 @@ class Discourse(): #Discourse, a forums types.
                         break
                     elif get_post[1] == 200 or get_post[1] == 403:
                         continue
+                    break
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     bool = True #so it dont get error if there is empty string, which hence set this true
@@ -70,6 +71,7 @@ class Discourse(): #Discourse, a forums types.
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
+                utils.prRed(error)
                 user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
                 if len(error) >2000: #so it can nicely send me a error message.
                     error_1=error[:1900]
