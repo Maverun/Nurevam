@@ -1,9 +1,9 @@
+from prettytable import PrettyTable
 from discord.ext import commands
 from random import randint
 from .utils import utils
-import asyncio
 import discord
-import time
+import math
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "level")
@@ -21,6 +21,13 @@ class Level():
         self.bot = bot
         self.redis = bot.db.redis
         self.bot.say_edit = bot.says_edit
+
+    async def on_member_remove(self,member):
+        await self.redis.srem("{}:Level:Player".format(member.server.id),member.id)
+
+    async def on_member_update(self,before,after):
+        if before.display_name != after.display_name:
+            await self.redis.hset("{}:Level:Player:{}".format(after.server.id,after.id),"Name",after.display_name)
 
     async def is_ban(self,msg):
         is_ban_member = await self.redis.smembers("{}:Level:banned_members".format(msg.server.id))
@@ -45,9 +52,6 @@ class Level():
             #Getting ID
             player = msg.author.id
             server = msg.server.id
-            await self.redis.set('{}:Level:Server_Name'.format(server),msg.server.name)
-            if msg.server.icon:
-                await self.redis.set('{}:Level:Server_Icon'.format(server),msg.server.icon)
             self.name = "{}:Level:Player:{}".format(server,player)
             list = await self.redis.exists(self.name) #Call of name and ID to get boolean
             if list is False: # if it False, then it will update a new list for player who wasnt in level record
@@ -61,8 +65,6 @@ class Level():
             #If Cooldown expire, Add xp and stuff
             await self.redis.sadd("{}:Level:Player".format(server),player)
             await self.redis.hset(self.name,"Discriminator",msg.author.discriminator)
-            if msg.author.avatar:
-                await self.redis.hset(self.name,"Avatar",msg.author.avatar)
             xp = randint(5,10)
             await self.redis.hincrby(self.name,"XP",increment=(xp))
             await self.redis.hincrby(self.name,"Total_XP",increment=(xp))
@@ -80,7 +82,7 @@ class Level():
                 await self.next_Level(Remain_XP)
                 await self.redis.hset("{}:Level:Trait".format(server),level,traits)
                 await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
-                utils.prCyan("{} - {} - {} ({}) Level up!".format(msg.server.id,server,msg.author,player))
+                utils.prCyan("{} - {} - {} ({}) Level up!".format(msg.server.name,server,msg.author,player))
                 announce = await self.redis.hgetall("{}:Level:Config".format(server))
                 if announce.get("announce",False) == "on":
                     print("whisper")
@@ -92,7 +94,7 @@ class Level():
 
     async def new_profile(self, msg): #New Profile
         await self.redis.hmset(self.name,
-                         "Name",str(msg.author),
+                         "Name",msg.author.display_name,
                           "ID",str(msg.author.id),
                           "Level",1,
                           "XP",0,
@@ -156,7 +158,7 @@ class Level():
         # await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{} | Traits: {}\n```".format(player.name.lower(),player_data["Level"],
         #                                                                                                              player_data["XP"],player_data["Next_XP"],
         #                                                                                                              player_data["Total_XP"],player_rank,len(data),player_data["Total_Traits_Points"]))
-        await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{}\n```".format(player.name.lower(),player_data["Level"],
+        await self.bot.say_edit("```xl\n{}: Level: {} | EXP: {}/{} | Total XP: {} | Rank: {}/{}\n```".format(player.display_name,player_data["Level"],
                                                                                                                      player_data["XP"],player_data["Next_XP"],
                                                                                                                      player_data["Total_XP"],player_rank,len(data)))
         cooldown = await self.redis.hget("{}:Level:Config".format(server),"rank_cooldown")
@@ -172,43 +174,34 @@ class Level():
     @commands.check(is_enable)
     async def rank_table(self,msg):
         server = msg.message.server.id
-        player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->Name".format(server),
+        player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->ID".format(server),
                                                                              "{}:Level:Player:*->Level".format(server),
                                                                              "{}:Level:Player:*->XP".format(server),
                                                                              "{}:Level:Player:*->Next_XP".format(server),
                                                                              "{}:Level:Player:*->Total_XP".format(server),
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
         player_data=list(reversed(player_data))
-        data = []
-        to_print = []
+        print(player_data)
+        table = PrettyTable()
+        table.field_names=["Rank","Name","Level","EXP","Total EXP"]
+        table.align["Name"]='l'
+        table.align["Level"] ='r'
+        table.align["EXP"]='r'
+        table.align["Total EXP"]='r'
         counter = 0
-        lvl = []
-        total = []
-        xp1 = []
-        xp2 = []
-        name = []
         for x in range(0,len(player_data),5):
             counter += 1
-            if len(str(counter)) == 1:
-                count = "0" + str(counter)
-            else:
-                count = counter
-            data.append([count,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]])
-            lvl.append(player_data[x+3])
-            total.append(player_data[x])
-            xp1.append(player_data[x+2])
-            xp2.append(player_data[x+1])
-            name.append(player_data[x+4])
-            # data.append("{}.{} Level: {} | EXP:{}/{} | Total XP: {}\n".format(counter,player_data[x+4],player_data[x+3],player_data[x+2],player_data[x+1],player_data[x]))
+            exp = "{}/{}".format(player_data[x+2],player_data[x+1])
+            print(player_data[x+4])
+            name = msg.message.server.get_member(player_data[x+4]).display_name
+            table.add_row([counter,name,player_data[x+3],exp,player_data[x]])
             if counter == 10:
                 break
-        for i,elem in enumerate(data):
-            to_print.append("{:<2}|{:<{name}} | Level: {:>{level}} | EXP: {:>{first}} / {:<{second}} | Total XP: {:>{total}}\n".format(elem[0],elem[1],elem[2],elem[3],elem[4],elem[5],
-                                                                                                                          name=len(max(name, key=len)),level=len(str(max(list(map(int,lvl))))),
-                                                                                                                          first=len(str(max(list(map(int,xp1))))),second=len(str(max(list(map(int,xp2))))),
-                                                                                                                          total=len(str(max(list(map(int,total)))))))
-        await self.bot.say_edit("```xl\n{}\n```".format("".join(to_print)))
-
+        print(table)
+        table.vertical_char="│"
+        table.horizontal_char="─"
+        table.junction_char="┼"
+        await self.bot.says_edit("```xl\n{}\n```".format(table))
 
 def setup(bot):
     bot.add_cog(Level(bot))

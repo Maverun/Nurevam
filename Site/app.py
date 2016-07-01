@@ -669,6 +669,10 @@ def levels(server_id):
         'name':server_check,
         'icon':db.hget("Info:Server_Icon",server_id)
     }
+    name_list = db.hgetall("Info:Name")
+    print(name_list)
+    avatar_list = db.hgetall("Info:Icon")
+    print(avatar_list)
     total_member = len(db.smembers("{}:Level:Player".format(server_id)))
     player_data = db.sort("{}:Level:Player".format(server_id), by="{}:Level:Player:*->Total_XP".format(server_id), get=[
                                                                                                           "{}:Level:Player:*->Name".format(server_id),
@@ -677,11 +681,11 @@ def levels(server_id):
                                                                                                           "{}:Level:Player:*->XP".format(server_id),
                                                                                                           "{}:Level:Player:*->Next_XP".format(server_id),
                                                                                                           "{}:Level:Player:*->Total_XP".format(server_id),
-                                                                                                          "{}:Level:Player:*->Discriminator".format(server_id),
-                                                                                                          "{}:Level:Player:*->Avatar".format(server_id),
-                                                                                                          "{}:Level:Player:*->Total_Traits_Points"], start=0, num=total_member, desc=True)
+                                                                                                          "{}:Level:Player:*->Discriminator".format(server_id)], start=0, num=total_member, desc=True)
     data = []
-    for x in range(0,len(player_data),9):
+    for x in range(0,len(player_data),7):
+        if name_list.get(player_data[x+1],False) is False:
+            db.srem("{}:Level:Player".format(server_id),player_data[x+1])
         temp = {
             "Name":player_data[x],
             "ID":player_data[x+1],
@@ -690,8 +694,7 @@ def levels(server_id):
             "Next_XP":player_data[x+4],
             "Total_XP":player_data[x+5],
             "Discriminator":player_data[x+6],
-            "Avatar":player_data[x+7],
-            "Total_Traits":player_data[x+8],
+            "Avatar":avatar_list.get(player_data[x+1],None),
             "XP_Percent":100*(float(player_data[x+3])/float(player_data[x+4]))
         }
         data.append(temp)
@@ -802,7 +805,7 @@ def profile(player_id,server_id):
     name = db.hget("Info:Name",player_id)
     return render_template("profile.html",data=data,icon=icon,name=name,player_id=player_id,
                            server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
-                           description="{} Profile".format(name),is_owner=is_owner,is_private=is_private)
+                           is_owner=is_owner,is_private=is_private)
 
 
 # @app.route('/test')
