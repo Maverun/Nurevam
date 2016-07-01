@@ -25,12 +25,10 @@ class Channel():
         self.bot.say_edit = bot.says_edit
         self.Temp_Chan={} #Making a Dict so it can track of channel in
         self.Temp_Count=0 #To count how many channel for limit
+        self.everyone = discord.PermissionOverwrite(read_messages=False)
+        self.admin =  discord.PermissionOverwrite(read_messages=True)
         self.allow=discord.Permissions.none()
-        self.deny=discord.Permissions.none()
         self.allow.read_messages=True
-        self.deny.read_messages=True
-        self.allow_bot= self.allow
-        self.allow_bot.manage_channels=True
         self.bot.add_listener(self.channel_status,"on_channel_delete")
 
     async def channel_status(self,name):
@@ -61,11 +59,8 @@ class Channel():
         name = name.replace(" ","-").lower() #to prevert error due to space not allow in channel name
         check = discord.utils.find(lambda c:c.name == name, msg.message.server.channels) #Check if there is exist one, so that user can create one if there is none
         if check is None:
-            data= await self.bot.create_channel(msg.message.server,name) #Create channel
+            data= await self.bot.create_channel(msg.message.server,name,(msg.message.server.default_role,self.everyone),(msg.message.server.me,self.admin)) #Create channel
             await self.bot.edit_channel(data,topic="Owner:{}".format(msg.message.author.name))
-            await self.bot.edit_channel_permissions(data,msg.message.server.me,allow=self.allow_bot)
-            await self.bot.edit_channel_permissions(data,msg.message.server.roles[0],deny=self.deny) #remove @everyone from this channel
-            await self.bot.edit_channel_permissions(data,msg.message.author,allow=self.allow) #Invite person to view this channel
             await self.bot.say_edit("{} have now been created.".format(name.replace("-"," "))) #To info that this channel is created
             self.Temp_Chan.update({server_id:{name:{"Name":data,"Creator":msg.message.author.id}}}) #channel Name have channel ID and Creator (Creator ID)
             self.Temp_Count +=1 #add 1 to "Total atm" so we can keep maintain to limit channel

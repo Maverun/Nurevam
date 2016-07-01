@@ -181,7 +181,6 @@ class Level():
                                                                              "{}:Level:Player:*->Total_XP".format(server),
                                                                              by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
         player_data=list(reversed(player_data))
-        print(player_data)
         table = PrettyTable()
         table.field_names=["Rank","Name","Level","EXP","Total EXP"]
         table.align["Name"]='l'
@@ -192,7 +191,6 @@ class Level():
         for x in range(0,len(player_data),5):
             counter += 1
             exp = "{}/{}".format(player_data[x+2],player_data[x+1])
-            print(player_data[x+4])
             name = msg.message.server.get_member(player_data[x+4]).display_name
             table.add_row([counter,name,player_data[x+3],exp,player_data[x]])
             if counter == 10:
