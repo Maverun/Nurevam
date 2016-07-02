@@ -69,8 +69,11 @@ class Myanimelist():
                 return num.content.isdigit()
             asking = await self.bot.say("```{}```\nWhich number?".format("\n".join(name_data)))
             answer = await self.bot.wait_for_message(timeout=15, author=msg.message.author, check=digit_check)
-            await self.bot.delete_message(asking)
-            await self.bot.delete_message(answer)
+            try:
+                await self.bot.delete_message(asking)
+                await self.bot.delete_message(answer)
+            except:
+                pass
             if answer is None:  # if user didnt reply any or not, it will print this
                 await self.bot.says_edit("You took too long, try again!")
                 return
