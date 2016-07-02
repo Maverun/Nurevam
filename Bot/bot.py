@@ -13,19 +13,35 @@ description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=description,pm_help=False)
 bot.db= storage.Redis()
 
+def check_post(check):
+    if check == "None":
+        return None
+    elif check == "on":
+        return 30
+
+def get_channel(name):
+    stack = inspect.stack()
+    try:
+        for frames in stack:
+            try:
+                frame = frames[0]
+                current_locals = frame.f_locals
+                if name in current_locals:
+                    return current_locals[name]
+            finally:
+                del frame
+    finally:
+        del stack
+
 async def say_edit(msg):
     try:
         key = str(inspect.getmodule(inspect.currentframe().f_back.f_code))
         regex = re.compile(r"(cogs.[a-zA-Z]*)")
         get = re.search(regex,key)
         if get:
-            word = await bot.say(msg)
-            check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(word.server.id))
-            if check.get(get.groups()[0][5:]) == "on":
-                await asyncio.sleep(30)
-                await bot.delete_message(word)
-        else:
-            print("NONE")
+            check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(get_channel("_internal_channel").server.id))
+            check = check.get(get.groups()[0][5:])
+            await bot.say(msg,delete_after=check_post(check))
         return
     except:
         utils.prRed(traceback.format_exc())
@@ -41,6 +57,7 @@ async def on_ready():
     utils.redis_connection()
     load_cogs()
     bot.commands["help"].hidden = True
+    await bot.change_status(discord.Game(name="http://nurevam.site/"))
 
 @bot.event
 async def on_message(msg): #For help commands.
@@ -57,9 +74,7 @@ async def on_message(msg): #For help commands.
                 bot.pm_help=False
     except:
         pass
-
     await bot.process_commands(msg)
-
 
 def load_cogs():
     cogs = list_cogs()
@@ -70,8 +85,6 @@ def load_cogs():
         except Exception as e:
             utils.prRed(cogs)
             utils.prRed(e)
-            # continue
-            # raise
 
 def list_cogs():
     cogs = glob.glob("cogs/*.py")

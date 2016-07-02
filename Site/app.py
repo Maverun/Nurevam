@@ -306,7 +306,7 @@ def plugin_page(plugin_name):
                 db.hincrby("Info:Cogs_Enables",plugin_name,amount=-1)
                 return redirect(url_for('dashboard', server_id=server_id))
             db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
-            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,"off")
+            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
             db.hincrby('Info:Cogs_Enables',plugin_name,amount=1)
             servers = get_user_guilds(session['api_token'])
             server = list(filter(lambda g: g['id']==str(server_id), servers))[0]
@@ -364,7 +364,9 @@ def core(server_id): #UNQIUE SETTING FOR SERVER
 @plugin_method
 def update_core(server_id):
     config_delete = db.hgetall("{}:Config:Delete_MSG".format(server_id))
+    print(config_delete)
     for x in config_delete:
+        print(request.form.get(x))
         db.hset("{}:Config:Delete_MSG".format(server_id),x,request.form.get(x))
     db.set("{}:Config:Whisper".format(server_id),request.form.get("whisper"))
     db.set("{}:Config:CMD_Prefix".format(server_id),request.form.get("command_prefix"))
@@ -372,9 +374,9 @@ def update_core(server_id):
     return redirect(url_for('core', server_id=server_id))
 
 #Anime
-@app.route('/dashboard/<int:server_id>/anime')
-@plugin_page('anime')
-def plugin_anime(server_id):
+@app.route('/dashboard/<int:server_id>/myanimelist')
+@plugin_page('myanimelist')
+def plugin_myanimelist(server_id):
     number =random.randint(0,len(anime_picture)-1)
     return {"Info":anime_picture[number]}
 
