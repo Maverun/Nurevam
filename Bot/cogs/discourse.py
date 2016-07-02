@@ -82,8 +82,8 @@ class Discourse(): #Discourse, a forums types.
                 if len(error) >2000: #so it can nicely send me a error message.
                     error_1=error[:1900]
                     error_2=error[1900:]
-                    await self.bot.say(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_1)
-                    await self.bot.say(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_2)
+                    await self.bot.send_message(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_1)
+                    await self.bot.send_message(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_2)
                 else:
                     await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
                 return
