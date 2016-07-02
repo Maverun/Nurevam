@@ -27,15 +27,19 @@ class Discourse(): #Discourse, a forums types.
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
-        headers = {"Host": domain.replace("http://","").replace("https://","")}
-        link = "{}.json?api_key={}&api_username={}".format(link,api,username)
-        with aiohttp.ClientSession() as discourse:
-            async with discourse.get(link,headers=headers) as resp:
-                if resp.status == 200:
-                    return [True,await resp.json()]
-                else:
-                    return [False,resp.status]
-
+        try:
+            headers = {"Host": domain.replace("http://","").replace("https://","")}
+            link = "{}.json?api_key={}&api_username={}".format(link,api,username)
+            with aiohttp.ClientSession() as discourse:
+                async with discourse.get(link,headers=headers) as resp:
+                    if resp.status == 200:
+                        return [True,await resp.json()]
+                    else:
+                        return [False,resp.status]
+        except:
+            utils.prRed("Under get_data function")
+            utils.prRed(traceback.format_exc)
+            return None
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
@@ -55,6 +59,8 @@ class Discourse(): #Discourse, a forums types.
                     self.write_files("{}:[{}]-{}".format(config["domain"],get_post,id_post+counter))
                 else:
                     self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
+                if get_post is None:
+                    return
                 if get_post[0] is False:
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
@@ -80,7 +86,6 @@ class Discourse(): #Discourse, a forums types.
                     await self.bot.say(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_2)
                 else:
                     await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
-
                 return
         if bool:
             try:
