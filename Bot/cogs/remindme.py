@@ -5,7 +5,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
     def __init__(self,bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def remindme(self,time,*,message=""):
         time = time.split(":")
         remind_time = 0
