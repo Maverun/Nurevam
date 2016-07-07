@@ -10,10 +10,9 @@
             <form id="channel" method="POST" action="{{url_for('update_channel', server_id=server['id'])}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
-
                     <label class="control-label" for="time"><strong>Channel</strong> time expire</label>
                     <input class="form-control input-lg" name="time"
-                           value="{% if time is defined %}{{time}}{%else%}0{%endif%}" ype="text" id="time">
+                           value="{% if time is defined %}{{time}}{%else%}0{%endif%}" type="text" id="time">
                     <div class="well well-sm">
                         There will be time set, once time up, channel will delete.
                         I would recommend having at 1 hours (3600 second) is best ideal.
@@ -21,7 +20,7 @@
 
                     <label class="control-label" for="warning"><strong>Warning</strong> time</label>
                     <input class="form-control input-lg" name="warning"
-                           value="{% if warning is defined %}{{warning}}{%else%}0{%endif%}" ype="text" id="warning">
+                           value="{% if warning is defined %}{{warning}}{%else%}0{%endif%}" type="text" id="warning">
                     <div class="well well-sm">
                         Once Time is up, it will give a warning to chat that how many second they have.
                         Once warning time second is up, it will finally delete channel.
@@ -29,7 +28,7 @@
 
                     <label class="control-label" for="limit"><strong>Limit</strong> Total</label>
                     <input class="form-control input-lg" name="limit"
-                           value="{% if limit is defined %}{{limit}}{%else%}0{%endif%}" ype="text" id="limit">
+                           value="{% if limit is defined %}{{limit}}{%else%}0{%endif%}" type="text" id="limit">
                     <div class="well well-sm">
                         The total set of how many channel you want for user created.
                     </div>

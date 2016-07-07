@@ -391,16 +391,24 @@ def plugin_welcome(server_id):
         get_message=default_message
     config = db.hgetall("{}:Welcome:Message".format(server_id))
     get_channel = resource_get("/guilds/{}/channels".format(server_id))
-    print(get_channel)
     channel = list(filter(lambda c: c['type']!='voice',get_channel))
     delete_msg = db.hget("{}:Welcome:Message".format(server_id),"delete_msg") or 0
     if config.get("channel",False) is False:
         welcome_channel=server_id
     else:
         welcome_channel = config['channel']
+
+    db_assign_role = db.smembers('{}:Welcome:Assign_Roles'.format(server_id)) or []
+    get_role = resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+    assign_role = list(filter(lambda r:r['name'] in db_assign_role or r['id'] in db_assign_role,guild_roles))
+    print(get_role)
+    print(guild_roles)
     return {
         'guild_channel':channel,
         "welcome_channel":welcome_channel,
+        'assign_role': assign_role,
+        'guild_roles':guild_roles,
         'message':get_message,
         'config':config,
         'delete_msg':delete_msg
@@ -412,6 +420,8 @@ def update_welcome(server_id):
     welcome_message = request.form.get('message')
     channel = request.form.get('channel')
     whisper_options = request.form.get('whisper')
+    role_options = request.form.get("role")
+    role_id = request.form.get("assign_role").split(',')
     delete_msg=request.form.get('delete_msg')
     if len(welcome_message) >= 2000 or welcome_message == "":
         flash("The welcome message need to be between 1-2000!",'warning')
@@ -427,7 +437,10 @@ def update_welcome(server_id):
         db.hset('{}:Welcome:Message'.format(server_id),'whisper',whisper_options)
         db.hset('{}:Welcome:Message'.format(server_id),'delete_msg',delete_msg)
         flash('Settings updated!', 'success')
-
+    db.hset('{}:Welcome:Message'.format(server_id),'role',role_options)
+    db.delete("{}:Welcome:Assign_role".format(server_id))
+    if len(role_id)>0:
+        db.sadd("{}:Welcome:Assign_Roles".format(server_id),*role_id)
     return redirect(url_for('plugin_welcome', server_id=server_id))
 
 #Discourse
@@ -498,6 +511,9 @@ def plugin_channel(server_id):
     time = db.hget('{}:Channel:Config'.format(server_id),"time") or 0
     limit = db.hget('{}:Channel:Config'.format(server_id),"limit") or 0
     warning = db.hget("{}:Channel:Config".format(server_id),"warning") or 0
+    print(get_role)
+    print(guild_roles)
+    print(admin_role)
     return {
         'config':config,
         'admin_roles': admin_role,
@@ -582,7 +598,6 @@ def plugin_levels(server_id):
     db_banned_members = db.smembers('{}:Level:banned_members'.format(server_id)) or []
     db_banned_roles = db.smembers('{}:Level:banned_roles'.format(server_id)) or []
     get_role = resource_get("/guilds/{}".format(server_id))
-    print(get_role)
     guild_roles = get_role['roles']
     get_member = resource_get("/guilds/{}/members?&limit=1000".format(server_id))
     guild_members=[]
@@ -591,6 +606,7 @@ def plugin_levels(server_id):
     banned_roles = list(filter(lambda r: r['name'] in db_banned_roles or r['id'] in db_banned_roles,guild_roles))
     banned_members = list(filter(lambda r:r['username'] in db_banned_members or r['id'] in db_banned_members,guild_members))
     cooldown = db.hget('{}:Level:Config'.format(server_id),"rank_cooldown") or 0
+    print(guild_roles)
     return {
         'config':config,
         'banned_members': banned_members,

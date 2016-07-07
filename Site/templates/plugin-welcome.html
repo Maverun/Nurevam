@@ -10,26 +10,31 @@
             <form id="welcome" method="POST" action="{{url_for('update_welcome', server_id=server['id'])}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="message">A Welcome message to newcomer!</label>
-                    <input class="form-control input-lg" name="message" value="{{message}}" type="text" id="message">
-                </div>
-                <div class="well well-sm">
-                    <strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
-                    mention use <strong>
-                    {user_mention}</strong>, <strong><{server}</strong> is server name of your.
-                </div>
-                <div class="form-group">
-                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="time">A Welcome message to newcomer!</label>
+                    <input class="form-control input-lg" name="message"
+                           value="{{message}}" type="text" id="message">
+                    <div class="well well-sm">
+                        <strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
+                        mention use <strong>
+                        {user_mention}</strong>, <strong><{server}</strong> is server name of your.
+                    </div>
+
                     <label class="control-label" for="delete_msg">Custom time to delete message</label>
-                    <input class="form-control input-lg" name="delete_msg" value="{{delete_msg}}" type="text" id="delete_msg">
-                </div>
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="whisper" {% if config["whisper"] =="on" %} checked {% endif %}>
-                        Whisper Only, If you want Nurevam send welcome message by whisper new member instead of public server.
-                        If check, ignore below
-                    </label>
-                </div>
+                    <input class="form-control input-lg" name="delete_msg"
+                           value="{{delete_msg}}" type="text" id="delete_msg">
+                    <div class="well well-sm">
+                        Once Time is up, it will give a warning to chat that how many second they have.
+                        Once warning time second is up, it will finally delete channel.
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="whisper" {% if config["whisper"] =="on" %} checked {% endif %}>
+                            Whisper Only, If you want Nurevam send welcome message by whisper new member instead of public
+                            server.
+                            If check, ignore below
+                        </label>
+                    </div>
+
                 <div>
                     <label class="control-label" for="channel_name">Welcome channel</label>
                     <select class="input-lg form-control" name="channel">
@@ -44,10 +49,49 @@
                         Note,make sure Nurevam are able to speak on that channel!
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Update</button>
+
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="role" {% if config["role"] =="on" %} checked {% endif %}>
+                        Assign a role. Allow to assign a role to member when they join server auto. If enable, it will start assign role when member join, otherwise, ignore below this.
+                    </label>
+                </div>
+
+                    <label class="control-label" for="assign_role">Assign Role</label>
+                    <input type="text" data-role="tagsinput" name="assign_role" class="assign_role"/><br/>
+                    <div class="well well-sm">
+                        Role that can assign a member. Multiple role work as well.
+                    </div>
+                    <script>
+				$(function() {
+				var roles = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_roles|tojson|safe}}
+                                });
+                                roles.initialize();
+                                var elt = $('.assign_role');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'roles',
+                                        displayKey: 'name',
+                                        source: roles.ttAdapter()
+                                    }
+                                });
+                                {% for role in assign_role %}
+                                    elt.tagsinput('add', {{role|tojson|safe}});
+                                {% endfor %}
+				});
+                    </script>
+                    <br/>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
 {% endblock %}
