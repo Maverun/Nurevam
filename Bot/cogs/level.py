@@ -71,6 +71,9 @@ class Level():
             await self.redis.hincrby(self.name,"Message Count",increment=1)
             current_xp=await self.redis.hget(self.name,"XP")
             Next_XP=await self.redis.hget(self.name,"Next_XP")
+            if Next_XP == None: #Some reason i get error that Next XP is missing, so best to this way to stop giving error while seting it
+                await self.redis.hset(self.name,"Next_XP",100)
+                return
             if int(current_xp) >= int(Next_XP):
                 level = await self.redis.hget(self.name,"Level")
                 traits_check =await self.redis.hget("{}:Level:Trait".format(server),"{}".format(level))
@@ -87,9 +90,9 @@ class Level():
                 if announce.get("announce",False) == "on":
                     print("whisper")
                     if announce.get("whisper",False) == "on":
-                        await self.bot.send_message(msg.author,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
+                        await self.bot.send_message(msg.author,announce["announce_message"].format(player=msg.author.display_name,level=int(level)+1))
                     else:
-                        await self.bot.send_message(msg.channel,announce["announce_message"].format(player=msg.author.name,level=int(level)+1))
+                        await self.bot.send_message(msg.channel,announce["announce_message"].format(player=msg.author.display_name,level=int(level)+1))
             await self.redis.set("{}:Level:{}:xp:check".format(server,player),'cooldown',expire=60)
 
     async def new_profile(self, msg): #New Profile

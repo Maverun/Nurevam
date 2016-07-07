@@ -30,7 +30,7 @@ class Welcome(): #Allow to welcome new members who join server. If it enable, wi
                 await self.bot.send_message(self.bot.get_channel("123934679618289669"), "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
 
         #Now assign a roles.
-            if config["role"] == "on":
+            if config.get("role") == "on":
                 try:
                     role_list = await self.redis.smembers('{}:Welcome:Assign_Roles'.format(member.server.id))
                     role_obj=[]
