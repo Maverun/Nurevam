@@ -19,12 +19,19 @@
                         {user_mention}</strong>, <strong><{server}</strong> is server name of your.
                     </div>
 
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="enable_delete" {% if config["enable_delete"] =="on" %} checked {% endif %}>
+                        Allow to time to delete message, otherwise, ignore below this.
+                    </label>
+                </div>
+
                     <label class="control-label" for="delete_msg">Custom time to delete message</label>
                     <input class="form-control input-lg" name="delete_msg"
                            value="{{delete_msg}}" type="text" id="delete_msg">
                     <div class="well well-sm">
-                        Once Time is up, it will give a warning to chat that how many second they have.
-                        Once warning time second is up, it will finally delete channel.
+                        Given time to make bot delete message. Recommend not to this if you set Whisper Options.
+
                     </div>
                     <div class="checkbox">
                         <label>

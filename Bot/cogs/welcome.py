@@ -17,9 +17,9 @@ class Welcome(): #Allow to welcome new members who join server. If it enable, wi
                     msg = await self.bot.send_message(member,config["message"].format(user=member.name,server=member.server,user_mention=member.mention))
                 else:
                     msg =await self.bot.send_message(self.bot.get_channel(config["channel"]),config["message"].format(user=member.name,server=member.server,user_mention=member.mention))
-                if await self.redis.hget("{}:Welcome:Message".format(member.server.id),"delete_msg"):
-                    await asyncio.sleep(int(config["delete_msg"]))
-                    await self.bot.delete_message(msg)
+                if config.get("enable_delete") == "on":
+                        await asyncio.sleep(int(config["delete_msg"]))
+                        await self.bot.delete_message(msg)
             except Exception as e:
                 await self.bot.send_message(member.server.owner,"There is error with newcomer, please report to creator about this.\n {}".format(e))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")

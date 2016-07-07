@@ -423,6 +423,7 @@ def update_welcome(server_id):
     role_options = request.form.get("role")
     role_id = request.form.get("assign_role").split(',')
     delete_msg=request.form.get('delete_msg')
+    delete_options = request.form.get("enable_delete")
     if len(welcome_message) >= 2000 or welcome_message == "":
         flash("The welcome message need to be between 1-2000!",'warning')
     else:
@@ -436,6 +437,7 @@ def update_welcome(server_id):
         db.hset('{}:Welcome:Message'.format(server_id),'channel',channel)
         db.hset('{}:Welcome:Message'.format(server_id),'whisper',whisper_options)
         db.hset('{}:Welcome:Message'.format(server_id),'delete_msg',delete_msg)
+        db.hset('{}:Welcome:Message'.format(server_id),'enable_delete',delete_options)
         flash('Settings updated!', 'success')
     db.hset('{}:Welcome:Message'.format(server_id),'role',role_options)
     db.delete("{}:Welcome:Assign_role".format(server_id))
