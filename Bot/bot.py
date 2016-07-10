@@ -12,6 +12,7 @@ import re
 description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=description,pm_help=False)
 bot.db= storage.Redis()
+utils.redis_connection()
 
 def check_post(check):
     if check == "None":
@@ -53,14 +54,12 @@ async def on_ready():
     print(bot.user.id)
     print('------')
     if not hasattr(bot, 'uptime'):
-            bot.uptime = datetime.datetime.utcnow()
-    utils.redis_connection()
+        bot.uptime = datetime.datetime.utcnow()
     load_cogs()
     bot.commands["help"].hidden = True
     await bot.change_status(discord.Game(name="http://nurevam.site/"))
 
-@bot.event
-async def on_message(msg): #For help commands.
+async def command_checker(msg):
     try:
         cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.server.id)))
         cmd_prefix=cmd_prefix.split(",")
@@ -74,6 +73,15 @@ async def on_message(msg): #For help commands.
                 bot.pm_help=False
     except:
         pass
+
+@bot.event
+async def on_message(msg): #For help commands and custom prefix.
+    await command_checker(msg)
+    await bot.process_commands(msg)
+
+@bot.event
+async def on_message_edit(before,msg): #get command from edit message with same feature as on_message..
+    await command_checker(msg)
     await bot.process_commands(msg)
 
 def load_cogs():
