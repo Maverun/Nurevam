@@ -55,12 +55,12 @@ class Discourse(): #Discourse, a forums types.
             try:
                 counter +=1
                 get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
+                if get_post is None:
+                    return
                 if str(get_post[1]).isdigit():
                     self.write_files("{}:[{}]-{}".format(config["domain"],get_post,id_post+counter))
                 else:
                     self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
-                if get_post is None:
-                    return
                 if get_post[0] is False:
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
@@ -204,7 +204,6 @@ class Discourse(): #Discourse, a forums types.
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
         read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
-        utils.prLightPurple(read)
         if read[1] == 404: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return

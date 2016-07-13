@@ -28,7 +28,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
             message = "you was remind for something."
         else:
             message = "You was remind for this ```fix\n{}\n```".format(message)
-        await self.bot.reply(message,delete_after=30)
+        await self.bot.reply(message)
         print(message)
 
 def setup(bot):
