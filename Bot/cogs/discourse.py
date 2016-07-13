@@ -38,7 +38,7 @@ class Discourse(): #Discourse, a forums types.
                         return [False,resp.status]
         except:
             utils.prRed("Under get_data function")
-            utils.prRed(traceback.format_exc)
+            utils.prRed(traceback.format_exc())
             return None
     async def post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
