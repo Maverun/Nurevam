@@ -1,5 +1,6 @@
 from flask import Flask, session, request, url_for, render_template, redirect, \
 jsonify, make_response, flash, abort, Response
+from flaskext.markdown import Markdown
 from itsdangerous import JSONWebSignatureSerializer
 from requests_oauthlib import OAuth2Session
 from functools import wraps
@@ -14,6 +15,7 @@ import math
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+md = Markdown(app) #for a markdown work, e.g FAQ
 
 Redis= os.environ.get('Redis')
 OAUTH2_CLIENT_ID = os.environ.get('OAUTH2_CLIENT_ID')
@@ -218,7 +220,22 @@ def index():
     return render_template('index.html',info=info)
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    content = []
+    with open("static/about.txt",'r') as f:
+        for line in f.readlines():
+            print(line)
+            if line.startswith("#"):
+                print("ignore")
+                continue
+            elif len(line.split(",")) == 2:
+                content.append(line.split(","))
+    return render_template('about.html',content=content)
+
+@app.route('/faq')
+def faq():
+    with open('faq.md','r') as f:
+        content = f.read()
+    return render_template('faq.html',text=content)
 
 @app.route('/debug_token')
 def debug_token():
@@ -879,12 +896,6 @@ def profile(player_id,server_id):
                            server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
                            is_owner=is_owner,is_private=is_private)
 
-
-# @app.route('/test')
-# def test():
-#
-#     print(dem)
-#     return json.dumps(answer,sort_keys=True,indent=2)
 
 
 @app.before_first_request

@@ -1,0 +1,11 @@
+#This will allow to read files for About
+#Comment will be ignore.
+
+#Name,description
+
+Core,Allow to config unqiue setting for your own server! Want a help command in PM? Want Nurevam delete itself message after certain time? Custom prefix? No problem! Nurevam got your back!
+Anime and Manga,Search the web for your favorite animes and mangas to share with your friend!
+Discourse,A Discourse forum! Allow Nurevam check if there is new post, if there is, it will post it out!
+Levels,Let your members gain XP and levels by participating in the chat! Profile! Server Leaderboard!
+Mod, Just a simple command that feature clean (itself,all message,certain role's message), kick,ban,softban, roles which is add/remove!
+Welcome,Allow Nurevam welcome newcomer!
