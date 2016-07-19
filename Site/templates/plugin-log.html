@@ -1,0 +1,63 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>Log <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="log" method="POST" action="{{url_for('update_log', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="join" {% if config["join"] =="on" %} checked {% endif %}>
+                            Member join
+                        </label>
+                        <label>
+                            <input type="checkbox" name="left" {% if config["left"] =="on" %} checked {% endif %}>
+                            Member left
+                        </label>
+                        <label>
+                            <input type="checkbox" name="edit" {% if config["edit"] =="on" %} checked {% endif %}>
+                            Edit Message
+                        </label>
+                        <label>
+                            <input type="checkbox" name="delete" {% if config["delete"] =="on" %} checked {% endif %}>
+                            Delete Message
+                        </label>
+                        <label>
+                            <input type="checkbox" name="name" {% if config["name"] =="on" %} checked {% endif %}>
+                            Changing name
+                        </label>
+                        <label>
+                            <input type="checkbox" name="nickname" {% if config["nickname"] =="on" %} checked {% endif %}>
+                            Changing Nickname
+                        </label>
+                        <label>
+                            <input type="checkbox" name="avatar" {% if config["avatar"] =="on" %} checked {% endif %}>
+                            Changing avatar
+                        </label>
+                    </div>
+
+                <div>
+                    <label class="control-label" for="channel_name">Channel for posting log</label>
+                    <select class="input-lg form-control" name="channel">
+                        {% for channel in guild_channel %}
+                        <option value="{{channel.id}}" {%if channel.id== log_channel%} selected{%endif%}>
+                            #{{channel.name}}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="well well-sm">
+                        Note,make sure Nurevam are able to speak on that channel!
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

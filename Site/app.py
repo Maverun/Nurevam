@@ -380,6 +380,12 @@ def plugin_myanimelist(server_id):
     number =random.randint(0,len(anime_picture)-1)
     return {"Info":anime_picture[number]}
 
+#Weather
+@app.route('/dashboard/<int:server_id>/weather')
+@plugin_page('weather')
+def plugin_weather(server_id):
+    return {}
+
 #Welcome message
 @app.route('/dashboard/<int:server_id>/welcome')
 @plugin_page('welcome')
@@ -496,8 +502,6 @@ def update_discourse(server_id):
             db.set("{}:Discourse:ID".format(server_id),currently_topic)
             flash('Settings updated!', 'success')
 
-    return redirect(url_for('plugin_discourse',server_id=server_id))
-
 #Channel
 @app.route("/dashboard/<int:server_id>/channel")
 @plugin_page('channel')
@@ -585,6 +589,54 @@ def update_mod(server_id):
     if len(admin_roles)>0:
         db.sadd("{}:Mod:admin_roles".format(server_id),*admin_roles)
     return redirect(url_for('plugin_mod',server_id=server_id))
+
+@app.route('/dashboard/<int:server_id>/log')
+@plugin_page('log')
+def plugin_log(server_id):
+    config = db.hgetall("{}:Log:Config".format(server_id))
+    get_channel = resource_get("/guilds/{}/channels".format(server_id))
+    channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    if config.get("channel",False) is False:
+        log_channel=server_id
+    else:
+        log_channel = config['channel']
+    return {
+        'guild_channel':channel,
+        "log_channel":log_channel,
+        'config':config
+    }
+
+@app.route('/dashboard/<int:server_id>/log/update',methods=['POST'])
+@plugin_method
+def update_log(server_id):
+    list__point =["join","left","edit","delete","name","nickname","avatar","channel"]
+    path = "{}:Log:Config".format(server_id)
+    log_bool = False
+    for x in list__point:
+        if request.form.get(x):
+            log_bool = True
+            print("{} is {}".format(x,request.form.get(x)))
+            db.hset(path,x,request.form.get(x))
+    if log_bool:
+        db.sadd("Info:Log",server_id)
+    # join = request.form.get('join')
+    # left = request.form.get('left')
+    # edit = request.form.get('edit')
+    # delete = request.form.get('delete')
+    # name = request.form.get('name')
+    # nick = request.form.get('nickname')
+    # avatar = request.form.get('avatar')
+    # db.hmset("{}:Log:Config".format(server_id),
+    #          {"join":join,
+    #           "left":left,
+    #           "edit":edit,
+    #           "delete":delete,
+    #           "name":name,
+    #           "nick":nick,
+    #           "avatar":avatar})
+    flash('Settings updated!', 'success')
+    return redirect(url_for('plugin_log', server_id=server_id))
+
 
 #Level
 @app.route('/dashboard/<int:server_id>/levels')

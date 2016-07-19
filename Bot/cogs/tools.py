@@ -214,7 +214,7 @@ class Tools():
 
     @commands.command(hidden=True,pass_context=True)
     @commands.check(utils.is_owner)
-    async def acivity(self,ctx):
+    async def activity(self,ctx):
         server = ctx.message.server.id
         player_data = await  self.redis.sort("{}:Level:Player".format(server),
                                                                      "{}:Level:Player:*->Name".format(server),
