@@ -10,7 +10,7 @@ def synopis(term):
         return term
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "anime")
+    return utils.is_enable(msg, "myanimelist")
 
 class Myanimelist():
     """
