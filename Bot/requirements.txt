@@ -1,5 +1,5 @@
 # Latest discord.py
-git+https://github.com/Rapptz/discord.py@async
+discord.py
 aioredis
 redis
 PTable
