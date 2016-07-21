@@ -33,7 +33,7 @@ class Log():
         update.save(fp,format='PNG')
         fp.seek(0)
         dest = self.bot.get_channel(self.config[after.server.id]["channel"])
-        await self.bot.send_file(dest,fp,filename="Pic.png",content="{} change avatar".format(after.name))
+        await self.bot.send_file(dest,fp,filename="Pic.png",content="{} **change avatar**".format(self.format_msg(after)))
 
     async def on_member_update(self,before,after):
         if self.config.get(after.server.id):
@@ -64,15 +64,18 @@ class Log():
                     print("get ready")
                     msg = self.format_msg(after.author)
                     msg += "*have edit message in* {}: ".format(after.channel.mention)
-                    msg += "```diff\n-{}\n+{}\n```".format(before.content.replace("\n","\n-"),after.content.replace("\n","\n+"))
+                    msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-"),after.clean_content.replace("\n","\n+"))
                     await self.send(after.server.id,msg)
 
     async def on_message_delete(self,msg):
         if self.config.get(msg.server.id):
             if self.config[msg.server.id].get("delete"):
                 message = self.format_msg(msg.author)
-                message += "*have delete this message* in {}: ".format(msg.channel.mention)
-                message += "{}".format(msg.content)
+                if msg.attachments:
+                    message += "*have delete attachments*"
+                else:
+                    message += "*have delete this message* in {}: ".format(msg.channel.mention)
+                    message += "{}".format(msg.content)
                 await self.send(msg.server.id,message)
 
     async def on_member_join(self,member):
