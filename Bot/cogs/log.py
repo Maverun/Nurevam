@@ -1,6 +1,10 @@
 from discord.ext import commands
+from PIL import Image
 import datetime
 import asyncio
+import aiohttp
+import io
+
 
 class Log():
     def __init__(self,bot):
@@ -15,6 +19,21 @@ class Log():
 
     def format_msg(self,author):
         return "`[{}]`:__{} [{}]__ ".format(self.time(),author,author.id)
+
+    async def avatar(self,before,after):
+        with aiohttp.ClientSession() as sesson:
+            async with sesson.get(before.avatar_url) as resp:
+                old = Image.open(io.BytesIO(await resp.read()))
+            async with sesson.get(after.avatar_url) as resp:
+                new = Image.open(io.BytesIO(await resp.read()))
+        update = Image.new('RGB',(256,128))
+        update.paste(old,(0,0))
+        update.paste(new,(128,0))
+        fp = io.BytesIO()
+        update.save(fp,format='PNG')
+        fp.seek(0)
+        dest = self.bot.get_channel(self.config[after.server.id]["channel"])
+        await self.bot.send_file(dest,fp,filename="Pic.png",content="{} change avatar".format(after.name))
 
     async def on_member_update(self,before,after):
         if self.config.get(after.server.id):
@@ -34,8 +53,7 @@ class Log():
                     msg_bool = True
             if before.avatar != after.avatar:
                 if config.get("avatar"):
-                    msg_bool = True
-                    msg += "changed avatar from {} to {}".format(before.avatar_url,after.avatar_url)
+                    return await self.avatar(before,after)
             if msg_bool:
                 await self.send(after.server.id,msg)
 
@@ -46,7 +64,7 @@ class Log():
                     print("get ready")
                     msg = self.format_msg(after.author)
                     msg += "*have edit message in* {}: ".format(after.channel.mention)
-                    msg += "```diff\n-{}\n+{}\n```".format(before.content,after.content)
+                    msg += "```diff\n-{}\n+{}\n```".format(before.content.replace("\n","\n-"),after.content.replace("\n","\n+"))
                     await self.send(after.server.id,msg)
 
     async def on_message_delete(self,msg):
@@ -71,9 +89,9 @@ class Log():
                 msg += "have left server "
                 await self.send(member.server.id,msg)
 
-    async def send(self,id,msg):
-        server_id = self.bot.get_channel(self.config[id]["channel"])
-        await self.bot.send_message(server_id,msg)
+    async def send(self,server_id,msg):
+        dest= self.bot.get_channel(self.config[server_id]["channel"])
+        await self.bot.send_message(dest,msg)
 
     async def timer(self):
         while True:

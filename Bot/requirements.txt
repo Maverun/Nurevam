@@ -3,3 +3,4 @@ discord.py
 aioredis
 redis
 PTable
+pillow
