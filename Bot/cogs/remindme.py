@@ -6,20 +6,20 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         self.bot = bot
 
     @commands.command(hidden=True)
-    async def remindme(self,time,*,message=""):
-        time = time.split(":")
+    async def remindme(self,get_time,*,message=""):
+        time = get_time.split(":")
         remind_time = 0
-        msg = ""
+        msg = "Time set"
         if len(time) == 3:
             if int(time[0]) >=5:
-                msg = "It is gonna be over 5 hours, which may not work anymore."
-                msg += "\nTime set {} hours {} minute {} second".format(time[0],time[1],time[2])
+                msg = "It is gonna be over 5 hours, which may not work anymore.\n Time set"
             remind_time += int(time[0])*3600 + int(time[1])*60+ int(time[2])
+            msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
             remind_time += int(time[0])*60 + int(time[1])
-            msg = "Time set {} minute {} second".format(time[0],time[1])
+            msg = "{} minute {} second".format(time[0],time[1])
         else:
-            msg = "Time set {} second".format(time[0])
+            msg = "{} second".format(time[0])
             remind_time += int(time[0])
 
         await self.bot.say(msg,delete_after=30)
