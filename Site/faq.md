@@ -22,6 +22,10 @@ Select which server you want Nurevam to join.
 
 >Bascially, it is just `<Main command> <subcommand>`
 
+##What is profile?
+>profile of your self, it is global setting for all server with Nurevam in, for example, myanimelist, if you got one, and enter your username, you dont have to write down your username when !profile username, just !profile,
+bot will do work for you!
+
 ##Why are there so many permission!
 >That is entire up to you, I put all permission so you can pick. I would recommend leaving manage message permission on, so it can delete your message and bot message (in certain command)
 
@@ -47,7 +51,7 @@ The server could not verify that you are authorized to access the URL requested.
 >I will review it and give feedback what need to improve on!
 
 ##This is a copycat of Mee6!
->I have ask permission creator of Mee6, Cookie, he give approves and said "go for it!", and my code is way different than him, only similar we have were website area.
+>I have ask a permission from creator of Mee6, Cookie, he give approves and said "go for it!", and my code is way different than him, only similar we have were website area.
 
 ##I got a question about this FAQ or something else
 >Feel free to PM me or [join server here](https://discordapp.com/invite/010erZHcMcH15gTLZ). I would gadly answer to your question and add somthing to this FAQ

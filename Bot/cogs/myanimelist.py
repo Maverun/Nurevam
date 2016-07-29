@@ -28,7 +28,16 @@ class Myanimelist():
             async with session.get('http://myanimelist.net/api/{}/search.xml?q={}'.format(category, name)) as resp:
                 return (await resp.read())
 
-    async def data(self, msg, category, name):
+    async def check_status(self,name):
+        with aiohttp.ClientSession() as session:
+            async with session.get("http://myanimelist.net/profile/{}".format(name)) as resp:
+                print(resp.status)
+                if resp.status == 200:
+                    return True
+                else:
+                    await self.bot.says_edit("This username does not exist!")
+
+    async def data(self, ctx, category, name):
         data = await self.get_data(category, name)
         try:
             root = ElementTree.fromstring(data)
@@ -68,7 +77,7 @@ class Myanimelist():
             def digit_check(num):  # to ensure that answer is int
                 return num.content.isdigit()
             asking = await self.bot.say("```{}```\nWhich number?".format("\n".join(name_data)))
-            answer = await self.bot.wait_for_message(timeout=15, author=msg.message.author, check=digit_check)
+            answer = await self.bot.wait_for_message(timeout=15, author=ctx.message.author, check=digit_check)
             try:
                 await self.bot.delete_message(asking)
                 await self.bot.delete_message(answer)
@@ -84,8 +93,8 @@ class Myanimelist():
                 await self.bot.says_edit("You enter a number that is out of range!")
 
     @commands.check(is_enable)
-    @commands.command(name="anime", brief="Allow to search anime info rom Myanimelist database",pass_context=True)
-    async def anime(self, msg, *, name: str):
+    @commands.command(brief="Allow to search anime info rom Myanimelist database",pass_context=True)
+    async def anime(self, ctx, *, name: str):
         """
         Allow to give you a infomatives of Anime from Myanimelist
         <Link>
@@ -97,11 +106,11 @@ class Myanimelist():
         Synopis:
         """
         link_name = name.replace(" ", "_").lower()  # In case there is more than 1 word
-        await self.data(msg, "anime", link_name)
+        await self.data(ctx, "anime", link_name)
 
     @commands.check(is_enable)
-    @commands.command(name="manga", brief="Allow to search manga info from Myanimelist database",pass_context=True)
-    async def manga(self, msg, *, name: str):
+    @commands.command(brief="Allow to search manga info from Myanimelist database",pass_context=True)
+    async def manga(self, ctx, *, name: str):
         """
         Allow to give you a infomatives of Manga from Myanimelist
                 Allow to give you a list of Anime from data base
@@ -114,7 +123,66 @@ class Myanimelist():
         Synopis:
         """
         link_name = name.replace(" ", "_").lower()
-        await self.data(msg, "manga", link_name)
+        await self.data(ctx, "manga", link_name)
+
+    async def check_username(self,ctx,name,site):
+        boolean = False
+        mention = False
+        user = ctx.message.author.id
+        if ctx.message.mentions: #If mention is true, it will get from mention ID instead.
+            user = ctx.message.mentions[0]
+            user = user.id
+            mention = True
+        setting = await self.redis.hget("Profile:{}".format(user),"myanimelist")
+        print(setting)
+        if name is None:
+            if setting is None:
+                await self.bot.says_edit("You need to enter a name! Or you can enter your own name in your profile at <http://nurevam.site>")
+            else:
+                boolean = True
+                name = setting
+        else:
+            if mention:
+                if setting is None:
+                    await self.bot.says_edit("{} didn't register on Nurevam.site yet! Tell him/her do it!".format(ctx.message.mentions[0].display_name))
+                else:
+                    if await self.check_status(setting):
+                        name = setting
+                        boolean = True
+            else:
+               if await self.check_status(name):
+                   boolean = True
+        if boolean:
+            await self.bot.says_edit("http://myanimelist.net/{}/{}".format(site,name))
+
+    @commands.check(is_enable)
+    @commands.command(pass_context=True,brief="link out MAL user's profile")
+    async def profile(self,ctx,name = None):
+        """
+        Allow to link a MAL Profile.
+        If you give your username on Nurevam site of profile, you will get auto profile link unless you put name in.
+        """
+        await self.check_username(ctx,name,"profile")
+
+
+    @commands.check(is_enable)
+    @commands.command(pass_context=True,brief = "link out MAL user's anime or manga list")
+    async def list(self,ctx,type,name=None):
+        """
+        Allow to give you a anime/manga list of that username.
+        !list amime <username>
+        !list manga <username>
+        username is optional, if you have register your name on nurevam.site, it would print your.
+        Mention someone, it will check if that user have register and give it out under his username.
+        """
+        if type == "anime":
+            await self.check_username(ctx,name,"animelist")
+        elif type == "manga":
+            await self.check_username(ctx,name,"mangalist")
+        else:
+            await self.bot.says_edit("Please double check your type, it is **anime** or **manga**")
+
+
 
 
 def setup(bot):

@@ -244,6 +244,50 @@ def debug_token():
     token = db.get('user:{}:discord_token'.format(session['api_token']['user_id']))
     return token
 
+@app.route('/profile')
+@require_auth
+def profile():
+    user = session['user']
+    setting = db.hgetall("Profile:{}".format(user["id"]))
+    return render_template('profile.html',user=user,setting=setting)
+
+@app.route('/profile/update', methods=['POST'])
+@require_auth
+def update_profile():
+    list_point = dict(request.form)
+    list_point.pop('_csrf_token',None)
+    path = "Profile:{}".format(session['user']['id'])
+    for  x in list_point:
+        if request.form.get(x) == "":
+            db.hdel(path,x)
+            continue
+        if x == "myanimelist":
+            status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
+            if status is False:
+                continue
+        db.hset(path,x,request.form.get(x))
+    flash('Settings updated!', 'success')
+    return redirect(url_for('profile'))
+
+def status_site(site):
+    r = requests.get(site)
+    print(r.status_code)
+    if r.status_code == 200:
+        return True
+    else:
+        return False
+
+    # log_bool = False
+    # for x in list__point:
+    #     if request.form.get(x):
+    #         log_bool = True
+    #         print("{} is {}".format(x,request.form.get(x)))
+    #         db.hset(path,x,request.form.get(x))
+    # if log_bool:
+    #     db.sadd("Info:Log",server_id)
+    # flash('Settings updated!', 'success')
+    # return redirect(url_for('plugin_log', server_id=server_id))
+
 @app.route('/servers')
 @require_auth
 def select_server():
@@ -291,6 +335,8 @@ def require_bot_admin(f):
 
         return f(*args, **kwargs)
     return wrapper
+
+
 #####################################################
 #    _____    _                   _                 #
 #   |  __ \  | |                 (_)                #
@@ -626,31 +672,18 @@ def plugin_log(server_id):
 @app.route('/dashboard/<int:server_id>/log/update',methods=['POST'])
 @plugin_method
 def update_log(server_id):
-    list__point =["join","left","edit","delete","name","nickname","avatar","channel"]
+    list_point = dict(request.form)
+    list_point.pop('_csrf_token',None)
     path = "{}:Log:Config".format(server_id)
     log_bool = False
-    for x in list__point:
+    db.delete(path)
+    for x in list_point:
         if request.form.get(x):
             log_bool = True
-            print("{} is {}".format(x,request.form.get(x)))
-            db.hset(path,x,request.form.get(x))
+        print("{} is {}".format(x,request.form.get(x)))
+        db.hset(path,x,request.form.get(x))
     if log_bool:
         db.sadd("Info:Log",server_id)
-    # join = request.form.get('join')
-    # left = request.form.get('left')
-    # edit = request.form.get('edit')
-    # delete = request.form.get('delete')
-    # name = request.form.get('name')
-    # nick = request.form.get('nickname')
-    # avatar = request.form.get('avatar')
-    # db.hmset("{}:Log:Config".format(server_id),
-    #          {"join":join,
-    #           "left":left,
-    #           "edit":edit,
-    #           "delete":delete,
-    #           "name":name,
-    #           "nick":nick,
-    #           "avatar":avatar})
     flash('Settings updated!', 'success')
     return redirect(url_for('plugin_log', server_id=server_id))
 
@@ -773,20 +806,20 @@ def levels(server_id):
                                                                                                           "{}:Level:Player:*->Discriminator".format(server_id)], start=0, num=total_member, desc=True)
     data = []
     for x in range(0,len(player_data),7):
-        if name_list.get(player_data[x+1],False) is False:
-            db.srem("{}:Level:Player".format(server_id),player_data[x+1])
-        temp = {
-            "Name":player_data[x],
-            "ID":player_data[x+1],
-            "Level":player_data[x+2],
-            "XP":player_data[x+3],
-            "Next_XP":player_data[x+4],
-            "Total_XP":player_data[x+5],
-            "Discriminator":player_data[x+6],
-            "Avatar":avatar_list.get(player_data[x+1],None),
-            "XP_Percent":100*(float(player_data[x+3])/float(player_data[x+4]))
-        }
-        data.append(temp)
+            if name_list.get(player_data[x+1]) is False:
+                db.srem("{}:Level:Player".format(server_id),player_data[x+1])
+            temp = {
+                "Name":player_data[x],
+                "ID":player_data[x+1],
+                "Level":player_data[x+2],
+                "XP":player_data[x+3],
+                "Next_XP":player_data[x+4],
+                "Total_XP":player_data[x+5],
+                "Discriminator":player_data[x+6],
+                "Avatar":avatar_list.get(player_data[x+1],None),
+                "XP_Percent":100*(float(player_data[x+3])/float(player_data[x+4]))
+            }
+            data.append(temp)
         #Those are for Website
     return render_template('levels.html', players=data, server=server, title="{} leaderboard".format(server['name']),is_admin=is_admin,is_private=is_private)
 
@@ -802,7 +835,11 @@ def server_levels():
             else:
                 player_total=[]
                 for player_id in db.smembers("{}:Level:Player".format(server_id)): #Get every player's total XP
-                    player_total.append(int(db.hget("{}:Level:Player:{}".format(server_id,player_id),"Total_XP")))
+                    try:
+                        player_total.append(int(db.hget("{}:Level:Player:{}".format(server_id,player_id),"Total_XP")))
+                    except:
+
+                        continue
                 total = sum(player_total)
                 print("{}-{} total xp is {}".format(server_id,server_list[server_id],total))
                 try:
@@ -854,8 +891,8 @@ def private_profile(server_id,player_id,bool):
         db.srem("{}:Level:Player:Private".format(server_id),player_id)
     return redirect(url_for('profile', server_id=server_id,player_id=player_id))
 
-@app.route('/profile/<string:player_id>/<int:server_id>')
-def profile(player_id,server_id):
+@app.route('/profile/level/<string:player_id>/<int:server_id>')
+def profile_level(player_id,server_id):
     #Checking if is owner of that site
     is_owner = False
     if session.get('api_token'):
@@ -892,7 +929,7 @@ def profile(player_id,server_id):
             data.append("{} - {}".format(x,y))
     icon = db.hget("Info:Icon",player_id)
     name = db.hget("Info:Name",player_id)
-    return render_template("profile.html",data=data,icon=icon,name=name,player_id=player_id,
+    return render_template("profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
                            server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
                            is_owner=is_owner,is_private=is_private)
 
