@@ -76,7 +76,8 @@ class Events():
 
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
-                if self.bot.log_config.get(msg.server.id):
+                print(msg.server.id)
+                if self.bot.log_config.get(msg.server.id) and msg.channel.is_private is False:
                     if msg.channel.id in self.bot.log_config[msg.server.id]['channel']:
                         return
                 if msg.channel.is_private:

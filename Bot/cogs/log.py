@@ -58,6 +58,8 @@ class Log():
                 await self.send(after.server.id,msg)
 
     async def on_message_edit(self,before,after):
+        if after.channel.is_private:
+            return
         if self.config.get(after.server.id):
             if self.config[after.server.id].get('edit'):
                 if before.content != after.content:
@@ -68,6 +70,8 @@ class Log():
                     await self.send(after.server.id,msg)
 
     async def on_message_delete(self,msg):
+        if msg.channel.is_private:
+            return
         if self.config.get(msg.server.id):
             if self.config[msg.server.id].get("delete"):
                 message = self.format_msg(msg.author)

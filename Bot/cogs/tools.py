@@ -210,7 +210,8 @@ class Tools():
         for server in self.bot.servers:
             name = str(server)
             owner = str(server.owner.name)
-            print("Server:{0:<{first}}\tOwner: {1}".format(name,owner,first=len(max(info,key=len))))
+            total =  server.member_count
+            print("Server:{0:<{first}}\tOwner: {1}\t Member Count: {2}".format(name,owner,total,first=len(max(info,key=len))))
 
     @commands.command(hidden=True,pass_context=True)
     @commands.check(utils.is_owner)
