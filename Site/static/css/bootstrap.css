@@ -5471,6 +5471,13 @@ button.list-group-item-danger.active:focus {
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
 }
+.panel-hover{
+  opacity: 0.5;
+  }
+.panel-hover:hover{
+   opacity : 1;
+   }
+
 .panel-heading > .dropdown .dropdown-toggle {
   color: inherit;
 }

@@ -1,0 +1,50 @@
+{% extends 'full-page.html' %}
+{% block content %}
+	<div class="jumbotron home-jumbotron">
+		<div class="container">
+			<div class="row">
+                <div class="col-md-3 col-md-offset-5 animated bounceInDown text-center">
+                    <a href = "{{url_for('profile')}}">
+                        <h2>Profile</h2>
+                        <div class="panel panel-primary panel-hover">
+                            <div class="panel-body">
+                                    {% if user["avatar"] !=None %}
+                                        <center><img src="https://discordapp.com/api/users/{{user["id"]}}/avatars/{{user["avatar"]}}.jpg" style="width:100%" class="img-circle"></center>
+                                    {% else %}
+                                        <center><img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:100%" class="img-circle"></center>
+                                    {%endif%}
+                                <center><p style = "font-size:150%;">{{user["username"]}}<sup>#{{user["discriminator"]}}</sup></p></center>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-md-offset-3 animated bounceInLeft text-center">
+                    <a href = "{{url_for('select_server')}}">
+                        <h2>Server</h2>
+                        <div class="panel panel-primary panel-hover">
+                            <div class="panel-body">
+                                <h3><img src="{{ url_for('static', filename='img/discord-logo.svg') }}" class="discord-logo2"> server</h3>
+                                <h6>A server where you want bot to join</h6>
+                                <h6>Or config plugin setting!</h6>
+                            </div>
+                        </div>
+                    <a>
+                </div>
+                <div class="col-md-4 col-md-offset-1 animated bounceInRight text-center">
+                    <a href = "{{url_for('server_levels')}}">
+                        <h2>Server Leaderboard</h2>
+                        <div class="panel panel-primary panel-hover">
+                            <div class="panel-body">
+                                <h3>Server Leaderboard</h3>
+                                <center><img src="http://i.imgur.com/55J5oVy.png" style="width:100%"></center>
+                                <h6>A public server leaderboard</h6>
+                            </div>
+                        </div>
+                    <a>
+                </div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

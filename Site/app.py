@@ -159,7 +159,6 @@ def login():
 def confirm_login():
     # Check for state and for 0 errors
     state = session.get('oauth2_state')
-    print(state)
     if not state or request.values.get('error'):
         return redirect(url_for('index'))
 
@@ -188,8 +187,7 @@ def confirm_login():
     }
     session.permanent = True
     session['api_token'] = api_token
-    print("OKAY I AM HERE")
-    return redirect(url_for('select_server'))
+    return redirect(url_for('after_login'))
 
 def require_auth(f):
     @wraps(f)
@@ -206,6 +204,12 @@ def require_auth(f):
 
         return f(*args, **kwargs)
     return wrapper
+
+@app.route('/login_confirm')
+@require_auth
+def after_login():
+    user = session['user']
+    return render_template("after_login.html",user=user)
 
 @app.route('/logout')
 def logout():
@@ -247,13 +251,17 @@ def debug_token():
 @app.route('/profile')
 @require_auth
 def profile():
+    """
+    A user profile.
+    It's purpose is for globals setting across server.
+    """
     user = session['user']
     setting = db.hgetall("Profile:{}".format(user["id"]))
     return render_template('profile.html',user=user,setting=setting)
 
 @app.route('/profile/update', methods=['POST'])
 @require_auth
-def update_profile():
+def update_profile(): #Update a setting.
     list_point = dict(request.form)
     list_point.pop('_csrf_token',None)
     path = "Profile:{}".format(session['user']['id'])
@@ -271,22 +279,10 @@ def update_profile():
 
 def status_site(site):
     r = requests.get(site)
-    print(r.status_code)
     if r.status_code == 200:
         return True
     else:
         return False
-
-    # log_bool = False
-    # for x in list__point:
-    #     if request.form.get(x):
-    #         log_bool = True
-    #         print("{} is {}".format(x,request.form.get(x)))
-    #         db.hset(path,x,request.form.get(x))
-    # if log_bool:
-    #     db.sadd("Info:Log",server_id)
-    # flash('Settings updated!', 'success')
-    # return redirect(url_for('plugin_log', server_id=server_id))
 
 @app.route('/servers')
 @require_auth

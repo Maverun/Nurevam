@@ -102,6 +102,7 @@ class Log():
             for x in server_list:
                 config = await self.redis.hgetall("{}:Log:Config".format(x))
                 self.config.update({x:config})
+            self.bot.log_config = self.config
             await asyncio.sleep(60)
 
 def setup(bot):
