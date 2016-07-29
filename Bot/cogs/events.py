@@ -76,9 +76,13 @@ class Events():
 
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
-                if self.bot.log_config.get(msg.server.id) and msg.channel.is_private is False:
-                    if msg.channel.id in self.bot.log_config[msg.server.id]['channel']:
-                        return
+                if msg.channel.is_private is False:
+                    try:
+                        if self.bot.log_config.get(msg.server.id):
+                            if msg.channel.id in self.bot.log_config[msg.server.id]['channel']:
+                                return
+                    except:
+                        pass
                 if msg.channel.is_private:
                     utils.prCyan("PRIVATE")
                     utils.prGreen("<Event Send> {} : {} |||{}".format(self.Time(), msg.author.name, msg.clean_content))

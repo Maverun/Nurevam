@@ -63,7 +63,6 @@ class Log():
         if self.config.get(after.server.id):
             if self.config[after.server.id].get('edit'):
                 if before.content != after.content:
-                    print("get ready")
                     msg = self.format_msg(after.author)
                     msg += "*have edit message in* {}: ".format(after.channel.mention)
                     msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-"),after.clean_content.replace("\n","\n+"))
