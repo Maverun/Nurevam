@@ -48,7 +48,7 @@ def is_enable(msg,Cogs):
     pass
 
 ######################Checking if Role is able######################################
-def check_roles(msg,Cogs,Get_Roles):
+def check_roles(msg,Cogs,Get_Roles): #Server ID  then which plugin, and Roles with set
     data = redis
     try:
         Roles= data.smembers("{}:{}:{}".format(msg.message.server.id,Cogs,Get_Roles))
