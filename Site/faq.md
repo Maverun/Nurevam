@@ -51,7 +51,7 @@ The server could not verify that you are authorized to access the URL requested.
 >I will review it and give feedback what need to improve on!
 
 ##This is a copycat of Mee6!
->I have ask a permission from creator of Mee6, Cookie, he give approves and said "go for it!", and my code is way different than him, only similar we have were website area.
+>I have ask a permission from creator of Mee6, Cookie, he give approves and said "go for it!", and my code is way different than him, only similar we have were website design.
 
 ##I got a question about this FAQ or something else
 >Feel free to PM me or [join server here](https://discordapp.com/invite/010erZHcMcH15gTLZ). I would gadly answer to your question and add somthing to this FAQ
