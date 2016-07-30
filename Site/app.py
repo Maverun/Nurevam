@@ -550,7 +550,8 @@ def update_discourse(server_id):
     if len(domain) == 0 or len(api_key) == 0 or len(username) == 0:
         flash ("One of them need to be filled!",'warning')
     else:
-        db.hset("{}:Discourse:Config".format(server_id),"domain",domain.replace("/",""))
+
+        db.hset("{}:Discourse:Config".format(server_id),"domain",domain.strip("/"))
         db.hset("{}:Discourse:Config".format(server_id),"api_key",api_key)
         db.hset("{}:Discourse:Config".format(server_id),"username",username)
         db.hset("{}:Discourse:Config".format(server_id),"channel",channel)
