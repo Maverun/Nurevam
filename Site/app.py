@@ -929,8 +929,6 @@ def profile_level(player_id,server_id):
                            server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
                            is_owner=is_owner,is_private=is_private)
 
-
-
 @app.before_first_request
 def setup_logging():
     # In production mode, add log handler to sys.stderr.

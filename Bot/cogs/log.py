@@ -22,10 +22,24 @@ class Log():
 
     async def avatar(self,before,after):
         with aiohttp.ClientSession() as sesson:
-            async with sesson.get(before.avatar_url) as resp:
-                old = Image.open(io.BytesIO(await resp.read()))
-            async with sesson.get(after.avatar_url) as resp:
-                new = Image.open(io.BytesIO(await resp.read()))
+            try:
+                async with sesson.get(before.avatar_url) as resp:
+                        old = Image.open(io.BytesIO(await resp.read()))
+            except:
+                print("System failed! of Before")
+                async with sesson.get(before.default_avatar_url) as resp:
+                        old = Image.open(io.BytesIO(await resp.read()))
+                        print(old.size)
+                        old.thumbnail((128,128),Image.ANTIALIAS)
+            try:
+                async with sesson.get(after.avatar_url) as resp:
+                    new = Image.open(io.BytesIO(await resp.read()))
+            except:
+                print("System failed! of after")
+                async with sesson.get(after.default_avatar_url) as resp:
+                    new = Image.open(io.BytesIO(await resp.read()))
+                    print(new.size)
+                    new.thumbnail((128,128),Image.ANTIALIAS)
         update = Image.new('RGB',(256,128))
         update.paste(old,(0,0))
         update.paste(new,(128,0))

@@ -92,6 +92,8 @@ class Events():
     async def on_command_completion(self,command,ctx):
         if command.cog_name is None:
             return
+        if ctx.message.channel.is_private:
+            return
         try:
             print(command.cog_name)
             check = await self.bot.db.redis.hgetall("{}:Config:Delete_MSG".format(ctx.message.server.id))
