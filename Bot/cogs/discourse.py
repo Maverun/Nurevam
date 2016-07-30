@@ -6,7 +6,6 @@ import aiohttp
 import datetime
 import discord
 
-
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
 
@@ -54,7 +53,7 @@ class Discourse(): #Discourse, a forums types.
         while True:
             try:
                 counter +=1
-                get_post = await self.get_data("{}:/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
+                get_post = await self.get_data("{}/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
                 if get_post is None:
                     return
                 if str(get_post[1]).isdigit():
@@ -211,9 +210,9 @@ class Discourse(): #Discourse, a forums types.
         data =read["user"]
         data_array=[]
         data_array.append("**Username**: {}".format(data["username"]))
-        if data["name"] != "":
+        if data.get("name","") != "":
             data_array.append("**Name**: {}".format(data["name"]))
-        if data["title"] != None:
+        if data.get("title",None) != None:
             data_array.append("**Title**: {}".format(data['title']))
         data_array.append("**Total Badge**: {}".format(data["badge_count"]))
         data_array.append("**View**: {}".format(data["profile_view_count"]))

@@ -26,7 +26,6 @@ class Log():
                 async with sesson.get(before.avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
             except:
-                print("System failed! of Before")
                 async with sesson.get(before.default_avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
                         print(old.size)
@@ -35,7 +34,6 @@ class Log():
                 async with sesson.get(after.avatar_url) as resp:
                     new = Image.open(io.BytesIO(await resp.read()))
             except:
-                print("System failed! of after")
                 async with sesson.get(after.default_avatar_url) as resp:
                     new = Image.open(io.BytesIO(await resp.read()))
                     print(new.size)
@@ -117,8 +115,9 @@ class Log():
         while True:
             server_list = await self.redis.smembers("Info:Log")
             for x in server_list:
-                config = await self.redis.hgetall("{}:Log:Config".format(x))
-                self.config.update({x:config})
+                if await self.redis.hget("{}:Config:Cogs".format(x),"log") == "on":
+                    config = await self.redis.hgetall("{}:Log:Config".format(x))
+                    self.config.update({x:config})
             self.bot.log_config = self.config
             await asyncio.sleep(60)
 

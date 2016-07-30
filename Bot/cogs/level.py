@@ -108,7 +108,7 @@ class Level():
 
 
     async def next_Level(self, xp):
-        level = await self.redis.hget(self.name,"Level")
+        level = await self.redis.hget(self.name,"Level") or 1
         new_xp = int(100 * (1.2 ** int(level)))
         await self.redis.hset(self.name,"Next_XP", (new_xp))
         await self.redis.hset(self.name,"XP",xp)
