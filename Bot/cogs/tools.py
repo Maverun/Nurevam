@@ -203,15 +203,19 @@ class Tools():
             await self.update_all()
             await asyncio.sleep(3600)
 
-    @commands.command(name="List-server",hidden=True)
+    @commands.command(name="list-server",hidden=True)
     @commands.check(utils.is_owner)
     async def list_server(self):
         info = [r.name for r in self.bot.servers]
+        char_name = [str(r.owner) for r in self.bot.servers]
         for server in self.bot.servers:
             name = str(server)
-            owner = str(server.owner.name)
+            server_id = str(server.id)
+            owner = str(server.owner)
             total =  server.member_count
-            print("Server:{0:<{first}}\tOwner: {1}\t Member Count: {2}".format(name,owner,total,first=len(max(info,key=len))))
+            print("Server: {0:<{first}}[{1}]\tOwner: {2:<{second}}\t Member Count: {3}".format(name,server_id,owner,total,
+                                                                                               first=len(max(info,key=len)),
+                                                                                               second = len(max(char_name,key=len))))
 
     @commands.command(hidden=True,pass_context=True)
     @commands.check(utils.is_owner)

@@ -32,10 +32,24 @@ class Core():
         """Tells you how long the bot has been up for."""
         await self.bot.say_edit("```py\nI have been up for {}\n```".format(self.get_bot_uptime()))
 
-    @commands.command(name="prefix",hidden=True,pass_context=True)
+    @commands.command(hidden=True,pass_context=True)
     async def prefix(self,ctx):
         prefix = (await self.redis.get("{}:Config:CMD_Prefix".format(ctx.message.server.id)))
         await self.bot.says_edit("```\n{}\n```".format(prefix))
+
+    @commands.command(hidden=True,pass_context=True)
+    async def info(self,ctx):
+        server = len(self.bot.servers)
+        member = len(set(self.bot.get_all_members()))
+        app = await self.bot.application_info()
+        msg = "Name:{}".format(self.bot.user)
+        if ctx.message.server.me.nick:
+            msg += "\nNickname:{}".format(ctx.message.server.me.nick)
+        msg += "\nCreator: {}".format(app.owner)
+        msg += "\nServer:{}\nMembers:{}".format(server,member)
+        link = "If you want to invite this bot to your sever, you can check it out here <http://nurevam.site>!"
+        await self.bot.say("```xl\n{}\n```\n{}".format(msg,link))
+
 
 def setup(bot):
     bot.add_cog(Core(bot))

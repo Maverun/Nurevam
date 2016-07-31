@@ -69,7 +69,7 @@ class Events():
     async def on_command(self,command,ctx):
         if ctx.message.channel.is_private:
             return
-        print("\033[96m<Event Command>\033[94m {}:\033[96m {} ||| \033[93m {} ||| \033[94m ({})\033[92m ||| {}\033[00m".format(self.Time(),ctx.message.server.name, ctx.message.author.name, ctx.message.author.id, ctx.message.clean_content))
+        print("\033[96m<Event Command>\033[94m {}:\033[96m {} ||| \033[93m {} ||| \033[94m ({})\033[92m ||| {}\033[00m".format(self.Time(),ctx.message.server.name, ctx.message.author, ctx.message.author.id, ctx.message.clean_content))
         await self.redis.hincrby("{}:Total_Command:{}".format(ctx.message.server.id,ctx.message.author.id),ctx.invoked_with,increment=1)
         await self.redis.hincrby("Info:Total_Command",ctx.invoked_with,increment=1)
         await self.redis.hincrby("{}:Total_Command:User:{}".format(ctx.message.server.id,ctx.message.author.id),ctx.invoked_with,increment=1)
@@ -124,7 +124,7 @@ class Events():
             utils.prRed(Current_Time)
             utils.prRed("Error!")
             traceback.print_exception(type(error), error, error.__traceback__)
-            cog_error =  '```fix\nCogs:{}\tCommand:{}\tAuthor:{}#{}\n{}```'.format(ctx.command.cog_name,ctx.command,ctx.message.author.name,ctx.message.author.discriminator,error)
+            cog_error =  '```fix\nCogs:{}\tCommand:{}\tAuthor:{}\n{}\nError:\n{}```'.format(ctx.command.cog_name,ctx.command,ctx.message.author,ctx.message.clean_content,error)
             user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
             await self.bot.send_message(user, "```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors)))
 
