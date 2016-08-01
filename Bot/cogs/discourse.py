@@ -113,6 +113,7 @@ class Discourse(): #Discourse, a forums types.
                 utils.prPurple("Discourse Loops check! {}".format(self.counter))
                 counter_loops = 0
             self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
+            self.bot.background.update({"discourse":datetime.datetime.now()})
             for server in self.bot.servers:
                 await self.post(server.id)
             counter_loops+=1

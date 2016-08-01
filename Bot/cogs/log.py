@@ -117,6 +117,7 @@ class Log():
                     config = await self.redis.hgetall("{}:Log:Config".format(x))
                     self.config.update({x:config})
             self.bot.log_config = self.config
+            self.bot.background.update({"log":datetime.datetime.now()})
             await asyncio.sleep(60)
 
 def setup(bot):

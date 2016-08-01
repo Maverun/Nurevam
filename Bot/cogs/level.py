@@ -53,8 +53,8 @@ class Level():
             player = msg.author.id
             server = msg.server.id
             self.name = "{}:Level:Player:{}".format(server,player)
-            list = await self.redis.exists(self.name) #Call of name and ID to get boolean
-            if list is False: # if it False, then it will update a new list for player who wasnt in level record
+            check_exist = await self.redis.exists(self.name) #Call of name and ID to get boolean
+            if check_exist is False: # if it False, then it will update a new list for player who wasnt in level record
                 await self.new_profile(msg)
             await self.redis.hincrby(self.name,"Total Message Count",increment=1)
             await self.redis.hset(self.name,"ID",player)

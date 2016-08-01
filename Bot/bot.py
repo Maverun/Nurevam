@@ -55,6 +55,7 @@ async def on_ready():
     print('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
+        bot.background = {}
     load_cogs()
     bot.commands["help"].hidden = True
     await bot.change_status(discord.Game(name="http://nurevam.site/"))
@@ -111,8 +112,8 @@ async def on_error(event,*args,**kwargs):
     utils.prRed("Error!")
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
-    user=discord.utils.get(bot.get_all_members(),id="105853969175212032")
-    await bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+    user= await bot.application_info()
+    await bot.send_message(user.owner, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
 
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))
