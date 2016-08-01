@@ -937,6 +937,12 @@ def setup_logging():
     app.logger.addHandler(logging.StreamHandler())
     app.logger.setLevel(logging.INFO)
 
+@app.errorhandler(401)
+def page_not_found(e):
+    #if there is error with 401, it would redirect you to login pages
+    #It happen when you login in other area other than your site.
+    return redirect("/login")
+
 if __name__=='__main__':
     app.debug = True
     app.run()
