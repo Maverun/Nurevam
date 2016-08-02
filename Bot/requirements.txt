@@ -4,3 +4,4 @@ aioredis
 redis
 PTable
 pillow
+osuapi
