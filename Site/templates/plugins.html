@@ -50,6 +50,14 @@
     enabled_plugins=enabled_plugins
     )}}
     {{plugin.view(
+    'osu',
+    pretty_name="Osu",
+    view='plugin_osu',
+    description='Allow bot to tell you about stats of your OSU profile.',
+    server=server,
+    enabled_plugins=enabled_plugins
+    )}}
+    {{plugin.view(
     'welcome',
     pretty_name="Welcome",
     view='plugin_welcome',
