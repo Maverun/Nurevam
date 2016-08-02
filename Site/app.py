@@ -1,23 +1,22 @@
 from flask import Flask, session, request, url_for, render_template, redirect, \
 jsonify, make_response, flash, abort, Response
+from flaskext.markdown import Markdown
 from itsdangerous import JSONWebSignatureSerializer
 from requests_oauthlib import OAuth2Session
-from osuapi import OsuApi, ReqConnector
-from flaskext.markdown import Markdown
 from functools import wraps
-import binascii
-import requests
 import logging
 import random
 import redis
-import json
-import math
 import os
+import json
+import binascii
+import requests
+import math
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 md = Markdown(app) #for a markdown work, e.g FAQ
-osu_api = OsuApi(os.environ.get("osu"), connector=ReqConnector())
+
 Redis= os.environ.get('Redis')
 OAUTH2_CLIENT_ID = os.environ.get('OAUTH2_CLIENT_ID')
 OAUTH2_CLIENT_SECRET = os.environ.get('OAUTH2_CLIENT_SECRET')
@@ -266,9 +265,6 @@ def update_profile(): #Update a setting.
     list_point = dict(request.form)
     list_point.pop('_csrf_token',None)
     path = "Profile:{}".format(session['user']['id'])
-    warning = False
-    warning_msg = "One of those have failed, Please double check {} "
-    warning_list =[]
     for  x in list_point:
         if request.form.get(x) == "":
             db.hdel(path,x)
@@ -276,20 +272,9 @@ def update_profile(): #Update a setting.
         if x == "myanimelist":
             status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
             if status is False:
-                warning = True
-                warning_list.append(x)
-                continue
-        elif x == "osu":
-            results = osu_api.get_user(request.form.get(x))
-            if results == []:
-                warning = True
-                warning_list.append(x)
                 continue
         db.hset(path,x,request.form.get(x))
-    if warning:
-        flash(warning_msg.format(",".join(warning_list)), 'warning')
-    else:
-        flash('Settings updated!', 'success')
+    flash('Settings updated!', 'success')
     return redirect(url_for('profile'))
 
 def status_site(site):
@@ -458,12 +443,6 @@ def plugin_myanimelist(server_id):
 @app.route('/dashboard/<int:server_id>/weather')
 @plugin_page('weather')
 def plugin_weather(server_id):
-    return {}
-
-# osu
-@app.route('/dashboard/<int:server_id>/osu')
-@plugin_page('osu')
-def plugin_osu(server_id):
     return {}
 
 #Welcome message

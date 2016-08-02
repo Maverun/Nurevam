@@ -31,17 +31,6 @@
                 </div>
             </div>
         </div>
-    <div class ="row">
-        <div class="col-md-8">
-            <form id="profile" method="POST" action="{{url_for('update_profile')}}">
-                <div class="form-group">
-                    <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="osu">OSU username</label>
-                    <input class="form-control input-lg" name="osu" value="{{setting["osu"]}}" type="text"
-                           id="osu">
-                </div>
-            </div>
-        </div>
     <button type="submit" class="btn btn-primary">Update</button>
 
     </div>
