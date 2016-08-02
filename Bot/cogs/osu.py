@@ -7,7 +7,7 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
-        self.api = OsuApi(utils.OS_Get("OSU"), connector=AHConnector())
+        self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
 
     @commands.command(pass_context=True)
     async def osu(self,ctx,name=None):
