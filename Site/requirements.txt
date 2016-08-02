@@ -3,3 +3,4 @@ requests_oauthlib
 redis
 gunicorn
 Flask-Markdown
+osuapi
