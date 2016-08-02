@@ -182,8 +182,5 @@ class Myanimelist():
         else:
             await self.bot.says_edit("Please double check your type, it is **anime** or **manga**")
 
-
-
-
 def setup(bot):
     bot.add_cog(Myanimelist(bot))
