@@ -17,9 +17,9 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
             remind_time += int(time[0])*60 + int(time[1])
-            msg = "{} minute {} second".format(time[0],time[1])
+            msg += "{} minute {} second".format(time[0],time[1])
         else:
-            msg = "{} second".format(time[0])
+            msg += "{} second".format(time[0])
             remind_time += int(time[0])
 
         await self.bot.say(msg,delete_after=30)
@@ -29,7 +29,6 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         else:
             message = "You was remind for this ```fix\n{}\n```".format(message)
         await self.bot.reply(message)
-        print(message)
 
 def setup(bot):
     bot.add_cog(Remind(bot))
