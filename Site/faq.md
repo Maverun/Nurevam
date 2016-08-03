@@ -29,11 +29,6 @@ bot will do work for you!
 ##Why are there so many permission!
 >That is entire up to you, I put all permission so you can pick. I would recommend leaving manage message permission on, so it can delete your message and bot message (in certain command)
 
-##I get this error
-```
-Unauthorized
-The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.
-```
 >Well this is common error with authorized. Just simply log out and relog in.
 ##What is this log plugin
 >It will give you update of what happen to that server, did user delete message, change avatar etc.

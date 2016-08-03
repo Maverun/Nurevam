@@ -243,6 +243,12 @@ def faq():
         content = f.read()
     return render_template('faq.html',text=content)
 
+@app.route('/tutorials')
+def tutorials():
+    with open('static/command ext tutorials.md','r') as f:
+        content = f.read()
+    return render_template('tutorials.html',text=content)
+
 @app.route('/debug_token')
 def debug_token():
     if not session.get('api_token'):
