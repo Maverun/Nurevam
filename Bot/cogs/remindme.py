@@ -9,7 +9,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
     async def remindme(self,get_time,*,message=""):
         time = get_time.split(":")
         remind_time = 0
-        msg = "Time set"
+        msg = "Time set "
         if len(time) == 3:
             if int(time[0]) >=5:
                 msg = "It is gonna be over 5 hours, which may not work anymore.\n Time set "

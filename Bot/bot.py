@@ -9,7 +9,7 @@ import glob
 import re
 
 description = '''Nurevam's Command List. '''
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description=description,pm_help=False)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True))
 bot.db= storage.Redis()
 utils.redis_connection()
 
@@ -55,12 +55,15 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
         bot.background = {}
-    load_cogs()
-    bot.commands["help"].hidden = True
+        load_cogs()
     await bot.change_status(discord.Game(name="http://nurevam.site/"))
 
 async def command_checker(msg):
     try:
+        if bot.user.id == "181503794532581376":
+            bot.command_prefix = commands.when_mentioned_or("$")
+            bot.pm_help = False
+            return
         cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.server.id)))
         cmd_prefix=cmd_prefix.split(",")
         if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevert any spam in case, lower chance of getting kick heh.

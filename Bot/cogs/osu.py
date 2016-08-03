@@ -9,7 +9,7 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         self.redis = bot.db.redis
         self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True,brief="Show a stats of player's")
     async def osu(self,ctx,name=None):
         """
         Allow to link a OSU Profile with some info.

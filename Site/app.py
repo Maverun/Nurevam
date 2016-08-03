@@ -223,6 +223,7 @@ def index():
         "Server":db.get("Info:Total Server"),
         "Member":db.get("Info:Total Member")}
     return render_template('index.html',info=info)
+
 @app.route('/about')
 def about():
     content = []

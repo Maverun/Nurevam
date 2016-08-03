@@ -1,8 +1,10 @@
+from osuapi import OsuApi, AHConnector
 from discord.ext import commands
 from .utils import utils
+import datetime
 import discord
 import asyncio
-import datetime
+import aiohttp
 
 class Core():
     """
@@ -12,7 +14,7 @@ class Core():
         self.bot = bot
         self.redis=bot.db.redis
         self.bot.say_edit = bot.says_edit
-
+        self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
 
     def get_bot_uptime(self): #to calculates how long it been up
         now = datetime.datetime.utcnow()
@@ -49,6 +51,54 @@ class Core():
         msg += "\nServer:{}\nMembers:{}".format(server,member)
         link = "If you want to invite this bot to your sever, you can check it out here <http://nurevam.site>!"
         await self.bot.say("```xl\n{}\n```\n{}".format(msg,link))
+
+
+    async def check_status(self,link):
+        with aiohttp.ClientSession() as session:
+            async with session.get(link) as resp:
+                if resp.status == 200:
+                    return True
+                else:
+                    return False
+
+    @commands.group(hidden=True,pass_context=True,invoke_without_command=True)
+    async def profile(self,ctx):
+        setting = await self.redis.hgetall("Profile:{}".format(ctx.message.author.id))
+        info = []
+        if setting:
+            for x in setting:
+                info.append("{}: {}".format(x,setting[x]))
+            msg = "To register, you can do !profile add osu <username here>"
+            await self.bot.whisper("```xl\n{}\n```\n{}".format("\n".join(info),msg))
+        else:
+            await self.bot.say("You didn't add any! Make sure you add something first!")
+
+    @profile.command(pass_context=True)
+    async def add(self,ctx,plugin,name):
+        # setting = await self.redis.hgetall("Profile:{}".format(ctx.message.author.id))
+        print("OKAY HERE")
+        default = ["myanimelist","osu"]
+        check = False
+        if plugin in default:
+            print("check")
+            print(name)
+            if plugin == "myanimelist":
+                check = await self.check_status("http://myanimelist.net/profile/{}".format(name))
+            elif plugin == "osu":
+                results = await self.api.get_user(name)
+                print(results)
+                if results == []:
+                    print("failed")
+                    pass
+                else:
+                    check = True
+            if check:
+                await self.redis.hset("Profile:{}".format(ctx.message.author.id),plugin,name)
+                await self.bot.says_edit("Done.")
+            else:
+                await self.bot.says_edit("There is no such a username like that, please double check")
+        else:
+            await self.bot.says_edit("Please double check! There is so far only \n{}".format(",".join(default)))
 
 
 def setup(bot):

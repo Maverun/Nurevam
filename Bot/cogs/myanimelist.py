@@ -1,9 +1,14 @@
 from discord.ext import commands
 from .utils import utils
 from xml.etree import ElementTree
+from xml.sax import saxutils
 import aiohttp
 
 def synopis(term):
+    saxutils.unescape(term)
+    term = term.replace("&quot;",'"')
+    term = term.replace("&mdash;",'-')
+    print(term)
     if len(term) >= 1500:
         return term[:1500]+"..."
     else:
@@ -157,7 +162,7 @@ class Myanimelist():
 
     @commands.check(is_enable)
     @commands.command(pass_context=True,brief="link out MAL user's profile")
-    async def profile(self,ctx,name = None):
+    async def mal(self,ctx,name = None):
         """
         Allow to link a MAL Profile.
         If you give your username on Nurevam site of profile, you will get auto profile link unless you put name in.

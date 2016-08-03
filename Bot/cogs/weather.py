@@ -14,9 +14,18 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
         self.bot = bot
         self.bot.say_edit = bot.says_edit
 
-    @commands.command()
+    @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
     @commands.check(is_enable)
     async def weather(self,city,*,country:str=""):
+        """
+        !weather city country
+        country is optional.
+        Name (latitude,longitude)
+        Weather Conditions:
+        Humidty: % Current Temperature: %
+        Cloudiness: %   Wind Speed: m/s
+        sunrise: 00:00:00 utc / sunset: 00:00:00 utc
+        """
         with aiohttp.ClientSession() as session:
             if country:
                 link = "http://api.openweathermap.org/data/2.5/weather?q={},{}&appid=26788a3fcb3c7e801745f379cb37494b&units=metric".format(city,country)
