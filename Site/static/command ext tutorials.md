@@ -21,17 +21,17 @@ For people who are new to Python, you can check the following links to get you s
 * [Codeabbey](http://www.codeabbey.com/)
 
 ##Here are some good resources to have that you can check out or depend on:
-* [Discord.py](http://discordpy.rtfd.io/en/latest/api.html)
+* [Discord.py Doc](http://discordpy.rtfd.io/en/latest/api.html)
 * [Command.ext](https://github.com/Rapptz/discord.py/tree/master/discord/ext/commands) **
 * [Discord.py FAQ](http://discordpy.readthedocs.io/en/latest/faq.html)
 
 **Note: Command.ext doesn't really have a doc, just a doc string. However, there's no need to worry as it also uses regular docs. The only difference is that the bonus features included can help you a lot.
 
-For an IDE, there are many of them out there. You just need to find the right one for you. Here's a few examples:
+For an IDE/Editor, there are many of them out there. You just need to find the right one for you. Here's a few examples:
 >
-+ Pycharm
-+ Sublime Text
-+ Atom
++ [Pycharm](https://www.jetbrains.com/pycharm/)
++ [Sublime Text](https://www.sublimetext.com/)
++ [Atom](https://atom.io/)
 
 Let's start with a explanation of command.ext.
 Command.ext is a framework built within Discord.py that provides command extensions. It parses a message and check if it's a command trigger, along with other bonus feature that can help you later on.
@@ -95,7 +95,7 @@ It should look like this:
 ![](http://i.imgur.com/EjPncKR.png)
 
 ##NOTE
-See that `await` statement? This is very important, as `say` is a builtin coroutine so we will need to use `await` on it, otherwise nothing will happen and no error will be given. 
+See that `await` statement? This is very important, as `say` is a coroutine built into coroutine so we will need to use `await` on it, otherwise nothing will happen and no error will be given. 
 
 Let's run it again, and type `!hello` or whatever prefix you have set.
 We should see something like this.
@@ -153,7 +153,7 @@ If we write `name = ctx.message.author.name`, we should get the username of the 
 
 The code should look something like this:
 
-![](http://i.imgur.com/uaihJZ2.png)
+![](http://i.imgur.com/0jLLzzT.png)
 
 *: ctx is just shorthand for context. However, you can put anything in place of `ctx` but it's a common practice to use `ctx`.
 
@@ -165,6 +165,25 @@ Oh look, it returns my name!
 
 This is one way to get the message object. For more uses, have a look at the docs.
 `ctx` is context. You will find that there are more uses of it than just a message if you take a look at the docs.
+
+#Benefits use of commands
+---
+
+There are ways to make commands helpful for you, such hide it from help command, alias command.
+
+* `pass_context = True` = pass down the context.
+* `brief = "explain"` =  a brief that shown in help command.
+* `name = "hey"` = allow main command (not allias) name different than a function.
+* `hidden = True`  = hide command from help command list.
+* `aliases = []` = allias command, it is a list/array, you can enter more than one.
+
+#Modify help command
+---
+
+There are also way to do something about help command.
+putting `pm_help=True` in bot when we declare a bot, where we have declare our prefix.
+We can also make help command brief change or make it hidden. By doing this
+`help_attrs=dict(hidden=True,brief="This is just a magic help")` You put them in same thing as `pm_help`
 
 
 These are the basics on starting your Discord bot with Python and Discord.py.

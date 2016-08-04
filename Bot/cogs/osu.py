@@ -14,6 +14,7 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         """
         Allow to link a OSU Profile with some info.
         Name: #rank
+        Level:  , PP:
         Country: #rank
         Total Play:
         Rank Score:
@@ -48,14 +49,15 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
             results =(await self.api.get_user(name))
             if results:
                 results = results[0]
-                msg = "{0.username}: #{0.pp_rank}\n"
-                msg +="Country:{0.country} #{0.pp_country_rank}\n"
-                msg +="Total Play:{0.playcount}\n"
-                msg +="Rank Score: {0.ranked_score}\n"
-                msg +="Total Score: {0.total_score}\n"
-                msg = msg.format(results)
-                link = "https://osu.ppy.sh/u/{}".format(results.user_id)
-                await self.bot.say_edit("```xl\n{}\n```<{}>".format(msg,link))
+                msg = "{0.username}: #{0.pp_rank}\n" \
+                      "Level: {0.level}, PP: {0.pp_raw}\n" \
+                      "Country:{0.country} #{0.pp_country_rank}\n" \
+                      "Total Play:{0.playcount}\n"\
+                      "Rank Score: {0.ranked_score}\n" \
+                      "Total Score: {0.total_score}\n".format(results)
+
+                link = "<https://osu.ppy.sh/u/{0}>\nhttps://a.ppy.sh/{0}".format(results.user_id)
+                await self.bot.say_edit("```xl\n{}\n```{}".format(msg,link))
             else:
                 await self.bot.say_edit("I am sorry, but that name does not exist.")
 def setup(bot):

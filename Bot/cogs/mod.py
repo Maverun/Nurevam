@@ -33,11 +33,10 @@ class Mod():
 #    \_____| |_|  \___|  \__,_| |_| |_| #
 #########################################
 
-
-    @commands.group(name="clean",brief="Allow to clean bot itself",pass_context=True,invoke_without_command=True)
+    @commands.group(brief="Allow to clean bot itself",pass_context=True,invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
-    async def cleanup(self,ctx,*,limit:int=100):
+    async def clean(self, ctx, *, limit:int=100):
         """
         Allow to clear up it's own message.
         Does not affect any user's message.
@@ -59,12 +58,11 @@ class Mod():
             counter= len(counter)
         await self.bot.say("```py\nClean up message: {}\n```".format(counter))
 
-
-    @cleanup.command(name="role",pass_context=True,invoke_without_command=True)
+    @clean.command(pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
-    async def roles(self,ctx,role : discord.Role,*,limit: int=100):
+    async def role(self,ctx,role : discord.Role,*,limit: int=100):
         """
         <prefix> role <what role it is> <optional, but how many, default 100 message>
         Allow to clear messages of user who have this role.
@@ -78,7 +76,7 @@ class Mod():
         except:
             pass
 
-    @cleanup.command(name="person",brief="Allow to clear that user's message",pass_context=True,invoke_without_command=True)
+    @clean.command(brief="Allow to clear that user's message", pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
@@ -92,7 +90,7 @@ class Mod():
         counter = await self.bot.purge_from(ctx.message.channel,check=delete_player,limit=limit)
         await self.bot.say("```py\nI have clean {} message from {}```".format(len(counter),user.name))
 
-    @cleanup.command(name="all",brief="Allow to clear all message",pass_context=True,invoke_without_command=True)
+    @clean.command(brief="Allow to clear all message", pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
