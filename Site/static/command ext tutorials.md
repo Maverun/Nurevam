@@ -186,6 +186,7 @@ We can also make help command brief change or make it hidden. By doing this
 `help_attrs=dict(hidden=True,brief="This is just a magic help")` You put them in same thing as `pm_help`
 
 
+---
 These are the basics on starting your Discord bot with Python and Discord.py.
 
 You can now code whatever you want and improve from there.
