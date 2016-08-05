@@ -73,7 +73,7 @@ class Discourse(): #Discourse, a forums types.
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     bool = True #so it dont get error if there is empty string, which hence set this true
-                    data.append("{0[fancy_title}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link))
+                    data.append("{0[fancy_title]}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link))
             except:
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
