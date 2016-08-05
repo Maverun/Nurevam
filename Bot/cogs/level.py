@@ -198,7 +198,6 @@ class Level():
             table.add_row([counter,name,player_data[x+3],exp,player_data[x]])
             if counter == 10:
                 break
-        print(table)
         table.vertical_char="│"
         table.horizontal_char="─"
         table.junction_char="┼"

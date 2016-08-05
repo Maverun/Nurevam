@@ -39,7 +39,8 @@ class Discourse(): #Discourse, a forums types.
             utils.prRed("Under get_data function")
             utils.prRed(traceback.format_exc())
             return None
-    async def post(self,server_id):
+
+    async def post(self,server_id):#TODO, make it look better
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
         id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
@@ -53,14 +54,15 @@ class Discourse(): #Discourse, a forums types.
         while True:
             try:
                 counter +=1
-                get_post = await self.get_data("{}/t/{}".format(config["domain"],id_post+counter),config['api_key'],config['username'],config['domain'])
+                link = "{}/t/{}".format(config['domain'],id_post+counter)
+                get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
                 if get_post is None:
                     return
                 if str(get_post[1]).isdigit():
                     self.write_files("{}:[{}]-{}".format(config["domain"],get_post,id_post+counter))
                 else:
                     self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
-                if get_post[0] is False:
+                if get_post[0] is False: #If there is error return
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
                         counter -=1
@@ -71,13 +73,13 @@ class Discourse(): #Discourse, a forums types.
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     bool = True #so it dont get error if there is empty string, which hence set this true
-                    data.append("{}\t\tAuthor: {}\n{}".format(get_post['fancy_title'],get_post['details']['created_by']['username'],"{}/t/{}".format(config['domain'],id_post+counter)))
+                    data.append("{0[fancy_title}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link))
             except:
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
                 utils.prRed(error)
-                user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
+                user=self.bot.owner
                 if len(error) >2000: #so it can nicely send me a error message.
                     error_1=error[:1900]
                     error_2=error[1900:]
@@ -100,8 +102,7 @@ class Discourse(): #Discourse, a forums types.
             except:
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 error =  '```py\n{}\n```'.format(traceback.format_exc())
-                user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
-                await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
+                await self.bot.send_message(self.bot.owner, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
                 return
 
     async def timer(self):
@@ -142,20 +143,21 @@ class Discourse(): #Discourse, a forums types.
         Posts Read:
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.server.id))
-        data = await self.get_data("{}/users/{}/summary".format(config["domain"],name),config["api_key"],config['username'],config["domain"])  #Get info of that users
+        link ="{}/users/{}/summary".format(config["domain"],name)
+        data = await self.get_data(link,config["api_key"],config['username'],config["domain"])  #Get info of that users
         utils.prGreen(data)
         data = data[1]
         if data == 404: #If there is error  which can be wrong user
             await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
             return
         summary=data["user_summary"] #Dict short for print_data format
-        print_data= "Topics Created:{}\nPost Created:{}\nLikes Given:{}\nLikes Received:{}\nDays Visited:{}\nPosts Read:{}".format(summary["topic_count"],
-                                                                                                                                   summary["post_count"],
-                                                                                                                                   summary["likes_given"],
-                                                                                                                                   summary["likes_received"],
-                                                                                                                                   summary["days_visited"],
-                                                                                                                                   summary["posts_read_count"])
-        await self.bot.say("```py\n{}\n```".format(print_data))
+        print_data= "Topics Created:{0[topic_count]}\n" \
+                    "Post Created:{0[post_count]}\n" \
+                    "Likes Given:{0[likes_given]}\n" \
+                    "Likes Received:{0[likes_received]}\n" \
+                    "Days Visited:{0[days_visited]}\n" \
+                    "Posts Read:{0[posts_read_count]}".format(summary)
+        await self.bot.say("```xl\n{}\n```".format(print_data))
 
     @commands.command(name="stats",brief="Show a Site Statistics",pass_context=True)
     @commands.check(is_enable)

@@ -63,7 +63,7 @@ class Log():
                     msg_bool = True
             if before.avatar != after.avatar:
                 if config.get("avatar"):
-                    return await self.avatar(before,after)
+                    await self.avatar(before,after)
             if msg_bool:
                 await self.send(after.server.id,msg)
 

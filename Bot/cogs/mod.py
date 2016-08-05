@@ -58,21 +58,20 @@ class Mod():
             counter= len(counter)
         await self.bot.say("```py\nClean up message: {}\n```".format(counter))
 
-    @clean.command(pass_context=True, invoke_without_command=True)
+    @clean.command(brief= "Allow to clear role's message",pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
-    async def role(self,ctx,role : discord.Role,*,limit: int=100):
+    async def role(self,ctx,roles : discord.Role,limit : int=100):
         """
         <prefix> role <what role it is> <optional, but how many, default 100 message>
         Allow to clear messages of user who have this role.
         """
         def delete_role(m):
-            return role.id in [r.id for r in m.author.roles]
+            return roles.id in [r.id for r in m.author.roles]
         try:
             counter =await self.bot.purge_from(ctx.message.channel,limit=limit,check=delete_role)
-            await self.bot.say("```py\nClean up message: {} from {}\n```".format(len(counter),role.name))
-
+            await self.bot.say("```py\nClean up message: {} from {}\n```".format(len(counter),roles.name))
         except:
             pass
 

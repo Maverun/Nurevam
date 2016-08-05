@@ -1,7 +1,3 @@
-##Maverun
-
-
-
 #How to make a Discord bot using command.ext
 ---
 
@@ -149,7 +145,7 @@ We can try to get it from message object, which contains most of these.
 However, how can we get the message object? Well, we pass down the context in `@bot.command()`, like so:`@bot.command(pass_context=True)`.
 Then in the function definition in the first parameter, we will add `ctx`*, so that it can pass context to ctx(context). 
 For example, I want my bot to greet back with my name. So, let's grab the name of the author and reply back with it!
-If we write `name = ctx.message.author.name`, we should get the username of the author of that command, then we can put it in `await bot.say("Hello there {}!".format(name))`.
+If we write `ctx.message.author.name`, we should get the username of the author of that command, then we can put it in `await bot.say("Hello there {}!".format(ctx.message.author.name))`.
 
 The code should look something like this:
 
@@ -192,6 +188,7 @@ These are the basics on starting your Discord bot with Python and Discord.py.
 You can now code whatever you want and improve from there.
 
 Have fun coding!
+
 ~Maverun
 
 Credits:

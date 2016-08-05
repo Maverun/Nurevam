@@ -114,6 +114,8 @@ class Events():
                 await self.bot.send_message(ctx.message.channel,page.replace("\n","fix\n",1))
 
     async def on_command_error(self,error,ctx):
+        if self.bot.user.id == "181503794532581376":
+            print(error)
         if isinstance(error, commands.MissingRequiredArgument):
             await self.send_cmd_help(ctx)
         elif isinstance(error,commands.BadArgument):
