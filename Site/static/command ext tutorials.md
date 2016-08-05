@@ -5,11 +5,23 @@ Everyone wants to make a discord bot that can do cool things.
 
 The following tutorial will show you how to set up and code your own basic Discord bot.
 
+#Content
+>
++ <h6><a href="#Prerequisites">Prerequisites</a></h6>
++ <h6><a href="#Fresh">Fresh Start</a></h6>
++ <h6><a href="#Commands">Commands</a></h6>
++ <h6><a href="#Help">Help command</a></h6>
++ <h6><a href="#message_obj">Message object</a></h6>
++ <h6><a href="#benefits_com">Benefits of commands</a></h6>
++ <h6><a href="#modify_help">Modify help command</a></h6>
+
+
 #Prerequisites
+<section id = 'Prerequisites'>
+
 >
 + You have to know Python.
 + Have a basic understanding on how OOP (object-oriented programming) works.
-
 For people who are new to Python, you can check the following links to get you started:
 
 * [Swaroopch](http://python.swaroopch.com/)
@@ -34,6 +46,8 @@ Command.ext is a framework built within Discord.py that provides command extensi
 In other words, we do not need to roll out our own custom framework or parse messages by hand which saves a lot of time. However, if you wanted to make commands from scratch, it's available to you.
 
 #Fresh start
+<section id = 'Fresh'>
+
 ---
 First thing first, we need to import a library.
 
@@ -42,16 +56,17 @@ First thing first, we need to import a library.
 This will tell Python to look into the folder discord/ext, then it would import the command libraries, so that we can use it in our code.
 Now, let add a command prefix and a description.
 
-`bot = commands.Bot(command_prefix=commands.command_prefix("!"), description="This is an example of a bot")`
+`bot = commands.Bot(command_prefix=command_prefix("!"), description="This is an example of a bot")`
+<section id = 'test'>
 
 You can have a multi-prefix by using tuple or a list like this: `("!", "$")`
 
 ##Some good tips:
 ###Triggering only when mentioned
->replace command_prefix with `when_mentioned`
+>replace command_prefix with `commands.when_mentioned`
 
 ###Triggering upon mention and with a command prefix
->replace command_prefix with `when_mentioned_or`
+>replace command_prefix with `commands.when_mentioned_or`
 
 To add command-line statements to ensure the status of the bot is online, We can simply add this:
 
@@ -72,7 +87,10 @@ You should see something like this:
 
 Congratulations! You have completed the first part of the tutorial!
 
+
 #Commands
+<section id = 'Commands'>
+
 ---
 
 Now you want to add a command, right?
@@ -105,8 +123,10 @@ It works!
   There is also `bot.reply()` which mentions users, and `bot.whisper()` which will DM users and lastly,
   `bot.upload()` which will attach files to same channel as the user's send message.
   
-  
+
 #Help Command
+<section id = 'Help'>
+
 ---
 Now you have created a command. Type `!help` or again, whatever prefix you have set.
 You should see something like this:
@@ -137,7 +157,10 @@ Now, let's test it.
 
 We got what we want!
 
+
 #Passing down a message object
+<section id = 'message_obj'>
+
 ---
 
 What if we need to know what the server name is, author of the message's name is, etc.
@@ -162,7 +185,10 @@ Oh look, it returns my name!
 This is one way to get the message object. For more uses, have a look at the docs.
 `ctx` is context. You will find that there are more uses of it than just a message if you take a look at the docs.
 
+
 #Benefits use of commands
+<section id = 'benefits_com'>
+
 ---
 
 There are ways to make commands helpful for you, such hide it from help command, alias command.
@@ -173,7 +199,10 @@ There are ways to make commands helpful for you, such hide it from help command,
 * `hidden = True`  = hide command from help command list.
 * `aliases = []` = allias command, it is a list/array, you can enter more than one.
 
+
 #Modify help command
+<section id = 'modify_help'>
+
 ---
 
 There are also way to do something about help command.
