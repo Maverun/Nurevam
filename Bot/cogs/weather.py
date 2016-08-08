@@ -13,6 +13,7 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
     def __init__(self,bot):
         self.bot = bot
         self.bot.say_edit = bot.says_edit
+        self.api = utils.OS_Get("WEATHER")
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
     @commands.check(is_enable)
@@ -28,11 +29,10 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
         """
         with aiohttp.ClientSession() as session:
             if country:
-                link = "http://api.openweathermap.org/data/2.5/weather?q={},{}&appid=26788a3fcb3c7e801745f379cb37494b&units=metric".format(city,country)
+                link = "http://api.openweathermap.org/data/2.5/weather?q={},{}&appid={}&units=metric".format(city,country,self.api)
             else:
-                link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid=26788a3fcb3c7e801745f379cb37494b&units=metric".format(city)
+                link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric".format(city,self.api)
             async with session.get(link) as resp:
-                # data = lxml.html.parse("https://discuss.moe/latest.rss")
                 data = await resp.json()
                 print(json.dumps(data,indent=2))
                 weather = ""
