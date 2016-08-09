@@ -2,6 +2,9 @@ from osuapi import OsuApi, AHConnector
 from discord.ext import commands
 from .utils import utils
 
+def is_enable(msg): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(msg, "osu")
+
 
 class Osu(): #Allow to welcome new members who join server. If it enable, will send them a message.
     def __init__(self,bot):
@@ -10,6 +13,7 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
 
     @commands.command(pass_context=True,brief="Show a stats of player's")
+    @commands.check(is_enable)
     async def osu(self,ctx,name=None):
         """
         Allow to link a OSU Profile with some info.

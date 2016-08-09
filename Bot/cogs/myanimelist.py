@@ -1,13 +1,11 @@
 from discord.ext import commands
 from .utils import utils
 from xml.etree import ElementTree
-from xml.sax import saxutils
 import aiohttp
+import html
 
 def synopis(term):
-    saxutils.unescape(term)
-    term = term.replace("&quot;",'"')
-    term = term.replace("&mdash;",'-')
+    term = html.unescape(term)
     print(term)
     if len(term) >= 1500:
         return term[:1500]+"..."
@@ -55,18 +53,18 @@ class Myanimelist():
         for tag in root:
             count += 1
             x = tag.findtext  # so it can be easy to call it
-            name_data.append("{}. {}".format(count, x("title")))
-            if x(
-                    "end_date") == "0000-00-00":  # check if there is end date,it will give 0000-00-00 if anime/manga is still airing/publishing
+            name_data.append("{}. {}".format(count, x("title"))) #So user can see what are in list and called them
+            if x("end_date") == "0000-00-00":  # check if there is end date,it will give 0000-00-00 if anime/manga is still airing/publishing
                 end_date = "???"
             else:
                 end_date = x("end_date")
             link = "http://myanimelist.net/{}/{}".format(category, x("id"))
             if category == "anime":  # Check which category that user ask for
                 data.append(
-                    "{}\n**Name**: {}\n**Episodes**: {}\n**Score**: {}\n**Status**:{}\n**Aired**: {} to {}\n**Synopis**:```{}```".format(
-                        link, x("title"), x("episodes"), x("score"), x("status"), x("start_date"), end_date,
-                        synopis(x("synopsis")).replace("<br />", "")))
+                    "{}\n**Name**: {1[title]}\n**Episodes**: {1[episodes]}"
+                    "\n**Score**: {1[score]}\n**Status**:{1[status]}\n"
+                    "**Aired**: {1[start_date]} to {2}\n**Synopis**:```{3}```".format(
+                        link, x,end_date,synopis(x("synopsis")).replace("<br />", "")))
             elif category == "manga":
                 if int(x("chapters")) > 0:
                     chapt = "**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))

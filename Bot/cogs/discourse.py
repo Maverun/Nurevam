@@ -4,10 +4,13 @@ import traceback
 import asyncio
 import aiohttp
 import datetime
-import discord
+import html
 
 def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "discourse")
+
+def html_unscape(term):
+    return html.unescape(term)
 
 class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
@@ -73,7 +76,8 @@ class Discourse(): #Discourse, a forums types.
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     bool = True #so it dont get error if there is empty string, which hence set this true
-                    data.append("{0[fancy_title]}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link))
+                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,
+                                                                                                html_unscape(get_post["fancy_title"])))
             except:
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
