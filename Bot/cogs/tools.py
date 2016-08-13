@@ -27,9 +27,11 @@ class Tools():
         self.bot = bot
         self.redis = bot.db.redis
         self.bot.say_edit = bot.says_edit
-        self.update_info = ""
+        self.update_info = None
+        self.back_up_info = None
+        self.counter = 0
         asyncio.get_event_loop().create_task(self.timer_update())
-        asyncio.get_event_loop().create_task(self.update_check())
+        asyncio.get_event_loop().create_task(self.update_check_loop())
 
 
     #Load/Unload/Reload cogs
@@ -194,7 +196,8 @@ class Tools():
         utils.prCyan("{}: Update {} of icon,name!".format(current_Time,len(info)))
         if self.update_info:
             utils.prCyan(self.update_info)
-        server = self.bot.servers
+        await self.update_check()
+        server = list(self.bot.servers)
         for x in server:
             if x.icon != None:
                 await self.redis.hset("Info:Server_Icon",x.id,x.icon)
@@ -256,31 +259,40 @@ class Tools():
         await self.bot.say("```xl\n{}\n```".format("\n".join(info)))
 
     async def update_check(self):
-        while True:
-            data = self.bot.background
-            now = datetime.datetime.now()
-            info = []
-            failed = []
-            failed_boolean = False
-            for x in data:
-                c = now - data[x]
-                time = divmod(c.days * 86400 + c.seconds,60)
-                minutes = time[0]
-                second = time[1]
-                if minutes >= 5:
-                    failed.append("-{}: {} min, {} second".format(x,minutes,second))
-                    self.bot.unload_extension("cogs.{}".format(x))
-                    self.bot.load_extension("cogs.{}".format(x))
-                    failed_boolean=True
-                else:
-                    info.append("+{}: {} min, {} second".format(x,minutes,second))
-            if failed_boolean:
-                user = await self.bot.application_info().owner
-                msg = "Background task of cogs have failed!\n"
-                msg += "```diff\n{}\n\n{}".format("\n".join(failed),"\n".join(info))
-                await self.bot.send_message(user.owner,msg)
+        data = self.bot.background
+        now = datetime.datetime.now()
+        info = []
+        failed = []
+        failed_boolean = False
+        for x in data:
+            c = now - data[x]
+            time = divmod(c.days * 86400 + c.seconds, 60)
+            minutes = time[0]
+            second = time[1]
+            if minutes >= 1:
+                failed.append("-{}: {} min, {} second".format(x, minutes, second))
+                self.bot.unload_extension("cogs.{}".format(x))
+                self.bot.load_extension("cogs.{}".format(x))
+                failed_boolean = True
             else:
-                self.update_info = "\n".join(info)
+                info.append("+{}: {} min, {} second".format(x, minutes, second))
+        if failed_boolean:
+            user = await self.bot.application_info().owner
+            msg = "Background task of cogs have failed!\n"
+            msg += "```diff\n{}\n\n{}".format("\n".join(failed), "\n".join(info))
+            await self.bot.send_message(user.owner, msg)
+        else:
+            self.update_info = "\n".join(info)
+
+    async def update_check_loop(self):
+        while True:
+            counter_loops = 0
+            while True:
+                if counter_loops == 100:
+                    self.counter += 1
+                    utils.prPurple("Update Check Loops check! {}".format(self.counter))
+                    counter_loops = 0
+            await self.update_check()
             await asyncio.sleep(300)
 
 def setup(bot):
