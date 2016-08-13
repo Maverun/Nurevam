@@ -59,12 +59,14 @@ class Myanimelist():
             else:
                 end_date = x("end_date")
             link = "http://myanimelist.net/{}/{}".format(category, x("id"))
+            utils.prGreen(x("synopsis"))
             if category == "anime":  # Check which category that user ask for
                 data.append(
-                    "{}\n**Name**: {1[title]}\n**Episodes**: {1[episodes]}"
-                    "\n**Score**: {1[score]}\n**Status**:{1[status]}\n"
-                    "**Aired**: {1[start_date]} to {2}\n**Synopis**:```{3}```".format(
-                        link, x,end_date,synopis(x("synopsis")).replace("<br />", "")))
+                    "{}\n**Name**: {}\n**Episodes**: {}\n"
+                    "**Score**: {}\n**Status**:{}"
+                    "\n**Aired**: {} to {}\n**Synopis**:```{}```".format(
+                        link, x("title"), x("episodes"), x("score"),x("status"), x("start_date"), end_date,
+                        synopis(x("synopsis")).replace("<br />", "")))
             elif category == "manga":
                 if int(x("chapters")) > 0:
                     chapt = "**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))
