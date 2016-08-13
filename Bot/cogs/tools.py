@@ -292,8 +292,8 @@ class Tools():
                     self.counter += 1
                     utils.prPurple("Update Check Loops check! {}".format(self.counter))
                     counter_loops = 0
-            await self.update_check()
-            await asyncio.sleep(300)
+                await self.update_check()
+                await asyncio.sleep(300)
 
 def setup(bot):
     bot.add_cog(Tools(bot))
