@@ -6,7 +6,6 @@ import html
 
 def synopis(term):
     term = html.unescape(term)
-    print(term)
     if len(term) >= 1500:
         return term[:1500]+"..."
     else:
@@ -34,7 +33,6 @@ class Myanimelist():
     async def check_status(self,name):
         with aiohttp.ClientSession() as session:
             async with session.get("http://myanimelist.net/profile/{}".format(name)) as resp:
-                print(resp.status)
                 if resp.status == 200:
                     return True
                 else:
@@ -59,7 +57,6 @@ class Myanimelist():
             else:
                 end_date = x("end_date")
             link = "http://myanimelist.net/{}/{}".format(category, x("id"))
-            utils.prGreen(x("synopsis"))
             if category == "anime":  # Check which category that user ask for
                 data.append(
                     "{}\n**Name**: {}\n**Episodes**: {}\n"

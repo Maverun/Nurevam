@@ -13,7 +13,7 @@ class Welcome(): #Allow to welcome new members who join server. If it enable, wi
         if await self.redis.hget("{}:Config:Cogs".format(member.server.id),"welcome") == "on":
             config = await self.redis.hgetall("{}:Welcome:Message".format(member.server.id))
             try:
-                if config["whisper"] == "on":
+                if config.get("whisper") == "on":
                     msg = await self.bot.send_message(member,config["message"].format(user=member.name,server=member.server,user_mention=member.mention))
                 else:
                     msg =await self.bot.send_message(self.bot.get_channel(config["channel"]),config["message"].format(user=member.name,server=member.server,user_mention=member.mention))
