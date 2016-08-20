@@ -277,10 +277,10 @@ class Tools():
             else:
                 info.append("+{}: {} min, {} second".format(x, minutes, second))
         if failed_boolean:
-            user = await self.bot.application_info().owner
+            user = self.bot.owner
             msg = "Background task of cogs have failed!\n"
             msg += "```diff\n{}\n\n{}".format("\n".join(failed), "\n".join(info))
-            await self.bot.send_message(user.owner, msg)
+            await self.bot.send_message(user, msg)
         else:
             self.update_info = "\n".join(info)
 
