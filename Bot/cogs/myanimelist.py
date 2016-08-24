@@ -32,11 +32,26 @@ class Myanimelist():
 
     async def check_status(self,name):
         with aiohttp.ClientSession() as session:
-            async with session.get("http://myanimelist.net/malappinfo.php?u={}".format(name)) as resp:
+            async with session.get("http://myanimelist.net/malappinfo.php?u={}&status=all".format(name)) as resp:
+                utils.prRed(resp.url)
                 if resp.status == 200:
-                    xml_data = ElementTree.fromstring(await resp.text())[0]
-                    data = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'ptw','days_spent_watching'], [x.text for x in xml_data]))
+                    xml_data = ElementTree.fromstring(await resp.text())
+                    data = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'ptw','days_spent_watching'], [x.text for x in xml_data[0]]))
                     if data:
+                        total_watch = 0
+                        mean_score = 0
+                        mean_count =0
+                        for x in xml_data:
+                            if mean_count == 0:
+                                mean_count =+ 1
+                                continue
+                            total_watch += int(x[10].text)
+                            if int(x[13].text) >= 1:
+                                mean_score += int(x[13].text)
+                                mean_count +=1
+                        mean_score = mean_score/(mean_count-1)
+                        mean_score = round(mean_score,ndigits=2)
+                        data.update({"mean":mean_score,"total_ep":total_watch})
                         return data
                     else:
                         await self.bot.says_edit("This username does not exist!")
@@ -158,8 +173,11 @@ class Myanimelist():
                    boolean = True
         if boolean:
             data = await self.check_status(name)
-            stats = "Watching:{}\nCompleted:{}\nOn Hold:{}\nDropped:{}\nPlan To Watch:{}\nTotal Days Watched:{}".format(data["watching"],data["completed"],data["on_hold"],
-                                                                                                 data["dropped"],data["ptw"],data["days_spent_watching"])
+            stats = "Watching:{}\nCompleted:{}\nOn Hold:{}\n" \
+                    "Dropped:{}\nPlan To Watch:{}\nTotal Days Watched:{}\n" \
+                    "Total Episode Watched:{}\nMean Score:{}".format(data["watching"],data["completed"],data["on_hold"],
+                                                                     data["dropped"],data["ptw"],data["days_spent_watching"],
+                                                                     data["total_ep"],data["mean"])
             await self.bot.says_edit("```xl\n{}\n```\nhttp://myanimelist.net/{}/{}".format(stats,site,name))
 
     @commands.check(is_enable)
