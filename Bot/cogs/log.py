@@ -108,6 +108,7 @@ class Log():
 
     async def send(self,server_id,msg):
         dest= self.bot.get_channel(self.config[server_id]["channel"])
+        msg = msg.replace("@","@\u200b")
         await self.bot.send_message(dest,msg)
 
     async def timer(self):
