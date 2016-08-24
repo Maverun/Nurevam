@@ -53,6 +53,7 @@ class Log():
             if before.name != after.name:
                 if config.get("name"):
                     msg_bool = True
+                    msg ="`[{}]`:__{} [{}]__ ".format(self.time(), before, before.id)
                     msg += "have changed username to **{}**".format(after.name)
             if before.nick != after.nick:
                 if config.get("nickname"):
@@ -88,7 +89,7 @@ class Log():
                     message += "*have delete attachments*"
                 else:
                     message += "*have delete this message* in {}: ".format(msg.channel.mention)
-                    message += "{}".format(msg.content)
+                    message += "{}".format(msg.clean_content)
                 await self.send(msg.server.id,message)
 
     async def on_member_join(self,member):
