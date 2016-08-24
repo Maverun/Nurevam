@@ -32,11 +32,14 @@ class Myanimelist():
 
     async def check_status(self,name):
         with aiohttp.ClientSession() as session:
-            async with session.get("http://myanimelist.net/profile/{}".format(name)) as resp:
+            async with session.get("http://myanimelist.net/malappinfo.php?u={}".format(name)) as resp:
                 if resp.status == 200:
-                    return True
-                else:
-                    await self.bot.says_edit("This username does not exist!")
+                    xml_data = ElementTree.fromstring(await resp.text())[0]
+                    data = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'ptw','days_spent_watching'], [x.text for x in xml_data]))
+                    if data:
+                        return data
+                    else:
+                        await self.bot.says_edit("This username does not exist!")
 
     async def data(self, ctx, category, name):
         data = await self.get_data(category, name)
@@ -136,7 +139,6 @@ class Myanimelist():
             user = user.id
             mention = True
         setting = await self.redis.hget("Profile:{}".format(user),"myanimelist")
-        print(setting)
         if name is None:
             if setting is None:
                 await self.bot.says_edit("You need to enter a name! Or you can enter your own name in your profile at <http://nurevam.site>")
@@ -155,7 +157,10 @@ class Myanimelist():
                if await self.check_status(name):
                    boolean = True
         if boolean:
-            await self.bot.says_edit("http://myanimelist.net/{}/{}".format(site,name))
+            data = await self.check_status(name)
+            stats = "Watching:{}\nCompleted:{}\nOn Hold:{}\nDropped:{}\nPlan To Watch:{}\nTotal Days Watched:{}".format(data["watching"],data["completed"],data["on_hold"],
+                                                                                                 data["dropped"],data["ptw"],data["days_spent_watching"])
+            await self.bot.says_edit("```xl\n{}\n```\nhttp://myanimelist.net/{}/{}".format(stats,site,name))
 
     @commands.check(is_enable)
     @commands.command(pass_context=True,brief="link out MAL user's profile")
