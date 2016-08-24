@@ -82,6 +82,8 @@ class Log():
     async def on_message_delete(self,msg):
         if msg.channel.is_private:
             return
+        if msg.author.id == self.bot.user.id:
+            return
         if self.config.get(msg.server.id):
             if self.config[msg.server.id].get("delete"):
                 message = self.format_msg(msg.author)
@@ -109,7 +111,11 @@ class Log():
     async def send(self,server_id,msg):
         dest= self.bot.get_channel(self.config[server_id]["channel"])
         msg = msg.replace("@","@\u200b")
-        await self.bot.send_message(dest,msg)
+        try:
+            await self.bot.send_message(dest,msg)
+        except:
+            pass
+
 
     async def timer(self):
         while True:
