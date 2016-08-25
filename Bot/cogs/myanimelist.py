@@ -33,7 +33,6 @@ class Myanimelist():
     async def check_status(self,name):
         with aiohttp.ClientSession() as session:
             async with session.get("http://myanimelist.net/malappinfo.php?u={}&status=all".format(name)) as resp:
-                utils.prRed(resp.url)
                 if resp.status == 200:
                     xml_data = ElementTree.fromstring(await resp.text())
                     data = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'ptw','days_spent_watching'], [x.text for x in xml_data[0]]))

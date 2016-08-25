@@ -119,4 +119,3 @@ async def on_error(event,*args,**kwargs):
 
 if __name__ == '__main__':
     bot.run(utils.OS_Get("NUREVAM_TOKEN"))
-

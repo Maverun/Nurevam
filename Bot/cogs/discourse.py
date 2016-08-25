@@ -19,7 +19,10 @@ class Discourse(): #Discourse, a forums types.
         self.counter= 0
         self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         loop = asyncio.get_event_loop()
-        loop.create_task(self.timer())
+        self.loop_discourse_timer = loop.create_task(self.timer())
+
+    def __unload(self):
+        self.loop_discourse_timer.cancel()
 
     def write_files(self,text):
         time= datetime.datetime.now().strftime("%b/%d/%Y %H:%M:%S")

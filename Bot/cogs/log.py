@@ -12,7 +12,10 @@ class Log():
         self.redis = bot.db.redis
         self.config = {}
         loop = asyncio.get_event_loop()
-        loop.create_task(self.timer())
+        self.loop_log_timer = loop.create_task(self.timer())
+
+    def __unload(self):
+        self.loop_log_timer.cancel()
 
     def time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
@@ -115,7 +118,6 @@ class Log():
             await self.bot.send_message(dest,msg)
         except:
             pass
-
 
     async def timer(self):
         while True:
