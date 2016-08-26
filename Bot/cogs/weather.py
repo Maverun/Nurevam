@@ -17,24 +17,22 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
     @commands.check(is_enable)
-    async def weather(self,city,*,country:str=""):
+    async def weather(self,*,locations:str="City,Country"):
         """
-        !weather city country
+        !weather city,country
         country is optional.
+        When include country, add comma after city name
         Name (latitude,longitude)
         Weather Conditions:
         Humidty: % Current Temperature: %
         Cloudiness: %   Wind Speed: m/s
         sunrise: 00:00:00 utc / sunset: 00:00:00 utc
         """
+        locate =",".join([x.strip().replace(" ","_") for x in locations.split(",")]) # Dont do this kid
         with aiohttp.ClientSession() as session:
-            if country:
-                link = "http://api.openweathermap.org/data/2.5/weather?q={},{}&appid={}&units=metric".format(city,country,self.api)
-            else:
-                link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric".format(city,self.api)
+            link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric".format(locate,self.api)
             async with session.get(link) as resp:
                 data = await resp.json()
-                print(json.dumps(data,indent=2))
                 weather = ""
                 weather += "_**{city}-{Country}**_ -({lat},{lon})\n".format(city=data["name"],Country=data["sys"]["country"],lat=data["coord"]["lat"],lon=data["coord"]["lon"])
                 weather += "**Weather Conditions**: {}\n".format(data["weather"][0]["description"])
