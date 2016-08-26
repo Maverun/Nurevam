@@ -1,4 +1,5 @@
 from discord.ext import commands
+from .utils import utils
 from PIL import Image
 import datetime
 import asyncio
@@ -16,6 +17,8 @@ class Log():
 
     def __unload(self):
         self.loop_log_timer.cancel()
+        utils.prLightPurple("Unloading Log")
+
 
     def time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")

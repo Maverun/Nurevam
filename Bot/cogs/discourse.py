@@ -23,6 +23,7 @@ class Discourse(): #Discourse, a forums types.
 
     def __unload(self):
         self.loop_discourse_timer.cancel()
+        utils.prLightPurple("Unloading Discourse")
 
     def write_files(self,text):
         time= datetime.datetime.now().strftime("%b/%d/%Y %H:%M:%S")

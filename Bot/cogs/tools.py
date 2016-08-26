@@ -272,6 +272,7 @@ class Tools():
             if minutes >= 1:
                 failed.append("-{}: {} min, {} second".format(x, minutes, second))
                 self.bot.unload_extension("cogs.{}".format(x))
+                await asyncio.sleep(3)
                 self.bot.load_extension("cogs.{}".format(x))
                 failed_boolean = True
             else:
@@ -279,7 +280,7 @@ class Tools():
         if failed_boolean:
             user = self.bot.owner
             msg = "Background task of cogs have failed!\n"
-            msg += "```diff\n{}\n\n{}".format("\n".join(failed), "\n".join(info))
+            msg += "```diff\n{}\n\n{}\n```".format("\n".join(failed), "\n".join(info))
             await self.bot.send_message(user, msg)
         else:
             self.update_info = "\n".join(info)
