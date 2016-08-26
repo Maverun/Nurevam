@@ -190,8 +190,8 @@ class Myanimelist():
 
 
     @commands.check(is_enable)
-    @commands.command(pass_context=True,brief = "link out MAL user's anime or manga list")
-    async def list(self,ctx,type,name=None):
+    @commands.command(name="list",pass_context=True,brief = "link out MAL user's anime or manga list")
+    async def show_list(self,ctx,type,name=None):
         """
         Allow to give you a anime/manga list of that username.
         !list amime <username>
