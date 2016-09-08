@@ -237,7 +237,7 @@ class Tools():
         print(player_data)
         for x in range(0,len(player_data),3):
             msg.append("{},{},{}\n".format(player_data[x],player_data[x+2].replace(","," "),player_data[x+1]))
-        with open("acivity.txt","w",encoding='utf-8') as f:
+        with open("activity.txt","w",encoding='utf-8') as f:
             for x in msg:
                 print(x)
                 f.write(x)

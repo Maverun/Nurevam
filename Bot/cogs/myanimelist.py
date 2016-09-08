@@ -177,7 +177,7 @@ class Myanimelist():
                     "Total Episode Watched:{}\nMean Score:{}".format(data["watching"],data["completed"],data["on_hold"],
                                                                      data["dropped"],data["ptw"],data["days_spent_watching"],
                                                                      data["total_ep"],data["mean"])
-            await self.bot.says_edit("```xl\n{}\n```\nhttp://myanimelist.net/{}/{}".format(stats,site,name))
+            await self.bot.says_edit("```xl\n{}\n```\n<http://myanimelist.net/{}/{}>".format(stats,site,name))
 
     @commands.check(is_enable)
     @commands.command(pass_context=True,brief="link out MAL user's profile")
