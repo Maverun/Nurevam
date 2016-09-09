@@ -30,7 +30,7 @@ DEFAULT_AVATAR = "https://discordapp.com/assets/1cbd08c76f8af6dddce02c5138971129
 DOMAIN = os.environ.get('VIRTUAL_HOST', 'localhost:5000')
 TOKEN_URL = API_BASE_URL + '/oauth2/token'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-headers = {"Authorization": os.environ.get("NUREVAM_TOKEN")}
+headers = {"Authorization": "Bot " + os.environ.get("NUREVAM_TOKEN")}
 
 db = redis.Redis(host=Redis,decode_responses=True)
 
