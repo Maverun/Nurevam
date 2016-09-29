@@ -70,8 +70,9 @@ class Discourse(): #Discourse, a forums types.
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     bool = True #so it dont get error if there is empty string, which hence set this true
-                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,
-                                                                                                html_unscape(get_post["fancy_title"])))
+                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
+                else: #Appear this is a reason why it stuck for ever... I think.
+                    return
             except:
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
@@ -112,10 +113,10 @@ class Discourse(): #Discourse, a forums types.
             while True:
                 if counter_loops == 100:
                     self.counter += 1
-                    if self.bot.id_discourse != id_count: #if it dont match, it will return
-                        return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
                     utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
                     counter_loops = 0
+                if self.bot.id_discourse != id_count:  # if it dont match, it will return
+                    return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
                 self.bot.background.update({"discourse":datetime.datetime.now()})
                 for server in self.bot.servers:
                     await self.post(server.id)
