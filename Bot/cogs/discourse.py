@@ -36,12 +36,16 @@ class Discourse(): #Discourse, a forums types.
                         return [True,await resp.json()]
                     else:
                         return [False,resp.status]
+        except asyncio.CancelledError: #Just in case here for some reason
+            utils.prRed("Under get_data function")
+            utils.prRed("Asyncio Cancelled Error")
+            return None
         except:
             utils.prRed("Under get_data function")
             utils.prRed(traceback.format_exc())
             return None
 
-    async def post(self,server_id):#TODO, make it look better
+    async def post(self,server_id):#TODO, make it look better, Serious.
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
         id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
@@ -72,6 +76,7 @@ class Discourse(): #Discourse, a forums types.
                     bool = True #so it dont get error if there is empty string, which hence set this true
                     data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
                 else: #Appear this is a reason why it stuck for ever... I think.
+                    utils.prRed("Found Nothing in Discourse, returning..")
                     return
             except:
                 utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
@@ -109,9 +114,9 @@ class Discourse(): #Discourse, a forums types.
         id_count = self.bot.id_discourse #testing ID of loops, how many time is there that
         utils.prPurple("Starting Discourse Loops time")
         counter_loops = 0
-        try:
-            while True:
-                if counter_loops == 100:
+        while True:
+            try:
+                if counter_loops == 30:
                     self.counter += 1
                     utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
                     counter_loops = 0
@@ -122,9 +127,10 @@ class Discourse(): #Discourse, a forums types.
                     await self.post(server.id)
                 counter_loops += 1
                 await asyncio.sleep(30)
-        except asyncio.CancelledError:
-            utils.prRed("Asyncio Cancelled Error")
-            pass
+            except asyncio.CancelledError:
+                utils.prRed("Asyncio Cancelled Error")
+                return
+
 
 #########################################################################
 #     _____                                                       _     #

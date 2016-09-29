@@ -286,6 +286,7 @@ class Tools():
             self.update_info = "\n".join(info)
 
     async def update_check_loop(self):
+        utils.prPurple("Starting update_check_loop")
         while True:
             counter_loops = 0
             while True:
