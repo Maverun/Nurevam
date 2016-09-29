@@ -17,18 +17,12 @@ class Discourse(): #Discourse, a forums types.
         self.bot = bot
         self.redis = bot.db.redis
         self.counter= 0
-        self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         loop = asyncio.get_event_loop()
         self.loop_discourse_timer = loop.create_task(self.timer())
 
     def __unload(self):
         self.loop_discourse_timer.cancel()
         utils.prLightPurple("Unloading Discourse")
-
-    def write_files(self,text):
-        time= datetime.datetime.now().strftime("%b/%d/%Y %H:%M:%S")
-        with open("discourse_log.txt","a") as f:
-            f.write("{}:{}\n".format(time,text))
 
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
@@ -65,10 +59,6 @@ class Discourse(): #Discourse, a forums types.
                 get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
                 if get_post is None:
                     return
-                if str(get_post[1]).isdigit():
-                    self.write_files("{}:[{}]-{}".format(config["domain"],get_post,id_post+counter))
-                else:
-                    self.write_files("{}:[{}|||{}|||{}]".format(config["domain"],get_post[0],get_post[1]["fancy_title"],id_post+counter))
                 if get_post[0] is False: #If there is error return
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
                     if get_post[1] == 404 or get_post[1]==410:
@@ -114,19 +104,26 @@ class Discourse(): #Discourse, a forums types.
                 return
 
     async def timer(self):
-        utils.prPurple("Starting time")
+        self.bot.id_discourse += 1
+        id_count = self.bot.id_discourse #testing ID of loops, how many time is there that
+        utils.prPurple("Starting Discourse Loops time")
         counter_loops = 0
-        while True:
-            if counter_loops ==100:
-                self.counter +=1
-                utils.prPurple("Discourse Loops check! {}".format(self.counter))
-                counter_loops = 0
-            self.time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
-            self.bot.background.update({"discourse":datetime.datetime.now()})
-            for server in self.bot.servers:
-                await self.post(server.id)
-            counter_loops+=1
-            await asyncio.sleep(30)
+        try:
+            while True:
+                if counter_loops == 100:
+                    self.counter += 1
+                    if self.bot.id_discourse != id_count: #if it dont match, it will return
+                        return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
+                    utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
+                    counter_loops = 0
+                self.bot.background.update({"discourse":datetime.datetime.now()})
+                for server in self.bot.servers:
+                    await self.post(server.id)
+                counter_loops += 1
+                await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            utils.prRed("Asyncio Cancelled Error")
+            pass
 
 #########################################################################
 #     _____                                                       _     #
@@ -232,20 +229,6 @@ class Discourse(): #Discourse, a forums types.
         if "bio_raw" in data:
             data_array.append("**Bio**: \n```\n{}\n```".format(data["bio_raw"]))
         await self.bot.say("\n".join(data_array))
-
-
-#Testing to see how it goes
-    @commands.command(pass_context=True,hidden=True)
-    @commands.check(utils.is_owner)
-    async def get_files(self,ctx):
-        with open("discourse_log.txt","rb") as f:
-            await self.bot.send_file(ctx.message.author,f)
-
-    @commands.command(hidden=True)
-    @commands.check(utils.is_owner)
-    async def get_time(self):
-        current_time=datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
-        await self.bot.say("```py\n{}\n{}\n```".format(current_time,self.time))
 
 def setup(bot):
     bot.add_cog(Discourse(bot))

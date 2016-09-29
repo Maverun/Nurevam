@@ -56,8 +56,9 @@ async def on_ready():
         bot.uptime = datetime.datetime.utcnow()
         bot.owner = (await bot.application_info()).owner
         bot.background = {}
+        bot.id_discourse = 0
         load_cogs()
-    await bot.change_status(discord.Game(name="http://nurevam.site/"))
+    await bot.change_presence(game = discord.Game(name="http://nurevam.site/"))
 
 async def command_checker(msg):
     try:

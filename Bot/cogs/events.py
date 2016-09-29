@@ -23,13 +23,12 @@ class Events():
 #############################################################
 
     async def on_server_join(self,server): #IF Bot join server, it will add to record of those.
-        print ("\033[92m<EVENT JOIN>: \033[94m {} :({}) -- {}\033[00m".format(self.Time(), server.id, server.name))
+        print ("\033[96m<EVENT JOIN>: \033[94m {} :({}) -- {}\033[00m".format(self.Time(), server.id, server.name))
         utils.prGreen("\t\t Servers: {}\t\t Members: {}".format(len(self.bot.servers), len(set(self.bot.get_all_members()))))
         await self.redis.hset("Info:Server",str(server.id),str(server.name))
         await self.redis.set("Info:Total Server",len(self.bot.servers))
         await self.redis.set("Info:Total Member",len(set(self.bot.get_all_members())))
         await self.redis.set("{}:Config:CMD_Prefix".format(server.id),"!")
-
         #Server setting
         await self.redis.hset("{}:Config:Delete_MSG".format(server.id),"core","off")
 
@@ -64,7 +63,7 @@ class Events():
         if before.name != after.name:
             print("\033[97m<Event Member Update Name>: \033[94m {}:\033[93m Before : {} |||\033[92m After : {} ||| {}\033[00m".format(self.Time(),before.name,after.name, after.id))
             await self.redis.hset("Info:Name",after.id,after.name)
-        await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=10) #To stop multi update
+        await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=15) #To stop multi update
 
     async def on_command(self,command,ctx):
         if ctx.message.channel.is_private:
