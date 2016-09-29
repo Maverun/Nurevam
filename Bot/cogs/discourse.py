@@ -48,11 +48,13 @@ class Discourse(): #Discourse, a forums types.
     async def post(self,server_id):#TODO, make it look better, Serious.
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
+        config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
+        if not (config):
+            return
         id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
-        if id_post is None:
+        if not(id_post):
             return
         id_post=int(id_post)
-        config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
         counter = 0
         data=[]
         bool = False
@@ -127,6 +129,7 @@ class Discourse(): #Discourse, a forums types.
                     await self.post(server.id)
                 counter_loops += 1
                 await asyncio.sleep(30)
+                utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
             except asyncio.CancelledError:
                 utils.prRed("Asyncio Cancelled Error")
                 return
