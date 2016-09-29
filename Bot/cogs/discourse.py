@@ -76,8 +76,9 @@ class Discourse(): #Discourse, a forums types.
                         continue
                     elif get_post[1] == 403:
                         count = await self.redis.get("{}:cooldown:403".format(server_id))
+                        print(count)
                         if count is not None:
-                            if count >= 10:
+                            if int(count) >= 10:
                                 break
                         else:
                             await self.redis.incr("{}:cooldown:403".format(server_id))
