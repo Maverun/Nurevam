@@ -27,6 +27,7 @@ class Discourse(): #Discourse, a forums types.
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
+        utils.prCyan("Under get_data, {}".format(link))
         try:
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
@@ -57,12 +58,13 @@ class Discourse(): #Discourse, a forums types.
         id_post=int(id_post)
         counter = 0
         data=[]
-        bool = False
+        data_bool = False
         while True:
             try:
                 counter +=1
                 link = "{}/t/{}".format(config['domain'],id_post+counter)
                 get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
+                utils.prYellow(get_post)
                 if get_post is None:
                     return
                 if get_post[0] is False: #If there is error return
@@ -75,7 +77,7 @@ class Discourse(): #Discourse, a forums types.
                     break
                 elif get_post[0] is True:
                     get_post=get_post[1]
-                    bool = True #so it dont get error if there is empty string, which hence set this true
+                    data_bool = True #so it dont get error if there is empty string, which hence set this true
                     data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
                 else: #Appear this is a reason why it stuck for ever... I think.
                     utils.prRed("Found Nothing in Discourse, returning..")
@@ -94,7 +96,7 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
                 return
-        if bool:
+        if data_bool:
             try:
                 if len("\n".join(data)) >=1500:
                     first= data[:int(len(data)/2)]
@@ -118,6 +120,7 @@ class Discourse(): #Discourse, a forums types.
         counter_loops = 0
         while True:
             try:
+                utils.prLightPurple("Start loops {}".format(counter_loops))
                 if counter_loops == 30:
                     self.counter += 1
                     utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
