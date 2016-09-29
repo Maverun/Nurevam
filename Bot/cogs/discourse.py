@@ -72,9 +72,19 @@ class Discourse(): #Discourse, a forums types.
                     if get_post[1] == 404 or get_post[1]==410:
                         counter -=1
                         break
-                    elif get_post[1] == 200 or get_post[1] == 403:
+                    elif get_post[1] == 200:
                         continue
+                    elif get_post[1] == 403:
+                        count = await self.redis.get("{}:cooldown:403".format(server_id))
+                        if count is not None:
+                            if count >= 10:
+                                break
+                        else:
+                            await self.redis.incr("{}:cooldown:403".format(server_id))
+                            await self.redis.expire("{}:cooldown:403".format(server_id),30)
+                            continue
                     break
+
                 elif get_post[0] is True:
                     get_post=get_post[1]
                     data_bool = True #so it dont get error if there is empty string, which hence set this true
