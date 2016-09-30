@@ -27,7 +27,7 @@ class Discourse(): #Discourse, a forums types.
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
-        utils.prCyan("Under get_data, {}".format(link))
+        # utils.prCyan("Under get_data, {}".format(link))
         try:
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
@@ -64,7 +64,7 @@ class Discourse(): #Discourse, a forums types.
                 counter +=1
                 link = "{}/t/{}".format(config['domain'],id_post+counter)
                 get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
-                utils.prYellow(get_post)
+                # utils.prYellow(get_post)
                 if get_post is None:
                     return
                 if get_post[0] is False: #If there is error return
@@ -76,14 +76,13 @@ class Discourse(): #Discourse, a forums types.
                         continue
                     elif get_post[1] == 403:
                         count = await self.redis.get("{}:cooldown:403".format(server_id))
-                        print(count)
-                        if count is not None:
+                        # print(count)
+                        if count is not None: #If key is atually exists, then check how many time it already got 403
                             if int(count) >= 10:
                                 break
-                        else:
-                            await self.redis.incr("{}:cooldown:403".format(server_id))
-                            await self.redis.expire("{}:cooldown:403".format(server_id),30)
-                            continue
+                        await self.redis.incr("{}:cooldown:403".format(server_id)) #adding up by 1
+                        await self.redis.expire("{}:cooldown:403".format(server_id),10) #add timer by 10 second, recall it will reset timer.
+                        continue
                     break
 
                 elif get_post[0] is True:
@@ -131,7 +130,7 @@ class Discourse(): #Discourse, a forums types.
         counter_loops = 0
         while True:
             try:
-                utils.prLightPurple("Start loops {}".format(counter_loops))
+                # utils.prLightPurple("Start loops {}".format(counter_loops))
                 if counter_loops == 30:
                     self.counter += 1
                     utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
@@ -143,7 +142,7 @@ class Discourse(): #Discourse, a forums types.
                     await self.post(server.id)
                 counter_loops += 1
                 await asyncio.sleep(30)
-                utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
+                # utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
             except asyncio.CancelledError:
                 utils.prRed("Asyncio Cancelled Error")
                 return

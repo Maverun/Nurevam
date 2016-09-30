@@ -131,7 +131,8 @@ class Log():
                     self.config.update({x:config})
             self.bot.log_config = self.config
             self.bot.background.update({"log":datetime.datetime.now()})
-            await asyncio.sleep(60)
+            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1min by miracle
+
 
 def setup(bot):
     bot.add_cog(Log(bot))

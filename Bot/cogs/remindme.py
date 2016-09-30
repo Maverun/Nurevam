@@ -20,10 +20,10 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
                 print(data)
                 for x in data: #run every Id in data and return timer
                     utils.prRed(x)
-                    time = self.redis.ttl("{}:Remindme:Time:{}".format(x.id,x))
+                    time = utils.redis.ttl("{}:Remindme:Time:{}".format(x.id,x))
                     utils.prYellow("Time: {},Channel: {}, Message: {}".format(time,channel[x],data[x]))
                     if time == -2:
-                        await self.bot.send_message(self.bot.get_channel(channel[x]),"My apologies for did not remind you early!, You was set to remind of this {}".format(data[x]))
+                        await self.bot.send_message(self.bot.get_channel(channel[x]),"I am deeply sorry for not remind you early!, You was set to remind of this {}".format(data[x]))
                     else:
                         self.loop.create_task(self.time_send(channel[x],data[x],time))
 
@@ -36,6 +36,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         time = get_time.split(":")
         remind_time = 0
         msg = "Time set "
+        id_time = 0
         print(message)
         if len(time) == 3:
             if int(time[0]) >=5:
@@ -62,7 +63,10 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         await self.bot.say(msg,delete_after=30)
         await asyncio.sleep(remind_time)
         await self.bot.say(message)
-
+        if remind_time >= 60: #cleaning them up
+            server = ctx.message.server.id
+            await self.redis.hdel("{}:Remindme:data".format(server),id_time,message)
+            await self.redis.hdel("{}:Remindme:channel".format(server),id_time,ctx.message.channel.id)
 
 def setup(bot):
     bot.add_cog(Remind(bot))
