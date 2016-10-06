@@ -171,8 +171,6 @@ class Level():
             return
         await self.redis.set("{}:Level:{}:rank:check".format(server,msg.message.author.id),'cooldown',expire=int(cooldown))
 
-
-
     @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
     @commands.check(is_enable)
     async def rank_table(self,msg):

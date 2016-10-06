@@ -131,7 +131,7 @@ class Tools():
 
         await self.bot.say(python.format(result))
 
-    @commands.command(name="server",pass_context=True,hidden=True)
+    @commands.command(name="server_core",pass_context=True,hidden=True)
     @commands.check(utils.is_owner)
     async def Check_Server(self,ctx):
         cogs = list_cogs()
