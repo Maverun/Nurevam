@@ -32,23 +32,27 @@ class Level():
     async def is_ban(self,msg):
         is_ban_member = await self.redis.smembers("{}:Level:banned_members".format(msg.server.id))
         is_ban_role = await self.redis.smembers("{}:Level:banned_roles".format(msg.server.id))
-        for role in msg.author.roles:
-            if role.id in is_ban_role:
-                return True
+        try: #Need to debug this later on.
+            for role in msg.author.roles:
+                if role.id in is_ban_role:
+                    return True
+        except:
+            if msg.channel.is_private:
+                utils.prRed("It is under private")
+            else:
+                utils.prRed("name: {0.name}, id:{0.id}, person: {1}, {1.id}".format(msg.server,msg.author))
         if msg.author.id in is_ban_member:
             return True
         return False
 
     async def on_message(self,msg): #waiting for player reply
-        if msg.author == self.bot.user:
+        if msg.author == self.bot.user or msg.channel.is_private:
             return
-        if msg.channel.is_private:
-            return
+        if int(msg.author.discriminator) == 0000:
+            return #Webhook
         if await self.is_ban(msg) is True:
             return
-        if await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "off":
-            return
-        elif await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "on":
+        if await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "on":
             #Getting ID
             player = msg.author.id
             server = msg.server.id
@@ -59,19 +63,17 @@ class Level():
             await self.redis.hincrby(self.name,"Total Message Count",increment=1)
             await self.redis.hset(self.name,"ID",player)
             await self.redis.hset(self.name,"Name",msg.author.name)
-            check = await self.redis.get("{}:Level:{}:xp:check".format(server,player))
-            if check: #If it true, return, it haven't cool down yet
+            if await self.redis.get("{}:Level:{}:xp:check".format(server,player)):#If it true, return, it haven't cool down yet
                 return
             #If Cooldown expire, Add xp and stuff
             await self.redis.sadd("{}:Level:Player".format(server),player)
             await self.redis.hset(self.name,"Discriminator",msg.author.discriminator)
             xp = randint(5,10)
-            await self.redis.hincrby(self.name,"XP",increment=(xp))
+            current_xp = await self.redis.hincrby(self.name,"XP",increment=(xp))
             await self.redis.hincrby(self.name,"Total_XP",increment=(xp))
             await self.redis.hincrby(self.name,"Message Count",increment=1)
-            current_xp=await self.redis.hget(self.name,"XP")
             Next_XP=await self.redis.hget(self.name,"Next_XP")
-            if Next_XP == None: #Some reason i get error that Next XP is missing, so best to this way to stop giving error while seting it
+            if Next_XP == None: #Some reason i get error that Next XP is missing, so best to this way to stop giving error while setting it
                 await self.redis.hset(self.name,"Next_XP",100)
                 return
             if int(current_xp) >= int(Next_XP):
@@ -87,9 +89,9 @@ class Level():
                 await self.redis.hincrby(self.name,"Total_Traits_Points",increment=traits)
                 utils.prCyan("{} - {} - {} ({}) Level up!".format(msg.server.name,server,msg.author,player))
                 announce = await self.redis.hgetall("{}:Level:Config".format(server))
-                if announce.get("announce",False) == "on":
+                if announce.get("announce") == "on":
                     print("whisper")
-                    if announce.get("whisper",False) == "on":
+                    if announce.get("whisper") == "on":
                         await self.bot.send_message(msg.author,announce["announce_message"].format(player=msg.author.display_name,level=int(level)+1))
                     else:
                         await self.bot.send_message(msg.channel,announce["announce_message"].format(player=msg.author.display_name,level=int(level)+1))
