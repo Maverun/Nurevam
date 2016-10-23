@@ -7,10 +7,12 @@ from flaskext.markdown import Markdown
 from functools import wraps
 import binascii
 import requests
+import datetime
 import logging
 import random
 import redis
 import json
+import time
 import math
 import os
 
@@ -217,7 +219,13 @@ def get_user_guilds(token):
     discord = make_session(token=token)
 
     req = discord.get(API_BASE_URL + '/users/@me/guilds')
-    if req.status_code != 200:
+    print(req)
+    print(req.status_code)
+    print(req.headers)
+    if req.status_code == 429:
+        current = datetime.datetime.now()
+        time.sleep(req.headers["X-RateLimit-Reset"]-current.timestamp())
+    elif req.status_code != 200:
         abort(req.status_code)
 
     guilds = req.json()
