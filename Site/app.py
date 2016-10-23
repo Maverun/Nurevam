@@ -224,7 +224,9 @@ def get_user_guilds(token):
     print(req.headers)
     if req.status_code == 429:
         current = datetime.datetime.now()
-        time.sleep(req.headers["X-RateLimit-Reset"]-current.timestamp())
+        print(current)
+        time.sleep(int(req.headers["X-RateLimit-Reset"])-current.timestamp())
+        print("OK")
     elif req.status_code != 200:
         abort(req.status_code)
 
