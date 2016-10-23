@@ -1,0 +1,209 @@
+{% extends 'full-page.html' %}
+{% block content %}
+<div class="jumbotron home-jumbotron">
+    <div class="container">
+        <div class="row">
+            {% set csrf = csrf_token() %}
+            <form id="add_form_species" method="post" action="{{url_for('add_species', server_id=server_id) }}">
+                {% include 'flash.html' %}
+                <h1>Species of monster</h1>
+                <hr>
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <input name=_csrf_token type=hidden value="{{ csrf }}">
+                        <label class="control-label" for="spieces">species</label>
+                        <input class="form-control input-lg" name="species" value="" type="text"
+                               id="species">
+                    </div>
+                    <div class="well well-sm">
+                        Enter new species.
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <ul>
+                        {% for kind in spieces %}
+                        <li>{{spieces[kind]}}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            <div class="col-md-12">
+                            <h3>Select the best option for this species with those</h3>
+
+            </div>
+            <div class="col-md-2">
+                    <div>
+                        <label class="control-label" for="which_str">STR</label>
+                        <select class="input-lg form-control" name="which_str">
+                            <option value="normal">Normal</option>
+                            <option value="best">Very strong</option>
+                            <option value="weak">Very weak</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div>
+                        <label class="control-label" for="which_int">INT</label>
+                        <select class="input-lg form-control" name="which_int">
+                            <option value="normal">Normal</option>
+                            <option value="best">Very strong</option>
+                            <option value="weak">Very weak</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div>
+                        <label class="control-label" for="which_def">DEF</label>
+                        <select class="input-lg form-control" name="which_def">
+                            <option value="normal">Normal</option>
+                            <option value="best">Very strong</option>
+                            <option value="weak">Very weak</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div>
+                        <label class="control-label" for="which_mdef">Magic DEF</label>
+                        <select class="input-lg form-control" name="which_mdef">
+                            <option value="normal">Normal</option>
+                            <option value="best">Very strong</option>
+                            <option value="weak">Very weak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <a href="#" id="add_spieces" class="btn btn-success"><i class="fa fa-pencil"></i> Add</a>
+                </div>
+            </form>
+
+        </div>
+
+
+        <h1> Creation of monster</h1>
+        <hr>
+        <div class="row">
+            <form id="add_form_mob" method="post" action="{{url_for('add_mob', server_id=server_id) }}">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input name=_csrf_token type=hidden value="{{ csrf }}">
+                        <label class="control-label" for="mob_name">Mob name</label>
+                        <input class="form-control input-lg" name="mob_name" value="" type="text"
+                               id="mob_name">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <input name=_csrf_token type=hidden value="{{ csrf }}">
+                        <label class="control-label" for="drop">Drop Item Name</label>
+                        <input class="form-control input-lg" name="drop" value="" type="text"
+                               id="drop">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div>
+                        <label class="control-label" for="which_common">Common</label>
+                        <select class="input-lg form-control" name="which_common">
+                            {% for x in common %}
+                            <option value="{{loop.index}}">{{x}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div>
+                        <label class="control-label" for="which_spieces">Select spieces</label>
+                        <select class="input-lg form-control" name="which_spieces">
+                            {% for kind in spieces %}
+                            <option value="{{kind}}">
+                                {{spieces[kind]}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                  <center><a href="#mob" id="add_mob" style="padding-down:19px;" class="btn btn-success"><i class="fa fa-pencil"></i> Add</a></center>
+                </div>
+            </form>
+        </div>
+        <h1>Edit Mob</h1>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="list-group">
+                    {% for mob in list_mob %}
+                    <form id="edit_form" method="post" action="{{url_for('update_mob', server_id=server_id,town_id=mob['id']) }}">
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                    <label class="control-label" for="name">Name</label>
+                                    <input class="form-control input-lg" name="name" value="{{ mob['name'] }} "
+                                    type="text"
+                                    id="name">
+
+                                </div>
+                            </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                        <label class="control-label" for="drop">Drop Item Name</label>
+                                        <input class="form-control input-lg" name="drop" value="" type="text"
+                                               id="drop">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div>
+                                        <label class="control-label" for="show_common">Common</label>
+                                        <select class="input-lg form-control" name="show_common">
+                                            {% for x in common %}
+                                            <option value="{{loop.index}}"{%if loop.index == mob['common']%} selected {%endif%}>
+                                                {{x}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div>
+                                        <label class="control-label" for="show_spieces">Select spieces</label>
+                                        <select class="input-lg form-control" name="show_spieces">
+                                            {% for kind in spieces %}
+                                            <option value="{{kind}}" {%if kind == mob['spiece']%} selected {%endif%} >
+                                                {{spieces[kind]}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+
+                                    <a href="{{url_for('delete_town', server_id=server_id, town=mob['id'])}}"
+                                       class="btn btn-danger"><i class="fa fa-trash"></i> Delete</a>
+                                    <a href="#" id="edit" class="btn btn-success"><i class="fa fa-pencil"></i> Update</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <br/><br/>
+    </div>
+</div>
+
+<script>
+    $('#add_spieces').click(function(){
+        $('#add_form_species').submit();
+    })
+
+</script>
+<script>
+    $('#add_mob').click(function(){
+        $('#add_form_mob').submit();
+    })
+
+</script>
+{% endblock %}

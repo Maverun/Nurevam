@@ -9,6 +9,13 @@
             {% include 'flash.html' %}
             <form id="welcome" method="POST" action="{{url_for('update_welcome', server_id=server['id'])}}">
                 <div class="form-group">
+
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="enable_message" {% if config["enable_message"] =="on" %} checked {% endif %}>
+                        If it enable, allow to send welcome message, other wise, disable it, Some server just want a assign role.
+                    </label>
+                </div>
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <label class="control-label" for="time">A Welcome message to newcomer!</label>
                     <input class="form-control input-lg" name="message"

@@ -100,6 +100,24 @@ class Core():
         else:
             await self.bot.says_edit("Please double check! There is so far only \n{}".format(",".join(default)))
 
+    @commands.command(hidden=True)
+    async def command(self):
+        """
+        Type !help {command} for more info on a command.
+        You can also type !help {category} for more info on a category.
+        For example, !help level (If you have level plugin enable!)
+        """
+        await self.bot.say("Yes this is a command.")
+
+    @commands.command(hidden=True)
+    async def category(self):
+        """
+        Type !help command for more info on a command.
+        You can also type !help category for more info on a category.
+        For example, !help Level (If you have level plugin enable!)
+
+        """
+        await self.bot.say("Yes this is a category.")
 
 def setup(bot):
     bot.add_cog(Core(bot))

@@ -34,15 +34,141 @@ headers = {"Authorization": "Bot " + os.environ.get("NUREVAM_TOKEN")}
 
 db = redis.Redis(host=Redis,decode_responses=True)
 
+
+#COGS ENABLE for adding some stuff into external
+editor_cogs = ["rpg"]
+
 #ANIME PICTURE
 anime_picture=[["http://31.media.tumblr.com/tumblr_m3z4xrHVZi1rw2jaio1_500.gif","I will wait for your commands! <3"],
                ["http://media3.giphy.com/media/ErZ8hv5eO92JW/giphy.gif","NICE JAB! USE IT AS YOU WANT!"]]
 
 
+#########################################################################################
+#              _____                                         _                          #
+#      ____   |  __ \                                       | |                         #
+#     / __ \  | |  | |   ___    ___    ___    _ __    __ _  | |_    ___    _ __   ___   #
+#    / / _` | | |  | |  / _ \  / __|  / _ \  | '__|  / _` | | __|  / _ \  | '__| / __|  #
+#   | | (_| | | |__| | |  __/ | (__  | (_) | | |    | (_| | | |_  | (_) | | |    \__ \  #
+#    \ \__,_| |_____/   \___|  \___|  \___/  |_|     \__,_|  \__|  \___/  |_|    |___/  #
+#     \____/                                                                            #
+#########################################################################################
+def require_auth(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        # Does the user have an api_token?
+        api_token = session.get('api_token')
+        if api_token is None:
+            return redirect(url_for('login'))
+
+        # Does his api_key is in the db?
+        user_api_key = db.get('user:{}:api_key'.format(api_token['user_id']))
+        if user_api_key != api_token['api_key']:
+            return redirect(url_for('login'))
+
+        return f(*args, **kwargs)
+    return wrapper
+
+def require_bot_admin(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        server_id = kwargs.get('server_id')
+        user = get_user(session['api_token'])
+        guilds = get_user_guilds(session['api_token'])
+        user_servers = get_user_managed_servers(user, guilds)
+        if str(server_id) not in map(lambda g: g['id'], user_servers):
+            return redirect(url_for('select_server'))
+
+        return f(*args, **kwargs)
+    return wrapper
+
+def server_check(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        server_id = kwargs.get('server_id')
+        server_ids = db.hget("Info:Server",server_id)
+
+        if server_ids is None:
+            url =   "https://discordapp.com/oauth2/authorize?&client_id={}"\
+                    "&scope=bot&permissions={}&guild_id={}&response_type=code"\
+                    "&redirect_uri=http://{}/servers".format(
+                        OAUTH2_CLIENT_ID,
+                        '66321471',
+                        server_id,
+                        DOMAIN
+                    )
+            return redirect(url)
+
+        return f(*args, **kwargs)
+    return wrapper
+
+def require_vip(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        print("require_vip")
+        user = session.get('user')
+        if user is None:
+            return redirect(url_for('index'))
+        if user['id'] not in ['105853969175212032','102184838999588864']:
+            return redirect(url_for('index'))
+        print("Ok")
+        return f(*args,**kwargs)
+    return wrapper
+
+def require_role(f):
+    @wraps(f)
+    def wrapper(*args,**kwargs):
+        print("require role")
+        cog = kwargs.get("cog")
+        server_id = kwargs.get("server_id")
+        user = session.get('user')
+        get_user_role = resource_get("/guilds/{}/members/{}".format(server_id,user['id']))
+        editor_role = db.smembers("{}:{}:editor_role".format(server_id,cog))
+        for x in editor_role:
+            if x in get_user_role["roles"]:
+                return f(*args, **kwargs)
+        return redirect(url_for('index'))
+    return wrapper
+
+def plugin_page(plugin_name):
+    def decorator(f):
+        @require_auth
+        @require_bot_admin
+        @server_check
+        @wraps(f)
+        def wrapper(server_id):
+            user = get_user(session['api_token'])
+            disable = request.args.get('disable')
+            if disable:
+                db.hdel('{}:Config:Cogs'.format(server_id), plugin_name)
+                db.hdel("{}:Config:Delete_MSG".format(server_id),plugin_name)
+                db.hincrby("Info:Cogs_Enables",plugin_name,amount=-1)
+                return redirect(url_for('dashboard', server_id=server_id))
+            db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
+            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
+            db.hincrby('Info:Cogs_Enables',plugin_name,amount=1)
+            servers = get_user_guilds(session['api_token'])
+            server = list(filter(lambda g: g['id']==str(server_id), servers))[0]
+            get_plugins = db.hgetall('{}:Config:Cogs'.format(server_id))
+            check_plugins = []
+            for key in get_plugins:
+                if get_plugins[key] == "on":
+                    check_plugins.append(key)
+            enabled_plugins = set(check_plugins)
+            return render_template("plugins_html/"+
+                f.__name__.replace('_', '-') + '.html',
+                server=server,
+                enabled_plugins=enabled_plugins,
+                **f(server_id)
+            )
+        return wrapper
+
+    return decorator
 
 def resource_get(end):#Getting a resournces from API
     r = requests.get(API_BASE_URL+end,headers=headers)
-    return r.json()
+    if r.status_code == 200:
+        return r.json()
+    return None
 """
     JINJA2 Filters
 """
@@ -102,6 +228,11 @@ def get_user_guilds(token):
 def get_user_managed_servers(user, guilds):
     return list(filter(lambda g: (g['owner'] is True) or bool(( int(g['permissions'])>> 5) & 1), guilds))
 
+def get_channel(server_id): #Shortcut to get channel,so i dont have to remember how to do this again...
+    get_channel = resource_get("/guilds/{}/channels".format(server_id))
+    channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    return channel
+
 """
     CRSF Security
 """
@@ -153,7 +284,6 @@ def login():
         access_type="offline"
     )
     session['oauth2_state'] = state
-    print(state)
     return redirect(authorization_url)
 
 @app.route('/confirm_login')
@@ -190,22 +320,6 @@ def confirm_login():
     session['api_token'] = api_token
     return redirect(url_for('after_login'))
 
-def require_auth(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        # Does the user have an api_token?
-        api_token = session.get('api_token')
-        if api_token is None:
-            return redirect(url_for('login'))
-
-        # Does his api_key is in the db?
-        user_api_key = db.get('user:{}:api_key'.format(api_token['user_id']))
-        if user_api_key != api_token['api_key']:
-            return redirect(url_for('login'))
-
-        return f(*args, **kwargs)
-    return wrapper
-
 @app.route('/login_confirm')
 @require_auth
 def after_login():
@@ -216,6 +330,7 @@ def after_login():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 #Website Route
 @app.route('/')
 def index():
@@ -233,8 +348,10 @@ def about():
             if line.startswith("#"):
                 print("ignore")
                 continue
-            elif len(line.split(",")) == 2:
-                content.append(line.split(","))
+            elif len(line.split("|")) == 2:
+                content.append(line.split("|"))
+                print(line.split("|"))
+    print(content)
     return render_template('about.html',content=content)
 
 @app.route('/faq')
@@ -321,38 +438,6 @@ def select_server():
     )
     return render_template('select-server.html', user=user, user_servers=user_servers)
 
-def server_check(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        server_id = kwargs.get('server_id')
-        server_ids = db.hget("Info:Server",server_id)
-
-        if server_ids is None:
-            url =   "https://discordapp.com/oauth2/authorize?&client_id={}"\
-                    "&scope=bot&permissions={}&guild_id={}&response_type=code"\
-                    "&redirect_uri=http://{}/servers".format(
-                        OAUTH2_CLIENT_ID,
-                        '66321471',
-                        server_id,
-                        DOMAIN
-                    )
-            return redirect(url)
-
-        return f(*args, **kwargs)
-    return wrapper
-
-def require_bot_admin(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        server_id = kwargs.get('server_id')
-        user = get_user(session['api_token'])
-        guilds = get_user_guilds(session['api_token'])
-        user_servers = get_user_managed_servers(user, guilds)
-        if str(server_id) not in map(lambda g: g['id'], user_servers):
-            return redirect(url_for('select_server'))
-
-        return f(*args, **kwargs)
-    return wrapper
 
 
 #####################################################
@@ -372,40 +457,7 @@ def my_dash(f):
 def plugin_method(f):
     return my_dash(f)
 
-def plugin_page(plugin_name):
-    def decorator(f):
-        @require_auth
-        @require_bot_admin
-        @server_check
-        @wraps(f)
-        def wrapper(server_id):
-            user = get_user(session['api_token'])
-            disable = request.args.get('disable')
-            if disable:
-                db.hdel('{}:Config:Cogs'.format(server_id), plugin_name)
-                db.hdel("{}:Config:Delete_MSG".format(server_id),plugin_name)
-                db.hincrby("Info:Cogs_Enables",plugin_name,amount=-1)
-                return redirect(url_for('dashboard', server_id=server_id))
-            db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
-            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
-            db.hincrby('Info:Cogs_Enables',plugin_name,amount=1)
-            servers = get_user_guilds(session['api_token'])
-            server = list(filter(lambda g: g['id']==str(server_id), servers))[0]
-            get_plugins = db.hgetall('{}:Config:Cogs'.format(server_id))
-            check_plugins = []
-            for key in get_plugins:
-                if get_plugins[key] == "on":
-                    check_plugins.append(key)
-            enabled_plugins = set(check_plugins)
-            return render_template(
-                f.__name__.replace('_', '-') + '.html',
-                server=server,
-                enabled_plugins=enabled_plugins,
-                **f(server_id)
-            )
-        return wrapper
 
-    return decorator
 
 @app.route('/dashboard/<int:server_id>')
 @require_auth
@@ -483,8 +535,7 @@ def plugin_welcome(server_id):
         db.hset("{}:Welcome:Message".format(server_id),"message",default_message)
         get_message=default_message
     config = db.hgetall("{}:Welcome:Message".format(server_id))
-    get_channel = resource_get("/guilds/{}/channels".format(server_id))
-    channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    channel = get_channel(server_id)
     delete_msg = db.hget("{}:Welcome:Message".format(server_id),"delete_msg") or 0
     if config.get("channel",False) is False:
         welcome_channel=server_id
@@ -517,6 +568,7 @@ def update_welcome(server_id):
     role_id = request.form.get("assign_role").split(',')
     delete_msg=request.form.get('delete_msg')
     delete_options = request.form.get("enable_delete")
+    enable_msg = request.form.get("enable_message")
     if len(welcome_message) >= 2000 or welcome_message == "":
         flash("The welcome message need to be between 1-2000!",'warning')
     else:
@@ -531,6 +583,7 @@ def update_welcome(server_id):
         db.hset('{}:Welcome:Message'.format(server_id),'whisper',whisper_options)
         db.hset('{}:Welcome:Message'.format(server_id),'delete_msg',delete_msg)
         db.hset('{}:Welcome:Message'.format(server_id),'enable_delete',delete_options)
+        db.hset('{}:Welcome:Message'.format(server_id),'enable_message',enable_msg)
         flash('Settings updated!', 'success')
     db.hset('{}:Welcome:Message'.format(server_id),'role',role_options)
     db.delete("{}:Welcome:Assign_role".format(server_id))
@@ -556,8 +609,7 @@ def discourse(domain,api,username):
 @plugin_page('discourse')
 def plugin_discourse(server_id):
     config = db.hgetall("{}:Discourse:Config".format(server_id))
-    get_channel = resource_get("/guilds/{}/channels".format(server_id))
-    channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    channel = get_channel(server_id)
     if config.get("channel",False) is False:
         discourse_channel=server_id
     else:
@@ -683,8 +735,7 @@ def update_mod(server_id):
 @plugin_page('log')
 def plugin_log(server_id):
     config = db.hgetall("{}:Log:Config".format(server_id))
-    get_channel = resource_get("/guilds/{}/channels".format(server_id))
-    channel = list(filter(lambda c: c['type']!='voice',get_channel))
+    channel = get_channel(server_id)
     if config.get("channel",False) is False:
         log_channel=server_id
     else:
@@ -713,6 +764,210 @@ def update_log(server_id):
     flash('Settings updated!', 'success')
     return redirect(url_for('plugin_log', server_id=server_id))
 
+
+#RPG
+@app.route("/dashboard/<int:server_id>/rpg")
+@plugin_page('rpg')
+@require_vip #temp
+def plugin_rpg(server_id):
+    print("Am here")
+    editor_roles = db.smembers('{}:Rpg:editor_role'.format(server_id)) or []
+    get_role = resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+    print("ok?")
+    role = list(filter(lambda r:r['name'] in editor_roles or r['id'] in editor_roles,guild_roles))
+    print("returning")
+    return {"guild_roles":guild_roles,"editor_roles":role}
+
+@app.route('/dashboard/<int:server_id>/rpg/update',methods=['POST'])
+@plugin_method
+def update_rpg(server_id):
+    return redirect(url_for('plugin_rpg',server_id=server_id))
+
+@app.route("/<string:cog>/<int:server_id>/town")
+@require_vip #temp
+@require_role
+def town(cog,server_id):
+    print("OK HERE")
+    #If this cogs does not exist in first place, it will return back
+    town_list = db.smembers("{}:Rpg:Town".format(server_id))
+    channel = get_channel(server_id)
+    setting = []
+    for x in town_list:
+        data =db.hgetall("{}:Rpg:Town:{}".format(server_id,x))
+        setting.append(data)
+    print(setting)
+    return render_template("rpg/town.html",
+                           setting=setting,guild_channel=channel,
+                           server_id = server_id)
+    pass
+
+@app.route('/rpg/<int:server_id>/add/town', methods=['POST'])
+@plugin_method
+def add_town(server_id):
+    channel = request.form.get("channel")
+    min_level = request.form.get("min_level")
+    error_msg =  ""
+    if min_level:
+        if channel not in db.smembers("{}:Rpg:Town".format(server_id)):
+            db.sadd("{}:Rpg:Town".format(server_id),channel)
+            db.hmset("{}:Rpg:Town:{}".format(server_id,channel),{"min":min_level,"id":channel})
+
+        else:
+            error_msg = "Channel is already registered!"
+    else:
+        error_msg = "You need to enter min/max level!"
+
+    if error_msg:
+        flash(error_msg, 'warning')
+    else:
+        flash('Town added!', 'success')
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+@app.route('/rpg/<int:server_id>/delete/town/<int:town>', methods=['GET'])
+@plugin_method
+def delete_town(server_id,town):
+    print("Ok delete town")
+    print("Server ID: {}".format(server_id))
+    print("Town ID: {}".format(town))
+    db.srem("{}:Rpg:Town".format(server_id),town)
+    db.delete("{}:Rpg:Town:{}".format(server_id,town))
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+@app.route('/rpg/<int:server_id>/update/town/<int:town_id>', methods=['POST','GET'])
+@plugin_method
+def update_town(server_id,town_id):
+    print("Edit town")
+    print("Server ID is {}".format(server_id))
+    print("Town ID is {}".format(town_id))
+    print(dict(request.form))
+    min_level = request.form.get("min_level")
+    channel =  request.form.get("channel")
+    if channel not in db.smembers("{}:Rpg:Town".format(server_id)):
+        db.srem("{}:Rpg:Town".format(server_id),town_id)
+        db.delete("{}:Rpg:Town:{}".format(server_id,town_id)) #delete old one
+        db.hmset("{}:Rpg:Town:{}".format(server_id,channel),{"min":min_level,"id":channel})
+        db.sadd("{}:Rpg:Town".format(server_id),channel)
+        flash("Successful update!", "success")
+    else:
+        if min_level != db.hget("{}:Rpg:Town:{}".format(server_id,town_id),"min"):
+            db.hset("{}:Rpg:Town:{}".format(server_id,town_id),"min",min_level)
+            flash("Successful update!", "success")
+        else:
+            flash("This channel have already exists!", 'warning')
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+@app.route("/<string:cog>/<int:server_id>/mob")
+@require_vip #temp
+@require_role
+def mob(cog,server_id):
+    #If this cogs does not exist in first place, it will
+    mob_list = db.hgetall("{}:Rpg:Mob".format(server_id))
+    species = db.hgetall("{}:Rpg:Species".format(server_id))
+    list_mob = []
+    for x in mob_list:
+        mob = db.hgetall("{}:Rpg:Mob:{}".format(server_id,x))
+        list_mob.append(mob)
+    print(list_mob)
+    common = ["Common","Uncommon","Rare"] #Starting from most common to rarest, 0 is 1
+    return render_template("rpg/mob.html",list_mob=list_mob,server_id=server_id,spieces=species,common = common)
+
+@app.route('/rpg/<int:server_id>/add/species', methods=['POST'])
+@plugin_method
+def add_species(server_id):
+    def covert(status):
+        if status == "best":
+            return 2
+        elif status == "normal":
+            return 1
+        elif status == "weak":
+            return 0.5
+    print("add species")
+    print(dict(request.form))
+    species_str = covert(request.form.get("which_str"))
+    species_int = covert(request.form.get("which_int"))
+    species_def = covert(request.form.get("which_def"))
+    species_mdef = covert(request.form.get("which_mdef"))
+    species = request.form.get("species")
+    if request.form.get("species"):
+        spiece_id = db.incr("{}:Rpg:ID:Species".format(server_id))
+        db.hset("{}:Rpg:Species".format(server_id),spiece_id,species)
+        db.hmset("{}:Rpg:Species:{}".format(server_id,spiece_id),{"name":species,"str":species_str,"int":species_int,
+                                                                "def":species_def,"mdef":species_mdef})
+        flash("New species have added!","success")
+    else:
+        flash("It cannot be blank!","warning")
+
+    return redirect(url_for("mob",server_id=server_id,cog="Rpg"))
+    pass
+
+@app.route('/rpg/<int:server_id>/add/mob', methods=['POST'])
+@plugin_method
+def add_mob(server_id):
+    print("Add mob function")
+    drop = request.form.get('drop')
+    spieces = request.form.get("which_spieces")
+    mob = request.form.get("mob_name")
+    common = request.form.get("which_common")
+    data = dict(request.form)
+    data.pop("_csrf_token")
+    error_msg = ""
+    print(data)
+    print(mob)
+    if mob:
+        mob_id = db.incr("{}:Rpg:ID:Mob".format(server_id))
+        db.hset("{}:Rpg:Mob".format(server_id),mob_id,mob)
+        # if drop:
+        db.hmset("{}:Rpg:Mob:{}".format(server_id,mob_id),{"id":mob_id,
+                                                           "name":mob,
+                                                           "spiece":spieces,
+                                                           "common":common})
+
+        # else:
+        #     error_msg += "Drop item name"
+    else:
+        error_msg += "Monster name"
+    if error_msg:
+        error_msg +=" are missing! Please add them!"
+        flash(error_msg,"warning")
+    return redirect(url_for("mob",server_id=server_id,cog="Rpg"))
+
+@app.route('/rpg/<int:server_id>/delete/mob/<int:town>', methods=['GET'])
+@plugin_method
+def delete_mob(server_id,town):
+    print("Ok delete town")
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+    print("Server ID: {}".format(server_id))
+    print("Town ID: {}".format(town))
+    db.srem("{}:Rpg:Town".format(server_id),town)
+    db.delete("{}:Rpg:Town:{}".format(server_id,town))
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+@app.route('/rpg/<int:server_id>/update/mob/<int:town_id>', methods=['POST','GET'])
+@plugin_method
+def update_mob(server_id,town_id):
+    print("Edit mob")
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+
+    print("Server ID is {}".format(server_id))
+    print("Town ID is {}".format(town_id))
+    print(dict(request.form))
+    min_level = request.form.get("min_level")
+    channel =  request.form.get("channel")
+    if channel not in db.smembers("{}:Rpg:Town".format(server_id)):
+        db.srem("{}:Rpg:Town".format(server_id),town_id)
+        db.delete("{}:Rpg:Town:{}".format(server_id,town_id)) #delete old one
+        db.hmset("{}:Rpg:Town:{}".format(server_id,channel),{"min":min_level,"id":channel})
+        db.sadd("{}:Rpg:Town".format(server_id),channel)
+        flash("Successful update!", "success")
+    else:
+        if min_level != db.hget("{}:Rpg:Town:{}".format(server_id,town_id),"min"):
+            db.hset("{}:Rpg:Town:{}".format(server_id,town_id),"min",min_level)
+            flash("Successful update!", "success")
+        else:
+            flash("This channel have already exists!", 'warning')
+    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
 
 #Level
 @app.route('/dashboard/<int:server_id>/levels')
@@ -804,7 +1059,7 @@ def levels(server_id):
     if db.get("{}:Level:Private".format(server_id)) == "on":
         is_private=True
     print(is_private)
-    #Check if server and plugins are in
+    #Check if server and plugins_html are in
     server_check = db.hget("Info:Server",server_id)
     if server_check is None:
         return redirect(url_for('index'))
@@ -818,9 +1073,7 @@ def levels(server_id):
         'icon':db.hget("Info:Server_Icon",server_id)
     }
     name_list = db.hgetall("Info:Name")
-    print(name_list)
     avatar_list = db.hgetall("Info:Icon")
-    print(avatar_list)
     total_member = len(db.smembers("{}:Level:Player".format(server_id)))
     player_data = db.sort("{}:Level:Player".format(server_id), by="{}:Level:Player:*->Total_XP".format(server_id), get=[
                                                                                                           "{}:Level:Player:*->Name".format(server_id),
@@ -831,9 +1084,12 @@ def levels(server_id):
                                                                                                           "{}:Level:Player:*->Total_XP".format(server_id),
                                                                                                           "{}:Level:Player:*->Discriminator".format(server_id)], start=0, num=total_member, desc=True)
     data = []
+    total_exp = 0
     for x in range(0,len(player_data),7):
-            if name_list.get(player_data[x+1]) is False:
+            if name_list.get(player_data[x+1]) is None:
                 db.srem("{}:Level:Player".format(server_id),player_data[x+1])
+            # print(player_data[x],player_data[x+1]) #for future references
+            total_exp += int(player_data[x+5])
             temp = {
                 "Name":player_data[x],
                 "ID":player_data[x+1],
@@ -842,12 +1098,13 @@ def levels(server_id):
                 "Next_XP":player_data[x+4],
                 "Total_XP":player_data[x+5],
                 "Discriminator":player_data[x+6],
-                "Avatar":avatar_list.get(player_data[x+1],None),
+                "Avatar":avatar_list.get(player_data[x+1]),
                 "XP_Percent":100*(float(player_data[x+3])/float(player_data[x+4]))
             }
             data.append(temp)
         #Those are for Website
-    return render_template('levels.html', players=data, server=server, title="{} leaderboard".format(server['name']),is_admin=is_admin,is_private=is_private)
+    stats = {"total_member":total_member,"total_exp":total_exp}
+    return render_template('level/levels.html', players=data, stats = stats, server=server, title="{} leaderboard".format(server['name']),is_admin=is_admin,is_private=is_private)
 
 @app.route('/server/levels')
 def server_levels():
@@ -855,7 +1112,7 @@ def server_levels():
     server_icon=db.hgetall("Info:Server_Icon")
     enable_level= []
     for server_id in server_list:#run a loops of server list
-        if db.hget("{}:Config:Cogs".format(server_id),"level") == "on": #IF this plugins is on, then it will collect data
+        if db.hget("{}:Config:Cogs".format(server_id),"level") == "on": #IF this plugins_html is on, then it will collect data
             if db.get("{}:Level:Private".format(server_id)):
                 continue
             else:
@@ -876,7 +1133,7 @@ def server_levels():
                 enable_level.append([server_list[server_id],server_icon.get(server_id),server_id,
                                      total,next_xp,(100*(float(total)/float(next_xp))),level])
     enable_level=sorted(enable_level,key=lambda enable_level:enable_level[4],reverse=True)
-    return render_template('server_level.html',title="Server Leaderboard",server_list=enable_level)
+    return render_template('level/server_level.html',title="Server Leaderboard",server_list=enable_level)
 
 @app.route('/levels/reset/<int:server_id>/<int:player_id>')
 @plugin_method
@@ -955,7 +1212,7 @@ def profile_level(player_id,server_id):
             data.append("{} - {}".format(x,y))
     icon = db.hget("Info:Icon",player_id)
     name = db.hget("Info:Name",player_id)
-    return render_template("profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
+    return render_template("level/profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
                            server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
                            is_owner=is_owner,is_private=is_private)
 
@@ -974,8 +1231,11 @@ def code_401(e):
 @app.errorhandler(404)
 def code_404(e):
     #If page is not found, it will info you that page is not found.
-    return render_template("code_404_not_found.html")
+    return render_template("error/code_404_not_found.html")
 
 if __name__=='__main__':
     app.debug = True
     app.run()
+
+
+

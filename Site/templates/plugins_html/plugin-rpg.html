@@ -1,0 +1,49 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>RPG <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="rpg" method="POST" action="{{url_for('update_rpg', server_id=server['id'])}}">
+                <div class="form-group">
+                    <label class="control-label" for="editor_roles">Editor Role</label>
+                    <input type="text" data-role="tagsinput" name="editor_role" class="editor_roles"/><br/>
+                    <div class="well well-sm">
+                        Those role are one that are allow to editor stuff for RPG, Zones, etc.
+                    </div>
+                    <script>
+				$(function() {
+				var roles = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_roles|tojson|safe}}
+                                });
+                                roles.initialize();
+                                var elt = $('.editor_roles');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'roles',
+                                        displayKey: 'name',
+                                        source: roles.ttAdapter()
+                                    }
+                                });
+                                {% for role in editor_roles %}
+                                    elt.tagsinput('add', {{role|tojson|safe}});
+                                {% endfor %}
+				});
+                    </script>
+                    <br/>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+{% endblock %}

@@ -68,10 +68,7 @@ class Events():
     async def on_command(self,command,ctx):
         if ctx.message.channel.is_private:
             return
-        print("\033[96m<Event Command>\033[94m {}:\033[96m {} ||| \033[93m {} ||| \033[94m ({})\033[92m ||| {}\033[00m".format(self.Time(),ctx.message.server.name, ctx.message.author, ctx.message.author.id, ctx.message.clean_content))
-        await self.redis.hincrby("{}:Total_Command:{}".format(ctx.message.server.id,ctx.message.author.id),ctx.invoked_with,increment=1)
-        await self.redis.hincrby("Info:Total_Command",ctx.invoked_with,increment=1)
-        await self.redis.hincrby("{}:Total_Command:User:{}".format(ctx.message.server.id,ctx.message.author.id),ctx.invoked_with,increment=1)
+        print("\033[96m<Event Command>\033[94m {0}:\033[96m {1.server.name} ||| \033[93m {1.author} ||| \033[94m ({1.author.id})\033[92m ||| {1.clean_content}\033[00m".format(self.Time(), ctx.message))
 
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
@@ -98,8 +95,11 @@ class Events():
             check = await self.bot.db.redis.hgetall("{}:Config:Delete_MSG".format(ctx.message.server.id))
             if check.get(command.cog_name.lower()) == "on":
                 await self.bot.delete_message(ctx.message)
+            await self.redis.hincrby("{0.server.id}:Total_Command:{0.author.id}".format(ctx.message),ctx.invoked_with, increment=1)
+            await self.redis.hincrby("Info:Total_Command", ctx.invoked_with, increment=1)
+            await self.redis.hincrby("{0.server.id}:Total_Command:User:{0.author.id}".format(ctx.message),ctx.invoked_with, increment=1)
         except:
-            utils.prRed("Failed to delete user command - {}  - {}\n".format(ctx.message.server.name,ctx.message.server.id))
+            utils.prRed("Failed to delete user command - {0.name}  - {0.id}\n".format(ctx.message.server))
             utils.prRed(traceback.format_exc())
 
     async def send_cmd_help(self,ctx):

@@ -23,13 +23,12 @@ Select which server you want Nurevam to join.
 >Bascially, it is just `<Main command> <subcommand>`
 
 ##What is profile?
->profile of your self, it is global setting for all server with Nurevam in, for example, myanimelist, if you got one, and enter your username, you dont have to write down your username when !profile username, just !profile,
+>profile of your self, it is global setting for all server with Nurevam in, for example, myanimelist, if you got one, and enter your username, you don't have to write down your username when !mal username, just !mal,
 bot will do work for you!
 
 ##Why are there so many permission!
 >That is entire up to you, I put all permission so you can pick. I would recommend leaving manage message permission on, so it can delete your message and bot message (in certain command)
 
->Well this is common error with authorized. Just simply log out and relog in.
 ##What is this log plugin
 >It will give you update of what happen to that server, did user delete message, change avatar etc.
 >So you can be info. Normally, this is for admin/mod who want to be upkeep and not to be confused what happen.(I kinda don't like edit/delete message, it is user's privary right...)

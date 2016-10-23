@@ -71,7 +71,7 @@ async def command_checker(msg):
         if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevert any spam in case, lower chance of getting kick heh.
             return
         bot.command_prefix = commands.when_mentioned_or(*cmd_prefix)
-        if "help" in msg.content:
+        if "help" in msg.content: #changing setting for help, if server owner want Help command to be via PM or to server.
             if await bot.db.redis.get("{}:Config:Whisper".format(msg.server.id)) == "on":
                 bot.pm_help =True
             else:

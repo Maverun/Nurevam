@@ -24,7 +24,7 @@ class Log():
         return datetime.datetime.now().strftime("%H:%M:%S")
 
     def format_msg(self,author):
-        return "`[{}]`:__{} [{}]__ ".format(self.time(),author,author.id)
+        return "`[{0}]`:__{1} [{1.id}]__ ".format(self.time(),author)
 
     async def avatar(self,before,after):
         with aiohttp.ClientSession() as sesson:
@@ -59,7 +59,7 @@ class Log():
             if before.name != after.name:
                 if config.get("name"):
                     msg_bool = True
-                    msg ="`[{}]`:__{} [{}]__ ".format(self.time(), before, before.id)
+                    msg ="`[{0}]`:__{1} [{1.id}]__ ".format(self.time(), before)
                     msg += "have changed username to **{}**".format(after.name)
             if before.nick != after.nick:
                 if config.get("nickname"):
@@ -94,9 +94,9 @@ class Log():
             if self.config[msg.server.id].get("delete"):
                 message = self.format_msg(msg.author)
                 if msg.attachments:
-                    message += "*have delete attachments*"
+                    message += "*has deleted attachments*"
                 else:
-                    message += "*have delete this message* in {}: ".format(msg.channel.mention)
+                    message += "*has deleted the following message* in {}: ".format(msg.channel.mention)
                     message += "{}".format(msg.clean_content)
                 await self.send(msg.server.id,message)
 
@@ -104,7 +104,7 @@ class Log():
         if self.config.get(member.server.id):
             if self.config[member.server.id].get("join"):
                 msg = self.format_msg(member)
-                msg += "have join server "
+                msg += "has joined the server "
                 await self.send(member.server.id,msg)
 
     async def on_member_remove(self,member):
@@ -131,7 +131,7 @@ class Log():
                     self.config.update({x:config})
             self.bot.log_config = self.config
             self.bot.background.update({"log":datetime.datetime.now()})
-            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1min by miracle
+            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1 min by miracle
 
 
 def setup(bot):

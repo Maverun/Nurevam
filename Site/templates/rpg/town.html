@@ -1,0 +1,96 @@
+{% extends 'full-page.html' %}
+{% block content %}
+<div class="jumbotron home-jumbotron">
+    <div class="container">
+        <div class="row">
+            {% set csrf = csrf_token() %}
+            <form id="add_form" method="post" action="{{url_for('add_town', server_id=server_id) }}">
+                {% include 'flash.html' %}
+                <div class="col-md-4">
+                    <div>
+                        <label class="control-label" for="channel_name">A Town channel</label>
+                        <select class="input-lg form-control" name="channel">
+                            {% for channel in guild_channel %}
+                            <option value="{{channel.id}}">
+                                #{{channel.name}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="well well-sm">
+                            Select a channel for a town!
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <input name=_csrf_token type=hidden value="{{ csrf }}">
+                            <label class="control-label" for="min_level">Min level</label>
+                            <input class="form-control input-lg" name="min_level" value="" type="text"
+                                   id="min_level">
+                        </div>
+                        <center><a href="#" id="add" class="btn btn-success"><i class="fa fa-pencil"></i> Add</a></center>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <hr>
+        <h2>Edit Town</h2>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="list-group">
+                    {% for town in setting %}
+                    <form id="edit_form" method="post" action="{{url_for('update_town', server_id=server_id,town_id=town['id']) }}">
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div>
+                                    <label class="control-label" for="channel_name">A Town channel</label>
+                                    <select class="input-lg form-control" name="channel">
+                                        {% for channel in guild_channel %}
+                                        <option value="{{channel.id}}" {%if channel.id== town["id"] %} selected{%endif%}>
+                                        #{{channel.name}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="well well-sm">
+                                        Select a channel for a town!
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                    <label class="control-label" for="min_level">Min level</label>
+                                    <input class="form-control input-lg" name="min_level" value="{{ town["min"] }} "
+                                    type="text"
+                                    id="min_level">
+
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+
+                                    <a href="{{url_for('delete_town', server_id=server_id, town=town['id'])}}"
+                                       class="btn btn-danger btn-lg" style = "margin-bottom: -96px;"><i class="fa fa-trash"></i> Delete</a>
+                                    <a href="#" id="edit" class="btn btn-success btn-lg" style = "margin-bottom: -96px;"><i class="fa fa-pencil"></i> Update</a>
+                        </div>
+                        </div>
+                    </div>
+                        </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#add').click(function(){
+        $('#add_form').submit();
+    })
+    $('#edit').click(function(){
+        $('#edit_form').submit();
+    })
+</script>
+
+{% endblock %}
