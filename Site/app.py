@@ -223,13 +223,13 @@ def get_user_guilds(token):
     print(req.status_code)
     print(req.headers)
     if req.status_code == 429:
+        print("429!")
         current = datetime.datetime.now()
-        print(current)
         time.sleep(int(req.headers["X-RateLimit-Reset"])-current.timestamp())
         print("OK")
+        return get_user_guilds(token) #rerun it again.
     elif req.status_code != 200:
         abort(req.status_code)
-
     guilds = req.json()
     # Saving that to the db
     db.set('user:{}:guilds'.format(user_id), json.dumps(guilds))
