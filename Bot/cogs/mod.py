@@ -14,7 +14,7 @@ def is_enable(msg): #Checking if cogs' config for this server is off or not
 
 class Mod():
     """
-    A Mod tools for Mod.
+    A mod tool for Mods.
     """
     def __init__(self, bot):
         self.bot = bot
@@ -38,8 +38,8 @@ class Mod():
     @commands.check(check_roles)
     async def clean(self, ctx, *, limit:int=100):
         """
-        Allow to clear up it's own message.
-        Does not affect any user's message.
+        Is able to clear up it's own messages.
+        Does not affect any user's messages.
         """
         counter = 0
         if ctx.message.channel.is_private or ctx.message.channel.permissions_for(ctx.message.server.me).manage_messages is False:
@@ -58,14 +58,14 @@ class Mod():
             counter= len(counter)
         await self.bot.say("```py\nClean up message: {}\n```".format(counter))
 
-    @clean.command(brief= "Allow to clear role's message",pass_context=True, invoke_without_command=True)
+    @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def role(self,ctx,roles : discord.Role,limit : int=100):
         """
-        <prefix> role <what role it is> <optional, but how many, default 100 message>
-        Allow to clear messages of user who have this role.
+        <prefix> role <the role> <optional, number of messages, default: 100>
+        Is able to clear messages of all users who have this role.
         """
         def delete_role(m):
             return roles.id in [r.id for r in m.author.roles]
@@ -75,28 +75,28 @@ class Mod():
         except:
             pass
 
-    @clean.command(brief="Allow to clear that user's message", pass_context=True, invoke_without_command=True)
+    @clean.command(brief="Is able to clear a certain user's messages", pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def person(self,ctx,user: discord.Member,*,limit: int = 100):
         """
-        <prefix> person <which person> <optional, but how many, default 100 message>
-        Allow to clear message of certain person.
+        <prefix> person <the person> <optional, number of messages, default 100>
+        Is able to clear the messages of a certain person.
         """
         def delete_player(m):
                 return m.author.id == user.id
         counter = await self.bot.purge_from(ctx.message.channel,check=delete_player,limit=limit)
         await self.bot.say("```py\nI have clean {} message from {}```".format(len(counter),user.name))
 
-    @clean.command(brief="Allow to clear all message", pass_context=True, invoke_without_command=True)
+    @clean.command(brief="Is able to clear all messages", pass_context=True, invoke_without_command=True)
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def all(self,ctx,*,limit: int=100):
         """
-        <prefix> all <optional but how many, default 100 message>
-        Allow to clear all message, nothing can stop it.
+        <prefix> all <optional, number of messages, default 100>
+        Is able to clear all messages, nothing can stop it.
         """
         counter = await self.bot.purge_from(ctx.message.channel,limit=limit)
         await self.bot.say_edit("```py\nI have clean {}```".format(len(counter)))
@@ -111,7 +111,7 @@ class Mod():
 #   |_|\_\ |_|  \___| |_|\_\ /_/     |____/   \__,_| |_| |_|#
 #############################################################
 
-    @commands.command(brief="Allow to kick user")
+    @commands.command(brief="Is able to kick a user")
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( kick_members=True)
@@ -119,41 +119,41 @@ class Mod():
         """
         <prefix> kick <user name>
 
-        Use mention is faster way to get user.
-        Allow to kick user from server.
+        Mentioning is a faster way to get the user.
+        Is able to kick a user from server.
         """
         await self.bot.kick(user)
         await self.bot.says_edit("I have kicked {}".format(user.name))
 
-    @commands.command(brief="Allow to ban user")
+    @commands.command(brief="Is able to ban a user")
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
     async def ban(self,user:discord.Member,*,day : int = 1):
         """
-       <prefix> ban <user name> <optional but how many day, default is 1 day for delete messages>
+       <prefix> ban <user name> <optional, number of passed days, for which the user's messages are deleted, default 1>
 
-        Use mention is faster way to get user.
-        Allow to ban user from server, default day of delete message is 1 day.
+        Mentioning is a faster way to get the user.
+        Is able to ban a user from the server, default number of passed days, for which messages are deleted, is 1.
 
         """
         await self.bot.ban(user,delete_message_days=day)
-        await self.bot.says_edit("I have ban {}".format(user.name))
+        await self.bot.says_edit("I have banned {}".format(user.name))
 
-    @commands.command(brief="Allow to softban user which is equal to kick and delete its message")
+    @commands.command(brief="Is able to softban a user which is equal to kicking him and deleteting his messages")
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
     async def softban(self,user:discord.Member,*,day : int = 1):
         """
-        <prefix> softban <user name> <optional but how many day to delete message, default is 1>
+        <prefix> softban <user name> <optional, number of passed days, for which the messages are deleted, default is 1>
 
-        This is just kick + delete message,
-        allow to kick user and have delete message.
+        This is just kicking + deleteting messages,
+        Is able to kick a user and delete his messages.
         """
         await self.bot.ban(user,delete_message_days = day)
         await self.bot.unban(user.server,user)
-        await self.bot.says_edit("I have softban {}".format(user.name))
+        await self.bot.says_edit("I have softbanned {}".format(user.name))
 
 
 #################################
@@ -178,31 +178,31 @@ class Mod():
         """
         return
 
-    @role.command(brief="allow to add role to that user")
+    @role.command(brief="Is able to add a role to a user")
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_roles=True)
     async def add(self,user:discord.Member,*role:discord.Role):
         """
-        <prefix> add <user name> <which role>
-        Allow to add role to member, helpful for people who is on phone.
-        Also you can add multi role to members at same time
+        <prefix> add <user name> <the role>
+        Is able to add a role to a member, this is useful for people who are on phone.
+        >ou can also add multiple roles to a member at the same time.
         """
         await self.bot.add_roles(user,*role)
         await self.bot.says_edit("Added a role to {}".format(user.name))
 
-    @role.command(brief="allow to remove role from that user")
+    @role.command(brief="Is able to remove a role from a user")
     @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_roles=True)
     async def remove(self,user:discord.Member,*role:discord.Role):
         """
-        <prefix> remove <user name> <which role>
-        Allow to remove role form that member, helpful for people who is on phone.
-        Also you can remove multi role from member at same time.
+        <prefix> remove <user name> <the role>
+        Is able to remove a role from a member, this is useful for people who are on phone.
+        You can also remove multiple roles from a member at the same time.
         """
         await self.bot.remove_roles(user,*role)
-        await self.bot.says_edit("Remove role from {}".format(user.name))
+        await self.bot.says_edit("Removed a role from {}".format(user.name))
 
 def setup(bot):
     bot.add_cog(Mod(bot))
