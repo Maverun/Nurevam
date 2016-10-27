@@ -12,18 +12,18 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         self.redis = bot.db.redis
         self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
 
-    @commands.command(pass_context=True,brief="Show a stats of player's")
+    @commands.command(pass_context=True,brief="Shows the stats of a player")
     @commands.check(is_enable)
     async def osu(self,ctx,name=None):
         """
-        Allow to link a OSU Profile with some info.
+        Able to link an osu! profile with additional info.
         Name: #rank
         Level:  , PP:
         Country: #rank
         Total Play:
         Rank Score:
         Total Score:
-        If you give your username on Nurevam site of profile, you will get auto profile link unless you put name in.
+        If you enter your username on your profile on the Nurevam site, Nurevam can automatically link your profile.
         """
 
         boolean = False
@@ -36,14 +36,14 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         setting = await self.redis.hget("Profile:{}".format(user),"osu")
         if name is None: #if name is None then meaning it is in profile.
             if setting is None: #If it not found in profile, meaning it wasnt enter in
-                await self.bot.says_edit("You need to enter a name! Or you can enter your own name in your profile at <http://nurevam.site>")
+                await self.bot.says_edit("You need to enter a name! Or you can enter your own name on your profile at <http://nurevam.site>")
             else: # If it in setting, it is true.
                 boolean = True
                 name = setting
         else: #other wise, name have called, check if it mention or not
             if mention: # if name was a mention, (boolean check)
                 if setting is None: #if setting is not found, not in data
-                    await self.bot.says_edit("{} didn't register on Nurevam.site yet! Tell him/her do it!".format(ctx.message.mentions[0].display_name))
+                    await self.bot.says_edit("{} didn't register on Nurevam.site yet! Tell him/her to do it!".format(ctx.message.mentions[0].display_name))
                 else: #if it true, it is in data
                     name = setting
                     boolean = True
