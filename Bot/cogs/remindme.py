@@ -26,7 +26,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
                         remain_time = int(time[x]) - int(get_time)
                         utils.prYellow("Time: {},Channel: {}, Message: {}".format(remain_time,channel[x],data[x]))
                         if remain_time <= 0:
-                            await self.bot.send_message(self.bot.get_channel(channel[x]),"I am deeply sorry for not reminded you early!, You was set to remind of this following:\n{}".format(data[x]))
+                            await self.bot.send_message(self.bot.get_channel(channel[x]),"I am deeply sorry for not reminding you earlier! You were reminded of the following:\n{}".format(data[x]))
                             await self.redis.hdel("{}:Remindme:data".format(server.id), x)
                             await self.redis.hdel("{}:Remindme:channel".format(server.id), x)
                             await self.redis.hdel("{}:Remindme:time".format(server.id), x)
@@ -51,7 +51,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         print(message)
         if len(time) == 3:
             if int(time[0]) >=5:
-                msg = "It is gonna be over 5 hours, which may not work anymore.\n Time set "
+                msg = "You entered a time above 5 hours, this my result in a malfunction.\n Time set "
             remind_time += int(time[0])*3600 + int(time[1])*60+ int(time[2])
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
@@ -61,7 +61,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
             msg += "{} second".format(time[0])
             remind_time += int(time[0])
         if not message:
-            message = "{}, You were reminded for something.".format(ctx.message.author.mention)
+            message = "{}, You were reminded of something.".format(ctx.message.author.mention)
         else:
             message = "{}, You were reminded of the following: ```fix\n{}\n```".format(ctx.message.author.mention,message)
         if remind_time >= 60: #if it more than 1 hours, then add id so it can remind you in cases
