@@ -50,8 +50,6 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         id_time = 0
         print(message)
         if len(time) == 3:
-            if int(time[0]) >=5:
-                msg = "You entered a time above 5 hours, this my result in a malfunction.\n Time set "
             remind_time += int(time[0])*3600 + int(time[1])*60+ int(time[2])
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
