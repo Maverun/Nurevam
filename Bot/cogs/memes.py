@@ -5,7 +5,7 @@ import io
 import textwrap
 import aiohttp
 
-class Meme(): #Allow to welcome new members who join server. If it enable, will send them a message.
+class Memes(): #Allow to welcome new members who join server. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -67,4 +67,4 @@ class Meme(): #Allow to welcome new members who join server. If it enable, will 
 
 
 def setup(bot):
-    bot.add_cog(Meme(bot))
+    bot.add_cog(Memes(bot))

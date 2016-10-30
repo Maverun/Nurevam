@@ -8,7 +8,7 @@ import math
 def is_cooldown(msg):
     redis = utils.redis
     config = redis.get("{}:Level:{}:rank:check".format(msg.message.server.id,msg.message.author.id))
-    return bool(config)
+    return not(bool(config))
 
 class Level():
     def __init__(self,bot):
