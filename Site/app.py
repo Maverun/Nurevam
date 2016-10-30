@@ -38,7 +38,7 @@ db = redis.Redis(host=Redis,decode_responses=True)
 
 
 #COGS ENABLE for adding some stuff into external
-editor_cogs = ["rpg"]
+editor_cogs = ["rpg","memes"]
 
 #ANIME PICTURE
 anime_picture=[["http://31.media.tumblr.com/tumblr_m3z4xrHVZi1rw2jaio1_500.gif","I will wait for your commands! <3"],
@@ -120,7 +120,7 @@ def require_role(f):
     @wraps(f)
     def wrapper(*args,**kwargs):
         print("require role")
-        cog = kwargs.get("cog")
+        cog = kwargs.get("cog").title()
         server_id = kwargs.get("server_id")
         user = session.get('user')
         get_user_role = resource_get("/guilds/{}/members/{}".format(server_id,user['id']))
@@ -128,6 +128,7 @@ def require_role(f):
         for x in editor_role:
             if x in get_user_role["roles"]:
                 return f(*args, **kwargs)
+        print("else")
         return redirect(url_for('index'))
     return wrapper
 
@@ -219,9 +220,9 @@ def get_user_guilds(token):
     discord = make_session(token=token)
 
     req = discord.get(API_BASE_URL + '/users/@me/guilds')
-    print(req)
-    print(req.status_code)
-    print(req.headers)
+    # print(req)
+    # print(req.status_code)
+    # print(req.headers)
     if req.status_code == 429:
         print("429!")
         current = datetime.datetime.now()
@@ -741,6 +742,7 @@ def update_mod(server_id):
         db.sadd("{}:Mod:admin_roles".format(server_id),*admin_roles)
     return redirect(url_for('plugin_mod',server_id=server_id))
 
+#log
 @app.route('/dashboard/<int:server_id>/log')
 @plugin_page('log')
 def plugin_log(server_id):
@@ -774,6 +776,77 @@ def update_log(server_id):
     flash('Settings updated!', 'success')
     return redirect(url_for('plugin_log', server_id=server_id))
 
+#memes
+@app.route('/dashboard/<int:server_id>/memes')
+@plugin_page('memes')
+def plugin_memes(server_id):
+    db_role= db.smembers('{}:Memes:editor_role'.format(server_id)) or []
+    get_role = resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+    role = list(filter(lambda r:r['name'] in db_role or r['id'] in db_role,guild_roles))
+    return{"roles":role,"guild_roles":guild_roles}
+
+def check_memes_link(link):
+    try:
+        r = requests.get(link)
+    except:
+        flash("There is somthing wrong with a link...","warning")
+        return 2
+    if r.status_code == 200:
+        if r.headers['content-type'] in ['image/png', 'image/jpeg']:
+            return 0 #to say it is True
+        elif r.headers ==  'image/gif':
+            flash("Gif memes are not support!", "warning")
+            return 1 #to say it is not support yet for gif... some day?
+    flash("This type of files does not support!", "warning")
+    return 2 #returing False
+    pass
+
+@app.route("/<string:cog>/<int:server_id>/")
+@require_role
+def memes(cog,server_id):
+    meme_link = db.hgetall("{}:Memes:link".format(server_id))
+    return render_template("memes.html",data_memes = meme_link,server_id = server_id)
+
+@app.route('/Memes/<int:server_id>/add/memes/', methods=['POST'])
+@plugin_method
+def add_memes(server_id):
+    print(request.form)
+    name = request.form.get("meme_name")
+    link = request.form.get("meme_link")
+    status = check_memes_link(link)
+    if status == 0: #if is true
+        if name in db.smembers("{}:Memes:name".format(server_id)):
+            flash("This name already exists!","warning")
+        else:
+            db.hset("{}:Memes:link".format(server_id),name,link)
+            db.sadd("{}:Memes:name".format(server_id),name)
+            flash("You have add a new memes!","success")
+    return redirect(url_for("memes",server_id = server_id, cog = "memes"))
+
+@app.route('/dashboard/<int:server_id>/memes/update/<string:name>',methods=['POST'])
+@plugin_method
+def update_memes(server_id,name):
+    new_name = request.form.get("meme_name")
+    link = request.form.get("meme_link")
+    status = check_memes_link(link)
+    if status == 0:
+        #delete old database
+        db.hdel("{}:Memes:link".format(server_id),name)
+        db.srem("{}:Memes:name".format(server_id),name)
+        #adding, if there is a way to rename them in hash, that would be great...
+        db.hset("{}:Memes:link".format(server_id),new_name,link)
+        db.sadd("{}:Memes:name".format(server_id),new_name)
+        flash("Update data!","success")
+    return redirect(url_for("memes",server_id = server_id, cog = "memes"))
+
+@app.route('/Memes/<int:server_id>/delete/memes/<string:name>/', methods=['GET'])
+@plugin_method
+def delete_memes(server_id,name):
+    #Deleting data
+    db.hdel("{}:Memes:link".format(server_id), name)
+    db.srem("{}:Memes:name".format(server_id), name)
+    return redirect(url_for("memes",server_id = server_id, cog = "Memes"))
 
 #RPG
 @app.route("/dashboard/<int:server_id>/rpg")
@@ -794,7 +867,7 @@ def plugin_rpg(server_id):
 def update_rpg(server_id):
     return redirect(url_for('plugin_rpg',server_id=server_id))
 
-@app.route("/<string:cog>/<int:server_id>/town")
+@app.route("/<string:cog>/<int:server_id>/town/")
 @require_vip #temp
 @require_role
 def town(cog,server_id):
@@ -812,7 +885,7 @@ def town(cog,server_id):
                            server_id = server_id)
     pass
 
-@app.route('/rpg/<int:server_id>/add/town', methods=['POST'])
+@app.route('/rpg/<int:server_id>/add/town/', methods=['POST'])
 @plugin_method
 def add_town(server_id):
     channel = request.form.get("channel")
@@ -832,9 +905,9 @@ def add_town(server_id):
         flash(error_msg, 'warning')
     else:
         flash('Town added!', 'success')
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
-@app.route('/rpg/<int:server_id>/delete/town/<int:town>', methods=['GET'])
+@app.route('/rpg/<int:server_id>/delete/town/<int:town>/', methods=['GET'])
 @plugin_method
 def delete_town(server_id,town):
     print("Ok delete town")
@@ -842,7 +915,7 @@ def delete_town(server_id,town):
     print("Town ID: {}".format(town))
     db.srem("{}:Rpg:Town".format(server_id),town)
     db.delete("{}:Rpg:Town:{}".format(server_id,town))
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
 @app.route('/rpg/<int:server_id>/update/town/<int:town_id>', methods=['POST','GET'])
 @plugin_method
@@ -865,7 +938,7 @@ def update_town(server_id,town_id):
             flash("Successful update!", "success")
         else:
             flash("This channel have already exists!", 'warning')
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
 @app.route("/<string:cog>/<int:server_id>/mob")
 @require_vip #temp
@@ -908,7 +981,7 @@ def add_species(server_id):
     else:
         flash("It cannot be blank!","warning")
 
-    return redirect(url_for("mob",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("mob",server_id=server_id,cog="rpg"))
     pass
 
 @app.route('/rpg/<int:server_id>/add/mob', methods=['POST'])
@@ -940,19 +1013,19 @@ def add_mob(server_id):
     if error_msg:
         error_msg +=" are missing! Please add them!"
         flash(error_msg,"warning")
-    return redirect(url_for("mob",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("mob",server_id=server_id,cog="rpg"))
 
 @app.route('/rpg/<int:server_id>/delete/mob/<int:town>', methods=['GET'])
 @plugin_method
 def delete_mob(server_id,town):
     print("Ok delete town")
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
     print("Server ID: {}".format(server_id))
     print("Town ID: {}".format(town))
     db.srem("{}:Rpg:Town".format(server_id),town)
     db.delete("{}:Rpg:Town:{}".format(server_id,town))
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
 @app.route('/rpg/<int:server_id>/update/mob/<int:town_id>', methods=['POST','GET'])
 @plugin_method
@@ -977,7 +1050,7 @@ def update_mob(server_id,town_id):
             flash("Successful update!", "success")
         else:
             flash("This channel have already exists!", 'warning')
-    return redirect(url_for("town",server_id=server_id,cog="Rpg"))
+    return redirect(url_for("town",server_id=server_id,cog="rpg"))
 
 #Level
 @app.route('/dashboard/<int:server_id>/levels')
@@ -1228,6 +1301,7 @@ def profile_level(player_id,server_id):
 
 @app.before_first_request
 def setup_logging():
+    print("\033[92mName: {}|||ID: {}\033[00m".format(session["user"]["username"],session["user"]["id"]))
     # In production mode, add log handler to sys.stderr.
     app.logger.addHandler(logging.StreamHandler())
     app.logger.setLevel(logging.INFO)

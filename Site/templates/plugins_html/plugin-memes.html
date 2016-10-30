@@ -1,0 +1,52 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>Mod <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="mod" method="POST" action="{{url_for('update_memes', server_id=server['id'])}}">
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="roles">Creator Role</label>
+                    <input type="text" data-role="tagsinput" name="roles" class="roles"/><br/>
+                    <div class="well well-sm">
+                        Whoever have a role, can add memes they like.
+                    </div>
+                    <script>
+				$(function() {
+				var roles = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_roles|tojson|safe}}
+                                });
+                                roles.initialize();
+                                var elt = $('.roles');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'roles',
+                                        displayKey: 'name',
+                                        source: roles.ttAdapter()
+                                    }
+                                });
+                                {% for role in roles %}
+                                    elt.tagsinput('add', {{role|tojson|safe}});
+                                {% endfor %}
+				});
+
+
+                    </script>
+                    <br/>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+{% endblock %}

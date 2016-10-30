@@ -5,16 +5,10 @@ from .utils import utils
 import discord
 import math
 
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "level")
-
 def is_cooldown(msg):
     redis = utils.redis
     config = redis.get("{}:Level:{}:rank:check".format(msg.message.server.id,msg.message.author.id))
-    if config is None:
-        return True
-    else:
-        return False
+    return bool(config)
 
 class Level():
     def __init__(self,bot):
@@ -128,17 +122,14 @@ class Level():
 #########################################################################
 
     @commands.group(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True,invoke_without_command=True)
-    @commands.check(is_enable)
     async def level_link(self,msg):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
 
     @level_link.command(name="server",brief="Show a link of all server's leaderboard",pass_context=True)
-    @commands.check(is_enable)
     async def server_level_link(self,msg):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/server/levels".format(msg.message.server.id))
 
     @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
-    @commands.check(is_enable)
     @commands.check(is_cooldown)
     async def rank(self,msg):
         server = msg.message.server.id
@@ -174,7 +165,6 @@ class Level():
         await self.redis.set("{}:Level:{}:rank:check".format(server,msg.message.author.id),'cooldown',expire=int(cooldown))
 
     @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
-    @commands.check(is_enable)
     async def rank_table(self,msg):
         server = msg.message.server.id
         player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->ID".format(server),

@@ -8,11 +8,7 @@ def synopis(term):
     term = html.unescape(term)
     if len(term) >= 1500:
         return term[:1500]+"..."
-    else:
-        return term
-
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "myanimelist")
+    return term
 
 class Myanimelist():
     """
@@ -111,7 +107,6 @@ class Myanimelist():
             else:
                 await self.bot.says_edit("You enter a number that is out of range!")
 
-    @commands.check(is_enable)
     @commands.command(brief="Allow to search anime info rom Myanimelist database",pass_context=True)
     async def anime(self, ctx, *, name: str):
         """
@@ -127,7 +122,6 @@ class Myanimelist():
         link_name = name.replace(" ", "_").lower()  # In case there is more than 1 word
         await self.data(ctx, "anime", link_name)
 
-    @commands.check(is_enable)
     @commands.command(brief="Allow to search manga info from Myanimelist database",pass_context=True)
     async def manga(self, ctx, *, name: str):
         """
@@ -179,7 +173,6 @@ class Myanimelist():
                                                                      data["total_ep"],data["mean"])
             await self.bot.says_edit("```xl\n{}\n```\n<http://myanimelist.net/{}/{}>".format(stats,site,name))
 
-    @commands.check(is_enable)
     @commands.command(pass_context=True,brief="link out MAL user's profile")
     async def mal(self,ctx,name = None):
         """
@@ -189,7 +182,6 @@ class Myanimelist():
         await self.check_username(ctx,name,"profile")
 
 
-    @commands.check(is_enable)
     @commands.command(name="list",pass_context=True,brief = "link out MAL user's anime or manga list")
     async def show_list(self,ctx,type,name=None):
         """

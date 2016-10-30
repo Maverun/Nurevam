@@ -9,9 +9,6 @@ def check_roles(msg):
     Admin = utils.check_roles(msg, "Mod", "admin_roles")
     return Admin or msg.message.author.id == "105853969175212032"
 
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "mod")or msg.message.author.id == "105853969175212032"
-
 class Mod():
     """
     A Mod tools for Mod.
@@ -34,7 +31,6 @@ class Mod():
 #########################################
 
     @commands.group(brief="Allow to clean bot itself",pass_context=True,invoke_without_command=True)
-    @commands.check(is_enable)
     @commands.check(check_roles)
     async def clean(self, ctx, *, limit:int=100):
         """
@@ -59,7 +55,6 @@ class Mod():
         await self.bot.say("```py\nClean up message: {}\n```".format(counter))
 
     @clean.command(brief= "Allow to clear role's message",pass_context=True, invoke_without_command=True)
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def role(self,ctx,roles : discord.Role,limit : int=100):
@@ -76,7 +71,6 @@ class Mod():
             pass
 
     @clean.command(brief="Allow to clear that user's message", pass_context=True, invoke_without_command=True)
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def person(self,ctx,user: discord.Member,*,limit: int = 100):
@@ -90,7 +84,6 @@ class Mod():
         await self.bot.say("```py\nI have clean {} message from {}```".format(len(counter),user.name))
 
     @clean.command(brief="Allow to clear all message", pass_context=True, invoke_without_command=True)
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_messages=True)
     async def all(self,ctx,*,limit: int=100):
@@ -112,7 +105,6 @@ class Mod():
 #############################################################
 
     @commands.command(brief="Allow to kick user")
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( kick_members=True)
     async def kick(self,user:discord.Member):
@@ -126,7 +118,6 @@ class Mod():
         await self.bot.says_edit("I have kicked {}".format(user.name))
 
     @commands.command(brief="Allow to ban user")
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
     async def ban(self,user:discord.Member,*,day : int = 1):
@@ -141,7 +132,6 @@ class Mod():
         await self.bot.says_edit("I have ban {}".format(user.name))
 
     @commands.command(brief="Allow to softban user which is equal to kick and delete its message")
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
     async def softban(self,user:discord.Member,*,day : int = 1):
@@ -166,7 +156,6 @@ class Mod():
 #################################
 
     @commands.group(brief="Multi subcommand related to role",invoke_without_command=True)
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_roles=True)
     async def role(self):
@@ -179,7 +168,6 @@ class Mod():
         return
 
     @role.command(brief="allow to add role to that user")
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_roles=True)
     async def add(self,user:discord.Member,*role:discord.Role):
@@ -192,7 +180,6 @@ class Mod():
         await self.bot.says_edit("Added a role to {}".format(user.name))
 
     @role.command(brief="allow to remove role from that user")
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.bot_has_permissions(manage_roles=True)
     async def remove(self,user:discord.Member,*role:discord.Role):

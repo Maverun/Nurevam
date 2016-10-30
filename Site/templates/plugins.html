@@ -42,6 +42,14 @@
     enabled_plugins=enabled_plugins
     )}}
     {{plugin.view(
+    'memes',
+    pretty_name="Memes",
+    view='plugin_memes',
+    description='Allow to post a custom memes you like!',
+    server=server,
+    enabled_plugins=enabled_plugins
+    )}}
+    {{plugin.view(
     'mod',
     pretty_name="Mod",
     view='plugin_mod',

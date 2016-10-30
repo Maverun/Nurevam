@@ -12,9 +12,6 @@ def check_roles(msg):
     else:
         return False
 
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "channel")
-
 class Channel():
     """
     Allow user create a temp channel within time limit
@@ -36,13 +33,11 @@ class Channel():
             self.Temp_Chan.pop(name.name)
             self.Temp_Count -=1
 
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @commands.group("channel",brief="Main command of sub for channel related.",pass_context=True,invoke_without_command=True)
     async def channel(self, msg):
         await self.bot.say("\n\nYou need to enter subcommand in!")
 
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @channel.command(name="create", brief="Allow to create a temp channel for relative topic.", pass_context=True, invoke_without_command=True)
     async def create_channel(self, msg, *, name:str):
@@ -69,7 +64,6 @@ class Channel():
         else:
             await self.bot.say_edit("It is already exist, try again!")
 
-    @commands.check(is_enable)
     @channel.command(name="join", brief="Allow user to join channel", pass_context=True, invoke_without_command=True)
     async def join_channel(self, msg, *, name:str): #If user want to join the channel
         '''
@@ -84,8 +78,6 @@ class Channel():
         else:
             await self.bot.say_edit("I am afraid that didn't exist, please double check spelling and case")
 
-
-    @commands.check(is_enable)
     @commands.check(check_roles)
     @channel.command(name="delete", brief="Allow user or mod delete channel", pass_context=True, invoke_without_command=True)
     async def delete_channel(self, msg, *, name:str): #Allow Admin/Mod or Creator of that channel delete it

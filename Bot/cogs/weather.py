@@ -5,10 +5,6 @@ import aiohttp
 import asyncio
 import datetime
 
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "weather")
-
-
 class Weather(): #Allow to welcome new members who join server. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
@@ -16,7 +12,6 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
         self.api = utils.OS_Get("WEATHER")
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
-    @commands.check(is_enable)
     async def weather(self,*,locations:str="City,Country"):
         """
         !weather city,country

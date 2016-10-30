@@ -159,7 +159,6 @@ class Discourse(): #Discourse, a forums types.
 #########################################################################
 
     @commands.command(name="summary",brief="Showing a summary of user",pass_context= True)
-    @commands.check(is_enable)
     async def Summary_stat(self,ctx,*,name: str): #Showing a summary stats of User
         '''
         Give a stat of summary of that username
@@ -188,7 +187,6 @@ class Discourse(): #Discourse, a forums types.
         await self.bot.say("```xl\n{}\n```".format(print_data))
 
     @commands.command(name="stats",brief="Show a Site Statistics",pass_context=True)
-    @commands.check(is_enable)
     async def Statictics(self,ctx): #To show a stats of website of what have been total post, last 7 days, etc etc
         '''
         Show a table of Topics,Posts, New Users, Active Users, Likes for All Time, Last 7 Days and Lasts 30 Days
@@ -218,7 +216,6 @@ class Discourse(): #Discourse, a forums types.
                    stat["like_count"],stat["likes_7_days"],stat["likes_30_days"]))
 
     @commands.command(name="bio",brief="Give a bio of that user",pass_context=True)
-    @commands.check(is_enable)
     async def Bio(self,ctx,name:str):
         """
         Give a info of Username

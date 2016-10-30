@@ -12,6 +12,7 @@ description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True))
 bot.db= storage.Redis()
 utils.redis_connection()
+redis = utils.redis
 
 def check_post(check):
     if check == "None":
@@ -46,6 +47,25 @@ async def say_edit(msg):
     except:
         utils.prRed(traceback.format_exc())
 bot.says_edit=say_edit
+
+@bot.check
+def global_check(ctx):
+    """
+    This is function that will do a global check for all command.
+    Instead of doing same check for each function if they are able or not.
+    If it dev bot and creator, will always return Trues for a test purpose.
+    """
+    try:
+        if bot.user.id == "181503794532581376" and ctx.message.author.id == bot.owner.id:
+            return True
+        elif ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools"):
+            return True
+        elif redis.hget("{}:Config:Cogs".format(ctx.message.server.id),ctx.command.cog_name.lower()):
+            return True
+    except:
+        utils.prRed("ERROR")
+        utils.prRed(traceback.format_exc())
+    return False
 
 @bot.event
 async def on_ready():
