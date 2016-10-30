@@ -30,7 +30,7 @@ class Mod():
 #    \_____| |_|  \___|  \__,_| |_| |_| #
 #########################################
 
-    @commands.group(brief="Allow to clean bot itself",pass_context=True,invoke_without_command=True)
+    @commands.group(brief="Allow to clean bot itself, have subcommand",pass_context=True,invoke_without_command=True)
     @commands.check(check_roles)
     async def clean(self, ctx, *, limit:int=100):
         """

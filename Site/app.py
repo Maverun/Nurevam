@@ -121,10 +121,12 @@ def require_role(f):
     def wrapper(*args,**kwargs):
         print("require role")
         cog = kwargs.get("cog").title()
+        print(cog)
         server_id = kwargs.get("server_id")
         user = session.get('user')
         get_user_role = resource_get("/guilds/{}/members/{}".format(server_id,user['id']))
         editor_role = db.smembers("{}:{}:editor_role".format(server_id,cog))
+        print(editor_role)
         for x in editor_role:
             if x in get_user_role["roles"]:
                 return f(*args, **kwargs)
@@ -786,6 +788,15 @@ def plugin_memes(server_id):
     role = list(filter(lambda r:r['name'] in db_role or r['id'] in db_role,guild_roles))
     return{"roles":role,"guild_roles":guild_roles}
 
+@app.route('/dashboard/<int:server_id>/memes/update',methods=['POST'])
+@plugin_method
+def update_memes(server_id):
+    roles = request.form.get('roles').split(',')
+    db.delete("{}:Memes:editor_role".format(server_id))
+    if len(roles)>0:
+        db.sadd("{}:Memes:editor_role".format(server_id),*roles)
+    return redirect(url_for('plugin_memes',server_id=server_id))
+
 def check_memes_link(link):
     try:
         r = requests.get(link)
@@ -826,7 +837,7 @@ def add_memes(server_id):
 
 @app.route('/dashboard/<int:server_id>/memes/update/<string:name>',methods=['POST'])
 @plugin_method
-def update_memes(server_id,name):
+def edit_memes(server_id,name):
     new_name = request.form.get("meme_name")
     link = request.form.get("meme_link")
     status = check_memes_link(link)

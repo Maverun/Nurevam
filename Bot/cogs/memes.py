@@ -10,7 +10,7 @@ class Meme(): #Allow to welcome new members who join server. If it enable, will 
         self.bot = bot
         self.redis = bot.db.redis
 
-    @commands.command(pass_context = True)
+    @commands.command(pass_context = True , brief = "A custom memes at your finest.")
     async def meme(self,ctx,name,top = "",bottom = ""):
         """
         allow to give a memes pictures

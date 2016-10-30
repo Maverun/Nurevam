@@ -13,7 +13,10 @@
                     <label class="control-label" for="roles">Creator Role</label>
                     <input type="text" data-role="tagsinput" name="roles" class="roles"/><br/>
                     <div class="well well-sm">
-                        Whoever have a role, can add memes they like.
+                        Whoever have a role, can add memes they like. Make sure to include admin if wish to view it.
+                    </div>
+                    <div class="well well-sm">
+                        People who have right to make memes can access <a href={{url_for('memes', server_id=server['id'],cog="memes")}}>here</a>
                     </div>
                     <script>
 				$(function() {
