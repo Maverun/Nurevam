@@ -1,6 +1,6 @@
 import redis
 import json
-
+import platform
 #############Color for Terminal###############################
 #Whole line, and easier to debug
 def prRed(prt): print("\033[91m{}\033[00m".format(prt))
@@ -12,8 +12,13 @@ def prCyan(prt): print("\033[96m{}\033[00m".format(prt))
 def prLightGray(prt): print("\033[97m{}\033[00m".format(prt))
 def prBlack(prt): print("\033[98m{}\033[00m".format(prt))
 ###############################################################
+
+if platform.system() == "Windows": #due to different path for linux and window
+    slash = "\\"
+else:
+    slash = "/"
 #read files and save it to secret
-with open ("..\secret.json".replace("/", "\\"),"r") as f:# replace for Linux fix
+with open ("..^secret.json".replace("^",slash),"r") as f:
     secret = json.load(f)
 
 #########################################

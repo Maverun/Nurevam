@@ -8,6 +8,7 @@ from functools import wraps
 import binascii
 import requests
 import datetime
+import platform
 import logging
 import random
 import redis
@@ -16,9 +17,12 @@ import time
 import math
 import os
 
-
+if platform.system() == "Windows": #due to different path for linux and window
+    slash = "\\"
+else:
+    slash = "/"
 #read files and save it to secret
-with open ("..\secret.json".replace("/","\\"),"r") as f:# replace for Linux fix
+with open ("..^secret.json".replace("^",slash),"r") as f:
     secret = json.load(f)
 
 app = Flask(__name__)
