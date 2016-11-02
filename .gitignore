@@ -1,3 +1,4 @@
 *.pyc
 envfile.list
-Bot/discourse_log.txt
+Bot/cogs/rpg.py
+secret.json

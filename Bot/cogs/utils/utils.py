@@ -13,7 +13,7 @@ def prLightGray(prt): print("\033[97m{}\033[00m".format(prt))
 def prBlack(prt): print("\033[98m{}\033[00m".format(prt))
 ###############################################################
 #read files and save it to secret
-with open ("..\secret.json","r") as f:
+with open ("..\secret.json".replace("/", "\\"),"r") as f:# replace for Linux fix
     secret = json.load(f)
 
 #########################################

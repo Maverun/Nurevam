@@ -18,7 +18,7 @@ import os
 
 
 #read files and save it to secret
-with open ("..\secret.json","r") as f:
+with open ("..\secret.json".replace("/","\\"),"r") as f:# replace for Linux fix
     secret = json.load(f)
 
 app = Flask(__name__)
