@@ -11,8 +11,7 @@ import re
 description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True))
 bot.db= storage.Redis()
-utils.redis_connection()
-redis = utils.redis
+redis = utils.redis_set
 
 def check_post(check):
     if check == "None":
@@ -56,13 +55,14 @@ def global_check(ctx):
     If it dev bot and creator, will always return Trues for a test purpose.
     """
     try:
+        #If bot is dev, and owner is me, it will alway return true, so useful for testing code etc
         if bot.user.id == "181503794532581376" and ctx.message.author.id == bot.owner.id:
             return True
-        elif ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools"):
+        if ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools","Repl"): #None for such as help command, and rest didnt require enable plugins, so have to do this way
             return True
-        elif redis.hget("{}:Config:Cogs".format(ctx.message.server.id),ctx.command.cog_name.lower()):
+        elif redis.hget("{}:Config:Cogs".format(ctx.message.server.id),ctx.command.cog_name.lower()): #If plugin is enabled,then it will return true, so meaning one check is done.
             return True
-    except:
+    except: #In case of error.
         utils.prRed("ERROR")
         utils.prRed(traceback.format_exc())
     return False
@@ -139,4 +139,4 @@ async def on_error(event,*args,**kwargs):
     await bot.send_message(bot.owner, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
 
 if __name__ == '__main__':
-    bot.run(utils.OS_Get("NUREVAM_TOKEN"))
+    bot.run(utils.secret["nurevam_token"])

@@ -16,23 +16,28 @@ import time
 import math
 import os
 
+
+#read files and save it to secret
+with open ("..\secret.json","r") as f:
+    secret = json.load(f)
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = secret["SECRET_KEY"]
 md = Markdown(app) #for a markdown work, e.g FAQ
-osu_api = OsuApi(os.environ.get("osu"), connector=ReqConnector())
-Redis= os.environ.get('Redis')
-OAUTH2_CLIENT_ID = os.environ.get('OAUTH2_CLIENT_ID')
-OAUTH2_CLIENT_SECRET = os.environ.get('OAUTH2_CLIENT_SECRET')
-OAUTH2_REDIRECT_URI = os.environ.get('OAUTH2_REDIRECT_URI', 'http://localhost:5000/confirm_login')
-API_BASE_URL = os.environ.get('API_BASE_URL', 'https://discordapp.com/api')
+osu_api = OsuApi(secret["osu"], connector=ReqConnector())
+Redis= secret['Redis']
+OAUTH2_CLIENT_ID = secret['OAUTH2_CLIENT_ID']
+OAUTH2_CLIENT_SECRET = secret['OAUTH2_CLIENT_SECRET']
+OAUTH2_REDIRECT_URI = secret.get('OAUTH2_REDIRECT_URI', 'http://localhost:5000/confirm_login')
+API_BASE_URL = 'https://discordapp.com/api'
 AUTHORIZATION_BASE_URL = API_BASE_URL + '/oauth2/authorize'
 AVATAR_BASE_URL = "https://cdn.discordapp.com/avatars/"
 ICON_BASE_URL = "https://cdn.discordapp.com/icons/"
 DEFAULT_AVATAR = "https://discordapp.com/assets/1cbd08c76f8af6dddce02c5138971129.png"
-DOMAIN = os.environ.get('VIRTUAL_HOST', 'localhost:5000')
+DOMAIN = secret.get('VIRTUAL_HOST', 'localhost:5000')
 TOKEN_URL = API_BASE_URL + '/oauth2/token'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-headers = {"Authorization": "Bot " + os.environ.get("NUREVAM_TOKEN")}
+headers = {"Authorization": "Bot " + secret["nurevam_token"]}
 
 db = redis.Redis(host=Redis,decode_responses=True)
 
@@ -1312,7 +1317,10 @@ def profile_level(player_id,server_id):
 
 @app.before_first_request
 def setup_logging():
-    print("\033[92mName: {}|||ID: {}\033[00m".format(session["user"]["username"],session["user"]["id"]))
+    try:
+        print("\033[92mName: {}|||ID: {}\033[00m".format(session["user"]["username"],session["user"]["id"]))
+    except:
+        pass
     # In production mode, add log handler to sys.stderr.
     app.logger.addHandler(logging.StreamHandler())
     app.logger.setLevel(logging.INFO)
@@ -1331,6 +1339,3 @@ def code_404(e):
 if __name__=='__main__':
     app.debug = True
     app.run()
-
-
-

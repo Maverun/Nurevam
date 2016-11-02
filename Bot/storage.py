@@ -9,4 +9,4 @@ class Redis:
 
     async def Start(self):
         utils.prYellow("AIOREDIS")
-        self.redis = await aioredis.create_redis((utils.OS_Get("Redis"),6379),encoding='utf8')
+        self.redis = await aioredis.create_redis((utils.secret["Redis"],6379),encoding='utf8')

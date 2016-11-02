@@ -14,7 +14,7 @@ class Core():
         self.bot = bot
         self.redis=bot.db.redis
         self.bot.say_edit = bot.says_edit
-        self.api = OsuApi(utils.OS_Get("osu"), connector=AHConnector())
+        self.api = OsuApi(utils.secret["osu"], connector=AHConnector())
 
     def get_bot_uptime(self): #to calculates how long it been up
         now = datetime.datetime.utcnow()

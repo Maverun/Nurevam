@@ -21,8 +21,8 @@ class Myanimelist():
         self.bot.say_edit = bot.says_edit
 
     async def get_data(self, category, name):
-        with aiohttp.ClientSession(auth=aiohttp.BasicAuth(login=utils.OS_Get("MAL_USERNAME"),
-                                                          password=utils.OS_Get("MAL_PASSWORD"))) as session:
+        with aiohttp.ClientSession(auth=aiohttp.BasicAuth(login=utils.secret["MAL_USERNAME"],
+                                                          password=utils.secret["MAL_PASSWORD"])) as session:
             async with session.get('http://myanimelist.net/api/{}/search.xml?q={}'.format(category, name)) as resp:
                 return (await resp.read())
 

@@ -1,5 +1,6 @@
 import redis
-import os
+import json
+
 #############Color for Terminal###############################
 #Whole line, and easier to debug
 def prRed(prt): print("\033[91m{}\033[00m".format(prt))
@@ -11,9 +12,9 @@ def prCyan(prt): print("\033[96m{}\033[00m".format(prt))
 def prLightGray(prt): print("\033[97m{}\033[00m".format(prt))
 def prBlack(prt): print("\033[98m{}\033[00m".format(prt))
 ###############################################################
-
-def OS_Get(name):
-    return os.environ.get(name)
+#read files and save it to secret
+with open ("..\secret.json","r") as f:
+    secret = json.load(f)
 
 #########################################
 #    _____               _   _          #
@@ -26,16 +27,14 @@ def OS_Get(name):
 #########################################
 
 ###########Connection Line####################
-def redis_connection():
-    global redis
-    redis = redis.Redis(host=OS_Get("Redis"),decode_responses=True)
+redis_set = redis.Redis(host=secret["Redis"], decode_responses=True)
 
 def is_owner(msg): #Checking if you are owner of bot
     return msg.message.author.id == "105853969175212032"
 
 ############Checking if cogs for that server is enable or disable##########
 def is_enable(msg,Cogs):
-    data = redis
+    data = redis_set
     try:
         check = data.hget("{}:Config:Cogs".format(msg.message.server.id),Cogs)
         if check == "on":
@@ -48,7 +47,7 @@ def is_enable(msg,Cogs):
 
 ######################Checking if Role is able######################################
 def check_roles(msg,Cogs,Get_Roles): #Server ID  then which plugin, and Roles with set
-    data = redis
+    data = redis_set
     try:
         Roles= data.smembers("{}:{}:{}".format(msg.message.server.id,Cogs,Get_Roles))
         checking=msg.message.author.roles
@@ -61,4 +60,4 @@ def check_roles(msg,Cogs,Get_Roles): #Server ID  then which plugin, and Roles wi
         return False
 #####################Checking if it cooldown#####################################
 def is_cooldown(msg):
-    return redis
+    return redis_set

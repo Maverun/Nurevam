@@ -9,7 +9,7 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
     def __init__(self,bot):
         self.bot = bot
         self.bot.say_edit = bot.says_edit
-        self.api = utils.OS_Get("WEATHER")
+        self.api = utils.secret["weather"]
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
     async def weather(self,*,locations:str="City,Country"):
