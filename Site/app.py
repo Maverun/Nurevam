@@ -18,11 +18,11 @@ import math
 import os
 
 if platform.system() == "Windows": #due to different path for linux and window
-    slash = "\\"
+    path = "..\\secret.json"
 else:
-    slash = "/"
+    path = "/home/mave/Nurevam/secret.json"
 #read files and save it to secret
-with open ("..^secret.json".replace("^",slash),"r") as f:
+with open (path,"r") as f:
     secret = json.load(f)
 
 app = Flask(__name__)

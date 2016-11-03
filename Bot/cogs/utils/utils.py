@@ -14,11 +14,11 @@ def prBlack(prt): print("\033[98m{}\033[00m".format(prt))
 ###############################################################
 
 if platform.system() == "Windows": #due to different path for linux and window
-    slash = "\\"
+    path = "..\\secret.json"
 else:
-    slash = "/"
+    path = "/home/mave/Nurevam/secret.json"
 #read files and save it to secret
-with open ("..^secret.json".replace("^",slash),"r") as f:
+with open (path,"r") as f:
     secret = json.load(f)
 
 #########################################
@@ -66,3 +66,5 @@ def check_roles(msg,Cogs,Get_Roles): #Server ID  then which plugin, and Roles wi
 #####################Checking if it cooldown#####################################
 def is_cooldown(msg):
     return redis_set
+
+
