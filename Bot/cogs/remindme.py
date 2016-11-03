@@ -59,9 +59,9 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
             msg += "{} second".format(time[0])
             remind_time += int(time[0])
         if not message:
-            message = "{}, You were reminded of something.".format(ctx.message.author.mention)
+            message = "{}, unspecified reminder.".format(ctx.message.author.mention)
         else:
-            message = "{}, You were reminded of the following: ```fix\n{}\n```".format(ctx.message.author.mention,message)
+            message = "{}, Reminder: ```fix\n{}\n```".format(ctx.message.author.mention,message)
         if remind_time >= 60: #if it more than 1 hours, then add id so it can remind you in cases
             time = datetime.now().timestamp() + remind_time
             server = ctx.message.server.id
