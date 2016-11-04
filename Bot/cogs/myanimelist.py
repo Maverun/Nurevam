@@ -16,7 +16,7 @@ def is_enable(msg): #Checking if cogs' config for this server is off or not
 
 class Myanimelist():
     """
-    Is able to search the database of Myanimelist.com to get info about a certain anime/manga
+    Searches the database of Myanimelist.com to get informations about a certain anime/manga.
     """
 
     def __init__(self, bot):
@@ -112,10 +112,10 @@ class Myanimelist():
                 await self.bot.says_edit("You entered a number that is out of range!")
 
     @commands.check(is_enable)
-    @commands.command(brief="Is able to acquire anime info from the Myanimelist database",pass_context=True)
+    @commands.command(brief="Gives out the information about an anime from the Myanimelist database",pass_context=True)
     async def anime(self, ctx, *, name: str):
         """
-        Is able to give you the data of an anime from Myanimelist
+        Gives out the data of an anime from Myanimelist
         <Link>
         Name:
         Episodes:
@@ -128,11 +128,10 @@ class Myanimelist():
         await self.data(ctx, "anime", link_name)
 
     @commands.check(is_enable)
-    @commands.command(brief="Is able to acquire manga info from the Myanimelist database",pass_context=True)
+    @commands.command(brief="Gives out the information about a manga from the Myanimelist database",pass_context=True)
     async def manga(self, ctx, *, name: str):
         """
-        Is able to give you the data of a Manga from Myanimelist
-                Allow to give you a list of Anime from data base
+        Gives out the data of a manga from Myanimelist
         <Link>
         Name:
         Volume:
@@ -180,11 +179,11 @@ class Myanimelist():
             await self.bot.says_edit("```xl\n{}\n```\n<http://myanimelist.net/{}/{}>".format(stats,site,name))
 
     @commands.check(is_enable)
-    @commands.command(pass_context=True,brief="link out MAL user's profile")
+    @commands.command(pass_context=True,brief="Links MAL profiles")
     async def mal(self,ctx,name = None):
         """
-        Is able to link a MAL Profile.
-        If you enter your username on your profile on the Nurevam site, Nurevam will automatically link your profile.
+        Links MAL profiles.
+        You can enter your username on the Nurevam site, so that Nurevam cant automatically link your profile.
         """
         await self.check_username(ctx,name,"profile")
 
@@ -193,11 +192,11 @@ class Myanimelist():
     @commands.command(name="list",pass_context=True,brief = "links MAL user's anime or manga list")
     async def show_list(self,ctx,type,name=None):
         """
-        Is able to give you the anime/manga list of a user.
+        Links the anime/manga list of a user.
         !list amime <username>
         !list manga <username>
-        username is optional, if you have entered your name on nurevam.site, it will print yours.
-        If you mention someone, who is registered on nurevam.site, it will give out his.
+        Username is optional; if you have entered your name on nurevam.site, it will link your list.
+        If you mention someone, who is registered on nurevam.site, it will link his list.
         """
         if type == "anime":
             await self.check_username(ctx,name,"animelist")
