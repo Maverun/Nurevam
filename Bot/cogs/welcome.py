@@ -22,7 +22,7 @@ class Welcome(): #Allow to welcome new members who join server. If it enable, wi
                             await asyncio.sleep(int(config["delete_msg"]))
                             await self.bot.delete_message(msg)
             except Exception as e:
-                await self.bot.send_message(member.server.owner,"There is error with newcomer, please report to creator about this.\n {}".format(e))
+                await self.bot.send_message(member.server.owner,"There is an error with a newcomer, please report this to the creator.\n {}".format(e))
                 Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                 utils.prRed(Current_Time)
                 utils.prRed("Error!")
@@ -39,7 +39,7 @@ class Welcome(): #Allow to welcome new members who join server. If it enable, wi
                         role_obj.append(discord.utils.get(member.server.roles,id=x))
                     await self.bot.add_roles(member,*role_obj)
                 except Exception as e:
-                    await self.bot.send_message(member.server.owner,"There is error with newcomer with roles related, please report to creator about this.\n {}".format(e))
+                    await self.bot.send_message(member.server.owner,"There is an error with a newcomer's roles, please report this to the creator.\n {}".format(e))
                     Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
                     utils.prRed(Current_Time)
                     utils.prRed("Error!")
