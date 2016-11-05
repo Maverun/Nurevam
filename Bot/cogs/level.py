@@ -6,7 +6,7 @@ import discord
 import math
 
 def is_cooldown(msg):
-    redis = utils.redis
+    redis = utils.redis_set
     config = redis.get("{}:Level:{}:rank:check".format(msg.message.server.id,msg.message.author.id))
     return not(bool(config))
 
@@ -32,7 +32,7 @@ class Level():
                     return True
         except:
             if msg.channel.is_private:
-                utils.prRed("It is under private")
+                utils.prRed("It is set to private")
             else:
                 utils.prRed("name: {0.name}, id:{0.id}, person: {1}, {1.id}".format(msg.server,msg.author))
         if msg.author.id in is_ban_member:
@@ -121,15 +121,15 @@ class Level():
 #                                                                       #
 #########################################################################
 
-    @commands.group(name="levels",aliases=["level","leaderboard"],brief="Show a link of server's leaderboard",pass_context=True,invoke_without_command=True)
+    @commands.group(name="levels",aliases=["level","leaderboard"],brief="Prints a link of the server's leaderboard",pass_context=True,invoke_without_command=True)
     async def level_link(self,msg):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/levels/{}".format(msg.message.server.id))
 
-    @level_link.command(name="server",brief="Show a link of all server's leaderboard",pass_context=True)
+    @level_link.command(name="server",brief="Prints a link of the server leaderboard",pass_context=True)
     async def server_level_link(self,msg):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/server/levels".format(msg.message.server.id))
 
-    @commands.command(name="rank",brief="Allow to see what rank you are at",pass_context=True)
+    @commands.command(name="rank",brief="Prints your rank",pass_context=True)
     @commands.check(is_cooldown)
     async def rank(self,msg):
         server = msg.message.server.id
@@ -138,14 +138,14 @@ class Level():
         else:
             player = msg.message.author
         if await self.is_ban(msg.message) is True:
-            await self.bot.say_edit("I am sorry, but you are banned, if you think this is wrong, please info server owner")
+            await self.bot.say_edit("I am sorry, but you are banned. In case this is a mistake, please informate the server owner")
             return
         if await self.redis.exists("{}:Level:Player:{}".format(msg.message.server.id,player.id)) is False:
             if player != msg.message.author:
-                await self.bot.say_edit("{} seem to be not a ranked yet, Tell that person to talk more!".format(player.mention))
+                await self.bot.say_edit("{} doesn't seem to be ranked yet. Tell that person to talk more!".format(player.mention))
                 return
             else:
-                await self.bot.say_edit("I am sorry, it seem you are not in a rank list! Talk more!")
+                await self.bot.say_edit("I am sorry, but you don't seem to be ranked yet! Talk more!")
                 return
         data = await  self.redis.sort("{}:Level:Player".format(server),by="{}:Level:Player:*->Total_XP".format(server),offset=0,count=-1)
         data = list(reversed(data))
@@ -164,7 +164,7 @@ class Level():
             return
         await self.redis.set("{}:Level:{}:rank:check".format(server,msg.message.author.id),'cooldown',expire=int(cooldown))
 
-    @commands.command(name="table",brief="Allow to see top 10 rank",pass_context=True)
+    @commands.command(name="table",brief="Prints the top 10 of the leaderbord",pass_context=True)
     async def rank_table(self,msg):
         server = msg.message.server.id
         player_data = await  self.redis.sort("{}:Level:Player".format(server),"{}:Level:Player:*->ID".format(server),

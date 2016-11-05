@@ -1,10 +1,11 @@
-This is currenly Beta-Beta version
-Where i will often update public version for bot to run with.
+This is currenly the Alpha version.
+I will update the public version of the bot regularly on this site.
+This is the version, that can be run on any server.
 
-For a faq,
+In need of a FAQ,
 [please check here](http://nurevam.site/faq)
 
 
-Credits goes to Cookie,https://github.com/cookkkie/mee6
-Website is mainly based of his but with heavy edited.
-Level are similar yet homemake code
+Credit goes to [Cookie](https://github.com/cookkkie/mee6).
+The website is based on his website, but heavily edited.
+The level system is similar, yet homemade code.

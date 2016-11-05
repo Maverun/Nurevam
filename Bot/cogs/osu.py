@@ -12,17 +12,17 @@ class Osu(): #Allow to welcome new members who join server. If it enable, will s
         self.redis = bot.db.redis
         self.api = OsuApi(utils.secret["osu"], connector=AHConnector())
 
-    @commands.command(pass_context=True,brief="Show a stats of player's")
+    @commands.command(pass_context=True,brief="Prints a stats of player's")
     async def osu(self,ctx,name=None):
         """
-        Allow to link a OSU Profile with some info.
+        Links an osu! profile with additional info.
         Name: #rank
         Level:  , PP:
         Country: #rank
         Total Play:
         Rank Score:
         Total Score:
-        If you give your username on Nurevam site of profile, you will get auto profile link unless you put name in.
+        You can enter your username on the Nurevam site, so that Nurevam cant automatically link your profile.
         """
 
         boolean = False

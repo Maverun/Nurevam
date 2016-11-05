@@ -60,13 +60,13 @@ class Log():
                 if config.get("name"):
                     msg_bool = True
                     msg ="`[{0}]`:__{1} [{1.id}]__ ".format(self.time(), before)
-                    msg += "have changed username to **{}**".format(after.name)
+                    msg += "has changed his username to **{}**".format(after.name)
             if before.nick != after.nick:
                 if config.get("nickname"):
                     if after.nick is None:
-                        msg += "remove nick".format(after.display_name)
+                        msg += "removed his nick".format(after.display_name)
                     else:
-                        msg += "has changed nick from {} to {}".format(before.nick,after.nick)
+                        msg += "has changed his nick from {} to {}".format(before.nick,after.nick)
                     msg_bool = True
             if before.avatar != after.avatar:
                 if config.get("avatar"):
@@ -81,7 +81,7 @@ class Log():
             if self.config[after.server.id].get('edit'):
                 if before.content != after.content:
                     msg = self.format_msg(after.author)
-                    msg += "*have edit message in* {}: ".format(after.channel.mention)
+                    msg += "*has edited his message in* {}: ".format(after.channel.mention)
                     msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-"),after.clean_content.replace("\n","\n+"))
                     await self.send(after.server.id,msg)
 
@@ -111,7 +111,7 @@ class Log():
         if self.config.get(member.server.id):
             if self.config[member.server.id].get("left"):
                 msg = self.format_msg(member)
-                msg += "have left server "
+                msg += "has left the server "
                 await self.send(member.server.id,msg)
 
     async def send(self,server_id,msg):

@@ -12,7 +12,7 @@ def synopis(term):
 
 class Myanimelist():
     """
-    Allow to search up database of Myanimelist.com to see a info of that certain anime/manga
+    Is able to search the database of Myanimelist.com to get info about a certain anime/manga
     """
 
     def __init__(self, bot):
@@ -105,12 +105,12 @@ class Myanimelist():
                     data):  # Check if it below in list range so it dont split out of error about out of range
                 await self.bot.says_edit(data[int(answer.content) - 1])
             else:
-                await self.bot.says_edit("You enter a number that is out of range!")
+                await self.bot.says_edit("You entered a number that is out of range!")
 
-    @commands.command(brief="Allow to search anime info rom Myanimelist database",pass_context=True)
+    @commands.command(brief="Is able to acquire anime info from the Myanimelist database",pass_context=True)
     async def anime(self, ctx, *, name: str):
         """
-        Allow to give you a infomatives of Anime from Myanimelist
+        Is able to give you the data of an anime from Myanimelist
         <Link>
         Name:
         Episodes:
@@ -122,10 +122,10 @@ class Myanimelist():
         link_name = name.replace(" ", "_").lower()  # In case there is more than 1 word
         await self.data(ctx, "anime", link_name)
 
-    @commands.command(brief="Allow to search manga info from Myanimelist database",pass_context=True)
+    @commands.command(brief="Is able to acquire manga info from the Myanimelist database",pass_context=True)
     async def manga(self, ctx, *, name: str):
         """
-        Allow to give you a infomatives of Manga from Myanimelist
+        Is able to give you the data of a Manga from Myanimelist
                 Allow to give you a list of Anime from data base
         <Link>
         Name:
@@ -149,7 +149,7 @@ class Myanimelist():
         setting = await self.redis.hget("Profile:{}".format(user),"myanimelist")
         if name is None:
             if setting is None:
-                await self.bot.says_edit("You need to enter a name! Or you can enter your own name in your profile at <http://nurevam.site>")
+                await self.bot.says_edit("You need to enter a name! Or you can enter your own name on your profile at <http://nurevam.site>")
             else:
                 boolean = True
                 name = setting
@@ -176,27 +176,27 @@ class Myanimelist():
     @commands.command(pass_context=True,brief="link out MAL user's profile")
     async def mal(self,ctx,name = None):
         """
-        Allow to link a MAL Profile.
-        If you give your username on Nurevam site of profile, you will get auto profile link unless you put name in.
+        Is able to link a MAL Profile.
+        If you enter your username on your profile on the Nurevam site, Nurevam will automatically link your profile.
         """
         await self.check_username(ctx,name,"profile")
 
 
     @commands.command(name="list",pass_context=True,brief = "link out MAL user's anime or manga list")
-    async def show_list(self,ctx,type,name=None):
+    async def show_list(self,ctx,_type,name=None):
         """
-        Allow to give you a anime/manga list of that username.
+        Is able to give you the anime/manga list of a user.
         !list amime <username>
         !list manga <username>
-        username is optional, if you have register your name on nurevam.site, it would print your.
-        Mention someone, it will check if that user have register and give it out under his username.
+        username is optional, if you have entered  your name on nurevam.site, it will print yours.
+        If you mention someone, who is registered on nurevam.site, it will give out his.
         """
-        if type == "anime":
+        if _type == "anime":
             await self.check_username(ctx,name,"animelist")
-        elif type == "manga":
+        elif _type == "manga":
             await self.check_username(ctx,name,"mangalist")
         else:
-            await self.bot.says_edit("Please double check your type, it is **anime** or **manga**")
+            await self.bot.says_edit("Please double check what you typed, it is **anime** or **manga**")
 
 def setup(bot):
     bot.add_cog(Myanimelist(bot))
