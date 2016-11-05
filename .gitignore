@@ -2,3 +2,4 @@
 envfile.list
 Bot/cogs/rpg.py
 secret.json
+Bot/cogs/channel.py

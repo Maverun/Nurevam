@@ -6,7 +6,7 @@ import asyncio
 import traceback
 import datetime
 import inspect
-
+import git
 
 def list_cogs(): #Check a list and load it
     cogs = glob.glob("cogs/*.py")
@@ -243,6 +243,16 @@ class Tools():
                 f.write(x)
         with open("acivity.txt","rb") as r:
             await self.bot.upload(r)
+
+    @commands.command(hidden=True)
+    @commands.check(utils.is_owner)
+    async def upgrade(self):
+        """
+        Allow to update, so i can just simple do reload afterward.
+        """
+        repo = git.cmd.Git("../")
+        repo.pull()
+        await self.bot.say("Upgrade done")
 
     @commands.command(hidden=True)
     @commands.check(utils.is_owner)
