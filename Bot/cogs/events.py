@@ -8,6 +8,7 @@ class Events():
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
+        self.error_log = False
 
     def Time(self):
         return datetime.datetime.now().strftime("%b/%d/%Y %H:%M:%S")
@@ -62,7 +63,7 @@ class Events():
             await self.redis.hset("Info:Icon",after.id,after.avatar)
         if before.name != after.name:
             print("\033[97m<Event Member Update Name>: \033[94m {}:\033[93m Before : {} |||\033[92m After : {} ||| {}\033[00m".format(self.Time(),before.name,after.name, after.id))
-            await self.redis.hset("Info:Name",after.id,after.name)
+            await self.redis.hset("Info:Name",after.id,str(after))
         await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=15) #To stop multi update
 
     async def on_command(self,command,ctx):
@@ -113,7 +114,7 @@ class Events():
                 await self.bot.send_message(ctx.message.channel,page.replace("\n","fix\n",1))
 
     async def on_command_error(self,error,ctx):
-        if self.bot.user.id == "181503794532581376":
+        if self.bot.user.id == "181503794532581376" or self.error_log:
             print(error)
         if isinstance(error, commands.MissingRequiredArgument):
             await self.send_cmd_help(ctx)
@@ -129,6 +130,15 @@ class Events():
             user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
             await self.bot.send_message(user, "```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors)))
             await self.bot.send_message(ctx.message.channel,"There is problem, I have send report to creator,\n hopefully it will fixed in time?,Maybe you did it wrongly.")
+
+    @commands.command(hidden = True)
+    @commands.check(utils.is_owner)
+    async def set_error(self):
+        """
+        On a prod server, it can get very spammy, so i would set it for just in case...
+        """
+        self.error_log = not(self.error_log)
+        await self.bot.say("Set {}".format(self.error_log))
 
 def setup(bot):
     bot.add_cog(Events(bot))

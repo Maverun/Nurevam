@@ -131,6 +131,9 @@ def list_cogs():
 
 @bot.event
 async def on_error(event,*args,**kwargs):
+    print(event)
+    print(args)
+    print(kwargs)
     Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
     utils.prRed(Current_Time)
     utils.prRed("Error!")

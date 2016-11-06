@@ -126,6 +126,7 @@ def require_vip(f):
     return wrapper
 
 def require_role(f):
+    @require_auth
     @wraps(f)
     def wrapper(*args,**kwargs):
         print("require role")

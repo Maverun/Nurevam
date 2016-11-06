@@ -191,7 +191,7 @@ class Tools():
         for data in info:
             if data.avatar != None:
                 await self.redis.hset("Info:Icon",data.id,data.avatar)
-            await self.redis.hset("Info:Name",data.id,data.name)
+            await self.redis.hset("Info:Name",data.id,str(data))
         current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         utils.prCyan("{}: Update {} of icon,name!".format(current_Time,len(info)))
         if self.update_info:
