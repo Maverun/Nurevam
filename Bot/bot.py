@@ -58,7 +58,7 @@ def global_check(ctx):
         #If bot is dev, and owner is me, it will alway return true, so useful for testing code etc
         if bot.user.id == "181503794532581376" and ctx.message.author.id == bot.owner.id:
             return True
-        if ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools","Repl"): #None for such as help command, and rest didnt require enable plugins, so have to do this way
+        if ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools","Repl","Events"): #None for such as help command, and rest didnt require enable plugins, so have to do this way
             return True
         elif redis.hget("{}:Config:Cogs".format(ctx.message.server.id),ctx.command.cog_name.lower()): #If plugin is enabled,then it will return true, so meaning one check is done.
             return True
