@@ -12,6 +12,7 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
         self.loop_reminder_timer = self.loop.create_task(self.timer())
 
     async def timer(self): #Checking if there is remindme task that bot lost during shutdown/restart (losing data from memory)
+        await asyncio.sleep(10)#give it a moment..
         utils.prYellow("Remindme Timer start")
         server_list = list(self.bot.servers)
         for server in server_list: #checking each server

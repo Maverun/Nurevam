@@ -14,6 +14,8 @@ class Myanimelist():
     """
     Is able to search the database of Myanimelist.com to get info about a certain anime/manga
     """
+    auth = aiohttp.BasicAuth(login=utils.secret["MAL_USERNAME"],password=utils.secret["MAL_PASSWORD"])
+    header = {"User-Agent":"Nurevam"}
 
     def __init__(self, bot):
         self.bot = bot
@@ -21,14 +23,15 @@ class Myanimelist():
         self.bot.say_edit = bot.says_edit
 
     async def get_data(self, category, name):
-        with aiohttp.ClientSession(auth=aiohttp.BasicAuth(login=utils.secret["MAL_USERNAME"],
-                                                          password=utils.secret["MAL_PASSWORD"])) as session:
-            async with session.get('http://myanimelist.net/api/{}/search.xml?q={}'.format(category, name)) as resp:
+        with aiohttp.ClientSession(auth=self.auth,headers=self.header) as session:
+            async with session.get('https://myanimelist.net/api/{}/search.xml?q={}'.format(category, name),headers=self.header) as resp:
+                print(resp.status)
+                print(resp.headers)
                 return (await resp.read())
 
     async def check_status(self,name):
         with aiohttp.ClientSession() as session:
-            async with session.get("http://myanimelist.net/malappinfo.php?u={}&status=all".format(name)) as resp:
+            async with session.get("https://myanimelist.net/malappinfo.php?u={}&status=all".format(name)) as resp:
                 if resp.status == 200:
                     xml_data = ElementTree.fromstring(await resp.text())
                     data = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'ptw','days_spent_watching'], [x.text for x in xml_data[0]]))
@@ -69,7 +72,7 @@ class Myanimelist():
                 end_date = "???"
             else:
                 end_date = x("end_date")
-            link = "http://myanimelist.net/{}/{}".format(category, x("id"))
+            link = "https://myanimelist.net/{}/{}".format(category, x("id"))
             if category == "anime":  # Check which category that user ask for
                 data.append(
                     "{}\n**Name**: {}\n**Episodes**: {}\n"
@@ -171,7 +174,7 @@ class Myanimelist():
                     "Total Episode Watched:{}\nMean Score:{}".format(data["watching"],data["completed"],data["on_hold"],
                                                                      data["dropped"],data["ptw"],data["days_spent_watching"],
                                                                      data["total_ep"],data["mean"])
-            await self.bot.says_edit("```xl\n{}\n```\n<http://myanimelist.net/{}/{}>".format(stats,site,name))
+            await self.bot.says_edit("```xl\n{}\n```\n<https://myanimelist.net/{}/{}>".format(stats,site,name))
 
     @commands.command(pass_context=True,brief="link out MAL user's profile")
     async def mal(self,ctx,name = None):
