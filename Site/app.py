@@ -1241,6 +1241,14 @@ def profile_level(player_id,server_id):
     }
     xp=0
     data_temp = db.hgetall("{}:Total_Command:{}".format(server_id,player_id))
+    level_data =db.hgetall("{}:Level:Player:{}".format(server_id,player_id))
+    print(level_data)
+    if len(level_data) > 0:
+        level, next_exp = next_Level(level_data["Total_XP"])
+        level_data.update({"Level":level,"Next_XP":next_exp})
+        xp = 100*float(float(level_data["XP"])/float(next_exp))
+        level_data.update({"Percents":int(xp)})
+        print(level_data)
     else:
         data=None
     #This is command used list
@@ -1252,10 +1260,11 @@ def profile_level(player_id,server_id):
         data = []
         for x,y in data_array:
             data.append("{} - {}".format(x,y))
+    #Their name and icon
     icon = db.hget("Info:Icon",player_id)
     name = db.hget("Info:Name",player_id)
     return render_template("level/profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
-    #Their name and icon
+                           server=server,level=level_data,XP_Percent=xp,title="{} Profile".format(name),
                            is_owner=is_owner,is_private=is_private)
 
 @app.before_first_request

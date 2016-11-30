@@ -348,8 +348,10 @@ class Level:
             total_exp = 0
             current_exp = 0
             async for key in self.redis.iscan(match="*Level:Player:{}".format(x)): #getting key relative to that player
-                total_exp += int(await self.redis.hget(key,"Total_XP"))
-                current_exp += int(await self.redis.hget(key,"XP"))
+                if await self.redis.hget(key,"Total_XP"):
+                    total_exp += int(await self.redis.hget(key,"Total_XP"))
+                if await self.redis.hget(key,"XP1"):
+                    current_exp += int(await self.redis.hget(key,"XP"))
             level,new_xp = self.next_Level(total_exp)
             data_member_total_exp[x] = total_exp
             data_member_current_exp[x] = current_exp
