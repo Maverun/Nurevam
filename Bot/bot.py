@@ -33,7 +33,7 @@ def get_channel(name):
     finally:
         del stack
 
-async def say_edit(msg):
+async def say_edit(msg = None,embed = None):
     try:
         key = str(inspect.getmodule(inspect.currentframe().f_back.f_code))
         regex = re.compile(r"(cogs.[a-zA-Z]*)")
@@ -41,7 +41,7 @@ async def say_edit(msg):
         if get:
             check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(get_channel("_internal_channel").server.id))
             check = check.get(get.groups()[0][5:])
-            await bot.say(msg,delete_after=check_post(check))
+            await bot.say(content = msg,embed = embed,delete_after=check_post(check))
         return
     except:
         utils.prRed(traceback.format_exc())

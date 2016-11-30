@@ -18,7 +18,7 @@ if platform.system() == "Windows": #due to different path for linux and window
 else:
     path = "/home/mave/Nurevam/secret.json"
 #read files and save it to secret
-with open (path,"r") as f:
+with open (path,"r",encoding = "utf8") as f:
     secret = json.load(f)
 
 #########################################

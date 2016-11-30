@@ -187,21 +187,24 @@ class Tools():
         await self.bot.say("Collect {}".format(info))
 
     async def update_all(self):
+        """
+        Updating Thing for website, level every x hours instead of spamming.
+        For example, update user's name and their icon for website purpose
+        Same for server icon,name
+        """
+        #getting data of members, set it so there is no dupe, then put them into data
         info = set(self.bot.get_all_members())
-        for data in info:
-            if data.avatar != None:
-                await self.redis.hset("Info:Icon",data.id,data.avatar)
-            await self.redis.hset("Info:Name",data.id,str(data))
+        await self.redis.hmset_dict("Info:Icon",dict([(x.id,x.avatar) for x in info if x.avatar]))
+        await self.redis.hmset_dict("Info:Name",dict([[x.id,str(x)] for x in info]))
+        server = list(self.bot.servers) #same thing with ^^ but server
+        await self.redis.hmset_dict("Info:Server_Icon",dict([[x.id,x.icon] for x in server if x.icon]))
+        await self.redis.hmset_dict("Info:Server",dict([[x.id,x.name] for x in server]))
         current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         utils.prCyan("{}: Update {} of icon,name!".format(current_Time,len(info)))
+        utils.prCyan("{}: Update {} of server!".format(current_Time,len(server)))
         if self.update_info:
             utils.prCyan(self.update_info)
         await self.update_check()
-        server = list(self.bot.servers)
-        for x in server:
-            if x.icon != None:
-                await self.redis.hset("Info:Server_Icon",x.id,x.icon)
-            await self.redis.hset("Info:Server",x.id,x.name)
         return len(info)
 
     async def timer_update(self):
@@ -222,27 +225,6 @@ class Tools():
             print("Server: {0:<{first}}[{1}]\tOwner: {2:<{second}}\t Member Count: {3}".format(name,server_id,owner,total,
                                                                                                first=len(max(info,key=len)),
                                                                                                second = len(max(char_name,key=len))))
-
-    @commands.command(hidden=True,pass_context=True)
-    @commands.check(utils.is_owner)
-    async def activity(self,ctx):
-        server = ctx.message.server.id
-        player_data = await  self.redis.sort("{}:Level:Player".format(server),
-                                                                     "{}:Level:Player:*->Name".format(server),
-                                                                     "{}:Level:Player:*->Total Message Count".format(server),
-                                                                     "{}:Level:Player:*->ID".format(server),
-                                                                     by="{}:Level:Player:*->Total Message Count".format(server),offset=0,count=-1)
-        player_data = list(reversed(player_data))
-        msg=[]
-        print(player_data)
-        for x in range(0,len(player_data),3):
-            msg.append("{},{},{}\n".format(player_data[x],player_data[x+2].replace(","," "),player_data[x+1]))
-        with open("activity.txt","w",encoding='utf-8') as f:
-            for x in msg:
-                print(x)
-                f.write(x)
-        with open("acivity.txt","rb") as r:
-            await self.bot.upload(r)
 
     @commands.command(hidden=True)
     @commands.check(utils.is_owner)

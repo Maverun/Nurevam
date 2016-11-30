@@ -1,10 +1,11 @@
+from prettytable import PrettyTable
 from discord.ext import commands
 from .utils import utils
 import traceback
 import datetime
 import discord
 import sys
-class Events():
+class Events:
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -29,14 +30,24 @@ class Events():
         await self.redis.hset("Info:Server",str(server.id),str(server.name))
         await self.redis.set("Info:Total Server",len(self.bot.servers))
         await self.redis.set("Info:Total Member",len(set(self.bot.get_all_members())))
-        await self.redis.set("{}:Config:CMD_Prefix".format(server.id),"!")
+        if self.redis.exists("{}:Config:Cogs".format(server.id)): # if it exist, and going to be expire soon, best to persists them, so they don't lost data
+            async for key in self.redis.iscan(match="{}*".format(server.id)):
+                await self.redis.persist(key)
+        else:
+            await self.redis.set("{}:Config:CMD_Prefix".format(server.id),"!")
         #Server setting
-        await self.redis.hset("{}:Config:Delete_MSG".format(server.id),"core","off")
+        await self.redis.hset("{}:Config:Delete_MSG".format(server.id),"core","off") #just in case
 
     async def on_server_remove(self,server): #IF bot left or no longer in that server. It will remove this
         print("\033[91m<EVENT LEFT>:\033[94m[ {} : \033[96m({})\033[92m -- {}\033[00m".format(self.Time(), str(server.id), str(server.name)))
         utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.servers), len(set(self.bot.get_all_members()))))
         await self.redis.hdel("Info:Server",server.id)
+        #Set all database to expire, will expire in 30 days, so This way, it can save some space,it would unto when it is back to that server and setting changed.
+        count = 0
+        async for key in self.redis.iscan(match="{}*".format(server.id)):
+            await self.redis.expire(key,1209600)
+            count += 1
+        utils.prGreen("Set {} expire".format(count))
 
     async def on_server_update(self,before,after): #If server update name and w/e, just in case, Update those
         print("\033[95m<EVENT Update>:\033[94m {} :\033[96m {} \033[93m | \033[92m({}) -- {}\033[00m".format(self.Time(),after.name,after.id, after))
@@ -84,7 +95,15 @@ class Events():
                     utils.prCyan("PRIVATE")
                     utils.prGreen("<Event Send> {} : {} |||{}".format(self.Time(), msg.author.name, msg.clean_content))
                 else:
-                    utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, msg.clean_content))
+                    if msg.embeds:
+                        table = PrettyTable() #best to use it i guess
+                        data = msg.embeds[0]["fields"]
+                        for x in data:
+                            table.add_column(x["name"],x["value"].split("\n"))
+                        content ="\n" + str(table)
+                    else:
+                        content = msg.clean_content
+                    utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, content))
 
     async def on_command_completion(self,command,ctx):
         if command.cog_name is None:

@@ -9,7 +9,6 @@ import io
 class REPL:
     def __init__(self, bot):
         self.bot = bot
-        self.redis = utils.redis
         self.sessions = set()
 
     def cleanup_code(self, content):
@@ -37,7 +36,7 @@ class REPL:
             'channel': msg.channel,
             'author': msg.author,
             '_': None,
-            'redis':self.redis
+            'redis':utils.redis_set
         }
 
         if msg.channel.id in self.sessions:

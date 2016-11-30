@@ -1082,6 +1082,21 @@ def update_levels(server_id):
 
     return redirect(url_for('plugin_levels', server_id=server_id))
 
+
+def next_Level(total):
+    """
+    Formula to get next xp is 100*1.2^level
+    It will do calculate level by using log
+    then use that level to sub first equations for next level
+    This to ensure to make it accurate as it could.
+    """
+    if int(total) >= 100:  # if it greater than 100, it mean it above level 1
+        level = int(math.log(int(total) / 100, 1.2))  # getting level
+    else:  # when total exp is less than 100, it is still level 1, reason for that is due to -level via log equations
+        level = 1
+    next_xp = int(100 * (1.2 ** level))  # getting next require
+    return level, next_xp
+
 @app.route('/levels/<int:server_id>')
 def levels(server_id):
     is_admin = False
@@ -1112,30 +1127,30 @@ def levels(server_id):
     avatar_list = db.hgetall("Info:Icon")
     total_member = len(db.smembers("{}:Level:Player".format(server_id)))
     player_data = db.sort("{}:Level:Player".format(server_id), by="{}:Level:Player:*->Total_XP".format(server_id), get=[
-                                                                                                          "{}:Level:Player:*->Name".format(server_id),
                                                                                                           "{}:Level:Player:*->ID".format(server_id),
-                                                                                                          "{}:Level:Player:*->Level".format(server_id),
                                                                                                           "{}:Level:Player:*->XP".format(server_id),
-                                                                                                          "{}:Level:Player:*->Next_XP".format(server_id),
-                                                                                                          "{}:Level:Player:*->Total_XP".format(server_id),
-                                                                                                          "{}:Level:Player:*->Discriminator".format(server_id)], start=0, num=total_member, desc=True)
+                                                                                                          "{}:Level:Player:*->Total_XP".format(server_id),], start=0, num=total_member, desc=True)
+    print(player_data)
     data = []
     total_exp = 0
-    for x in range(0,len(player_data),7):
+    for x in range(0,len(player_data),3):
             if name_list.get(player_data[x+1]) is None:
                 db.srem("{}:Level:Player".format(server_id),player_data[x+1])
+            if player_data[x] is None: continue
             # print(player_data[x],player_data[x+1]) #for future references
-            total_exp += int(player_data[x+5])
+            total_exp += int(player_data[x+2])
+            level, next_xp = next_Level(player_data[x+2])
+            name = name_list[player_data[x]].split("#")
             temp = {
-                "Name":player_data[x],
-                "ID":player_data[x+1],
-                "Level":player_data[x+2],
-                "XP":player_data[x+3],
-                "Next_XP":player_data[x+4],
-                "Total_XP":player_data[x+5],
-                "Discriminator":player_data[x+6],
-                "Avatar":avatar_list.get(player_data[x+1]),
-                "XP_Percent":100*(float(player_data[x+3])/float(player_data[x+4]))
+                "Name":name[0],
+                "ID":player_data[x],
+                "Level":level,
+                "XP":player_data[x+1],
+                "Next_XP":next_xp,
+                "Total_XP":player_data[x+2],
+                "Discriminator":name[1],
+                "Avatar":avatar_list.get(player_data[x]),
+                "XP_Percent":100*(float(player_data[x+1])/float(next_xp))
             }
             data.append(temp)
         #Those are for Website
@@ -1218,13 +1233,7 @@ def profile_level(player_id,server_id):
         user_id =get_user(session['api_token'])['id']
 
         is_owner = str(player_id) == str(user_id)
-    # is_private=False #checking if page is private or not.
     is_private=player_id in db.smembers("{}:Level:Player:Private".format(server_id))
-    # print(player_id in db.smembers("{}:Level:Player:Private".format(server_id)))
-    # for id in db.smembers("{}:Level:Player:Private".format(server_id)):
-    #     if player_id == id:
-    #         is_private=True
-    # print(is_private)
     server = {
     'id':server_id,
     'name':db.get("{}:Level:Server_Name".format(server_id)),
@@ -1232,12 +1241,9 @@ def profile_level(player_id,server_id):
     }
     xp=0
     data_temp = db.hgetall("{}:Total_Command:{}".format(server_id,player_id))
-    level =db.hgetall("{}:Level:Player:{}".format(server_id,player_id))
-    if len(level) > 0:
-        xp = 100*float(float(level["XP"])/float(level["Next_XP"]))
-        level.update({"Percents":int(xp)})
     else:
-        level=None
+        data=None
+    #This is command used list
     if len(data_temp) == 0:
         data =None
     else:
@@ -1249,7 +1255,7 @@ def profile_level(player_id,server_id):
     icon = db.hget("Info:Icon",player_id)
     name = db.hget("Info:Name",player_id)
     return render_template("level/profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
-                           server=server,level=level,XP_Percent=xp,title="{} Profile".format(name),
+    #Their name and icon
                            is_owner=is_owner,is_private=is_private)
 
 @app.before_first_request

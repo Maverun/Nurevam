@@ -6,7 +6,7 @@ def is_enable(msg): #Checking if cogs' config for this server is off or not
     return utils.is_enable(msg, "osu")
 
 
-class Osu(): #Allow to welcome new members who join server. If it enable, will send them a message.
+class Osu:
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis

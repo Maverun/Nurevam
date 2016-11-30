@@ -25,8 +25,6 @@ class Myanimelist():
     async def get_data(self, category, name):
         with aiohttp.ClientSession(auth=self.auth,headers=self.header) as session:
             async with session.get('https://myanimelist.net/api/{}/search.xml?q={}'.format(category, name),headers=self.header) as resp:
-                print(resp.status)
-                print(resp.headers)
                 return (await resp.read())
 
     async def check_status(self,name):
