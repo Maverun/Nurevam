@@ -131,24 +131,9 @@ class Tools():
 
         await self.bot.say(python.format(result))
 
-    @commands.command(name="server_core",pass_context=True,hidden=True)
+    @commands.command(pass_context=True,hidden=True)
     @commands.check(utils.is_owner)
-    async def Check_Server(self,ctx):
-        cogs = list_cogs()
-        print(cogs)
-        # list = await self.redis.keys()
-        server = self.bot.servers
-        await self.redis.set("Info:Total Server",len(server))
-        for name in server:
-            print(name)
-            await self.redis.hset("Info:Server",str(name.id),str(name))
-            print(name.id)
-            #Server setting
-            await self.redis.hmset("{}:Config:Delete_MSG".format(name.id),"core","off")
-
-    @commands.command(name="enable",pass_context=True,hidden=True)
-    @commands.check(utils.is_owner)
-    async def Enable(self,ctx,*,Cogs):
+    async def enable(self,ctx,*,Cogs):
         print(Cogs)
         check = await self.redis.hget("{}:Config:cogs".format(ctx.message.server.id),Cogs)
         if check == "off":
@@ -157,9 +142,9 @@ class Tools():
         elif check == "on":
             await self.bot.say("It is already enable.")
 
-    @commands.command(name="disable",pass_context=True,hidden=True)
+    @commands.command(pass_context=True,hidden=True)
     @commands.check(utils.is_owner)
-    async def Disable(self,ctx,*,Cogs):
+    async def disable(self,ctx,*,Cogs):
         print(Cogs)
         check = await self.redis.hget("{}:Config:cogs".format(ctx.message.server.id),Cogs)
         if check == "on":
@@ -168,23 +153,14 @@ class Tools():
         elif check == "off":
             await self.bot.say("It is already disable.")
 
-    @commands.command(name="RESET",pass_context=True,hidden=True)
+    @commands.command(hidden = True)
     @commands.check(utils.is_owner)
-    async def RESET(self,ctx):
-        await self.bot.say("```diff\n-WARNING! DOING THIS WILL COMPLETE RESET ALL DATABASE! ARE YOU SURE!?-\n```")
-        answer = await self.bot.wait_for_message(timeout=5,author=ctx.message.author)
-        if answer.content =="YES":
-            await self.redis.flushall()
-            await self.bot.say("RESET.")
-        else:
-            print("SMITH")
-            return
-
-    @commands.command(name="get-all-icon-name",pass_context=True,hidden=True)
-    @commands.check(utils.is_owner)
-    async def get_all(self,ctx):
-        info = await self.update_all()
-        await self.bot.say("Collect {}".format(info))
+    async def logout(self):
+        """
+        Safetly to logout and close redis nicely.
+        """
+        await self.bot.logout()
+        await self.redis.quit()
 
     async def update_all(self):
         """
@@ -262,11 +238,12 @@ class Tools():
             minutes = time[0]
             second = time[1]
             if minutes >= 1:
-                failed.append("-{}: {} min, {} second".format(x, minutes, second))
-                self.bot.unload_extension("cogs.{}".format(x))
-                await asyncio.sleep(3)
-                self.bot.load_extension("cogs.{}".format(x))
-                failed_boolean = True
+                if x in self.bot.cogs:
+                    failed.append("-{}: {} min, {} second".format(x, minutes, second))
+                    self.bot.unload_extension("cogs.{}".format(x))
+                    await asyncio.sleep(3)
+                    self.bot.load_extension("cogs.{}".format(x))
+                    failed_boolean = True
             else:
                 info.append("+{}: {} min, {} second".format(x, minutes, second))
         if failed_boolean:

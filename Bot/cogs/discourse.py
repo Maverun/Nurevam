@@ -1,14 +1,16 @@
 from discord.ext import commands
 from .utils import utils
 import traceback
+import datetime
 import asyncio
 import aiohttp
-import datetime
+import discord
 import html
 
-def is_enable(msg): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(msg, "discourse")
+def is_enable(ctx): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(ctx, "discourse")
 
+@commands.check(is_enable)
 def html_unscape(term):
     return html.unescape(term)
 
@@ -17,12 +19,26 @@ class Discourse(): #Discourse, a forums types.
         self.bot = bot
         self.redis = bot.db.redis
         self.counter= 0
+        self.log_error = {}
+        bot.cogs["Core"].log.command(pass_context = True,brief="show Logging of discourse",name = "discourse")(self.dstatus)
         loop = asyncio.get_event_loop()
         self.loop_discourse_timer = loop.create_task(self.timer())
 
     def __unload(self):
         self.loop_discourse_timer.cancel()
         utils.prLightPurple("Unloading Discourse")
+
+    def logging_info(self,status,link,thread_id,server_id):
+        if isinstance(status,int):
+            if status == 404:
+                status = "Not found."
+            elif status == 410:
+                status = "Missing."
+            elif status == 403:
+                status = "Cannot access it."
+        elif status == 200:
+            status = "Working."
+        self.log_error[server_id] = {"status":status,"link":link,"id":thread_id,"time":datetime.datetime.now()}
 
     async def get_data(self,link,api,username,domain):
         #Using headers so it can support both http/1 and http/2
@@ -59,22 +75,26 @@ class Discourse(): #Discourse, a forums types.
         counter = 0
         data=[]
         data_bool = False
+        status =0
+        link = "???"
         while True:
             try:
                 counter +=1
                 link = "{}/t/{}".format(config['domain'],id_post+counter)
                 get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
+                status = get_post[1]
+                self.logging_info(status,link,id_post+counter,server_id)
                 # utils.prYellow(get_post)
                 if get_post is None:
                     return
                 if get_post[0] is False: #If there is error return
                     #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
-                    if get_post[1] == 404 or get_post[1]==410:
+                    if status == 404 or status==410:
                         counter -=1
                         break
-                    elif get_post[1] == 200:
+                    elif status == 200:
                         continue
-                    elif get_post[1] == 403:
+                    elif status == 403:
                         count = await self.redis.get("{}:cooldown:403".format(server_id))
                         # print(count)
                         if count is not None: #If key is atually exists, then check how many time it already got 403
@@ -106,6 +126,7 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
                 return
+        self.logging_info(status, link, id_post + counter, server_id)
         if data_bool:
             try:
                 if len("\n".join(data)) >=1500:
@@ -159,6 +180,7 @@ class Discourse(): #Discourse, a forums types.
 #########################################################################
 
     @commands.command(name="summary",brief="Showing a summary of user",pass_context= True)
+    @commands.check(is_enable)
     async def Summary_stat(self,ctx,*,name: str): #Showing a summary stats of User
         '''
         Give a stat of summary of that username
@@ -187,6 +209,7 @@ class Discourse(): #Discourse, a forums types.
         await self.bot.say("```xl\n{}\n```".format(print_data))
 
     @commands.command(name="stats",brief="Show a Site Statistics",pass_context=True)
+    @commands.check(is_enable)
     async def Statictics(self,ctx): #To show a stats of website of what have been total post, last 7 days, etc etc
         '''
         Show a table of Topics,Posts, New Users, Active Users, Likes for All Time, Last 7 Days and Lasts 30 Days
@@ -216,6 +239,7 @@ class Discourse(): #Discourse, a forums types.
                    stat["like_count"],stat["likes_7_days"],stat["likes_30_days"]))
 
     @commands.command(name="bio",brief="Give a bio of that user",pass_context=True)
+    @commands.check(is_enable)
     async def Bio(self,ctx,name:str):
         """
         Give a info of Username
@@ -249,6 +273,21 @@ class Discourse(): #Discourse, a forums types.
         if "bio_raw" in data:
             data_array.append("**Bio**: \n```\n{}\n```".format(data["bio_raw"]))
         await self.bot.say("\n".join(data_array))
+
+    async def dstatus(self,ctx):
+        """
+        Allow to display a log for this server, Give you a update current ID.
+        """
+        data = self.log_error.get(ctx.message.server.id)
+        if data is None:
+            await self.bot.say_edit("I cannot check it at this moment!")
+        else:
+            embed = discord.Embed()
+            embed.add_field(name = "Status", value=data["status"])
+            embed.add_field(name = "ID", value = "[{0[id]}]({0[link]})".format(data))
+            embed.timestamp = data["time"]
+            await self.bot.say_edit(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Discourse(bot))

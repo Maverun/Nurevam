@@ -3,11 +3,14 @@ from .utils import utils
 import asyncio
 import discord
 
-def check_roles(msg):
-    if msg.message.author.id == "105853969175212032":
+def check_roles(ctx):
+    if ctx.message.author.id == "105853969175212032":
         return True
-    Admin = utils.check_roles(msg, "Mod", "admin_roles")
-    return Admin or msg.message.author.id == "105853969175212032"
+    Admin = utils.check_roles(ctx, "Mod", "admin_roles")
+    return Admin or ctx.message.author.id == "105853969175212032"
+
+def is_enable(ctx): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(ctx, "mod")
 
 class Mod():
     """
@@ -31,6 +34,7 @@ class Mod():
 #########################################
 
     @commands.group(brief="Allow to clean bot itself, have subcommand",pass_context=True,invoke_without_command=True)
+    @commands.check(is_enable)
     @commands.check(check_roles)
     async def clean(self, ctx, *, limit:int=100):
         """
@@ -56,6 +60,7 @@ class Mod():
 
     @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_messages=True)
     async def role(self,ctx,roles : discord.Role,limit : int=100):
         """
@@ -72,6 +77,7 @@ class Mod():
 
     @clean.command(brief="Is able to clear a certain user's messages", pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_messages=True)
     async def person(self,ctx,user: discord.Member,*,limit: int = 100):
         """
@@ -85,6 +91,7 @@ class Mod():
 
     @clean.command(name = "all",brief="Allow to clear all message", pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_messages=True)
     async def _all(self,ctx,*,limit: int=100):
         """
@@ -106,6 +113,7 @@ class Mod():
 
     @commands.command(brief="Is able to kick a user")
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions( kick_members=True)
     async def kick(self,user:discord.Member):
         """
@@ -119,6 +127,7 @@ class Mod():
 
     @commands.command(brief="Is able to ban a user")
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions( ban_members=True)
     async def ban(self,user:discord.Member,*,day : int = 1):
         """
@@ -131,6 +140,7 @@ class Mod():
 
     @commands.command(brief="Is able to softban a user which is equal to kicking him and deleting his messages")
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions( ban_members=True)
     async def softban(self,user:discord.Member,*,day : int = 1):
         """
@@ -154,6 +164,7 @@ class Mod():
 
     @commands.group(brief="Multi subcommand related to role",invoke_without_command=True)
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_roles=True)
     async def role(self):
         """
@@ -166,6 +177,7 @@ class Mod():
 
     @role.command(brief="Is able to add a role to a user")
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_roles=True)
     async def add(self,user:discord.Member,*role:discord.Role):
         """
@@ -178,6 +190,7 @@ class Mod():
 
     @role.command(brief="Is able to remove a role from a user")
     @commands.check(check_roles)
+    @commands.check(is_enable)
     @commands.bot_has_permissions(manage_roles=True)
     async def remove(self,user:discord.Member,*role:discord.Role):
         """

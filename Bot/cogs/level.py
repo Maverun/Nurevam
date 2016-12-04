@@ -6,9 +6,12 @@ import discord
 import math
 
 def is_cooldown(msg):
-    redis = utils.redis_set
+    redis = utils.redis
     config = redis.get("{}:Level:{}:rank:check".format(msg.message.server.id,msg.message.author.id))
     return not(bool(config))
+
+def is_enable(ctx): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(ctx, "discourse")
 
 class Level:
     """
@@ -74,9 +77,11 @@ class Level:
             return
         if int(msg.author.discriminator) == 0000:
             return #Webhook
-        xp = randint(5,10)
-        await self.on_message_global(msg,xp)
-        if await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "on" and await self.is_ban(msg.author) is False:
+        if await self.redis.hget("{}:Config:Cogs".format(msg.server.id),"level") == "on":
+            xp = randint(5,10)
+            await self.on_message_global(msg,xp)
+            if await self.is_ban(msg.author) is True:
+                return
             #Getting ID
             player = msg.author.id
             server = msg.server.id
@@ -146,10 +151,12 @@ class Level:
 #########################################################################
 
     @commands.group(name="levels",aliases=["level","leaderboard"],brief="Prints a link of the server's leaderboard",pass_context=True,invoke_without_command=True)
+    @commands.check(is_enable)
     async def level_link(self,ctx):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/levels/{}".format(ctx.message.server.id))
 
     @level_link.command(name="server",brief="Prints a link of the server leaderboard",pass_context=True)
+    @commands.check(is_enable)
     async def server_level_link(self,ctx):
         await self.bot.says_edit("Check this out!\nhttp://nurevam.site/server/levels".format(ctx.message.server.id))
 
@@ -182,6 +189,7 @@ class Level:
         return embed
 
     @commands.group(brief="Prints your rank",pass_context=True,invoke_without_command=True)
+    @commands.check(is_enable)
     @commands.check(is_cooldown)
     async def rank(self, ctx,member:discord.Member = None):
         """
@@ -223,6 +231,7 @@ class Level:
         await self.redis.set("{}:Level:{}:rank:check".format(server, ctx.message.author.id), 'cooldown', expire=int(cooldown))
 
     @rank.command(name = "global",brief="Prints your global rank",pass_context=True)
+    @commands.check(is_enable)
     async def global_rank(self,ctx,member:discord.Member = None):
         """
         Print out global rank, meaning overall server that share server we were in.
@@ -325,15 +334,17 @@ class Level:
 
 
     @commands.group(name = "table",brief = "Prints the top 10 of the leaderbord",pass_context = True,invoke_without_command = True)
+    @commands.check(is_enable)
     async def rank_table(self, ctx,page = 1 ):
         return await self.table(ctx.message.author,page,server = ctx.message.server)
 
     @rank_table.command(name = "global",brief = "Prints the top 10 of the leaderboard global",pass_context = True)
+    @commands.check(is_enable)
     async def global_table(self,ctx,page = 1):
         return await self.table(ctx.message.author,page,description="Global Rank Leaderboard")
 
     @commands.command(hidden = True)
-    @commands.check(utils.is_owner)
+    @commands.check(is_enable)
     async def temp_global(self):
         print("Temp_global")
         data_level = []
@@ -351,7 +362,7 @@ class Level:
             async for key in self.redis.iscan(match="*Level:Player:{}".format(x)): #getting key relative to that player
                 if await self.redis.hget(key,"Total_XP"):
                     total_exp += int(await self.redis.hget(key,"Total_XP"))
-                if await self.redis.hget(key,"XP1"):
+                if await self.redis.hget(key,"XP"):
                     current_exp += int(await self.redis.hget(key,"XP"))
             level,new_xp = self.next_Level(total_exp)
             data_member_total_exp[x] = total_exp

@@ -1,9 +1,10 @@
 from discord.ext import commands
 from .utils import utils
-import json
-import aiohttp
-import asyncio
 import datetime
+import aiohttp
+
+def is_enable(ctx):
+    return utils.is_enable(ctx,"weather")
 
 class Weather(): #Allow to welcome new members who join server. If it enable, will send them a message.
     def __init__(self,bot):
@@ -12,6 +13,7 @@ class Weather(): #Allow to welcome new members who join server. If it enable, wi
         self.api = utils.secret["weather"]
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
+    @commands.check(is_enable)
     async def weather(self,*,locations:str="City,Country"):
         """
         !weather city,country

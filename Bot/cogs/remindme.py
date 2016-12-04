@@ -4,7 +4,7 @@ from .utils import utils
 import traceback
 import asyncio
 
-class Remind(): #Allow to welcome new members who join server. If it enable, will send them a message.
+class Remindme(): #Allow to welcome new members who join server. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -46,6 +46,8 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
     @commands.command(hidden=True,pass_context=True)
     async def remindme(self,ctx,get_time,*,message=""):
         time = get_time.split(":")
+        if not time[0].isdigit():
+            return await self.bot.say("You enter format wrong! It should be look like this {}remindme hh:mm:ss message".format(ctx.prefix))
         remind_time = 0
         msg = "Time set "
         id_time = 0
@@ -82,4 +84,4 @@ class Remind(): #Allow to welcome new members who join server. If it enable, wil
 
 
 def setup(bot):
-    bot.add_cog(Remind(bot))
+    bot.add_cog(Remindme(bot))

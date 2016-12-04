@@ -36,7 +36,7 @@ class REPL:
             'channel': msg.channel,
             'author': msg.author,
             '_': None,
-            'redis':utils.redis_set
+            'redis':utils.redis
         }
 
         if msg.channel.id in self.sessions:

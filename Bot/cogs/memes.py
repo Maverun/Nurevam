@@ -5,12 +5,16 @@ import io
 import textwrap
 import aiohttp
 
+def is_enable(ctx): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(ctx, "memes")
+
 class Memes:
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
 
     @commands.command(pass_context = True , brief = "A custom memes at your finest.")
+    @commands.check(is_enable)
     async def meme(self,ctx,name,top = "",bottom = ""):
         """
         allow to give a memes pictures

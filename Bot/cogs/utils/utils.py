@@ -1,6 +1,7 @@
-import redis
+import redis as rdb
 import json
 import platform
+
 #############Color for Terminal###############################
 #Whole line, and easier to debug
 def prRed(prt): print("\033[91m{}\033[00m".format(prt))
@@ -21,50 +22,29 @@ else:
 with open (path,"r",encoding = "utf8") as f:
     secret = json.load(f)
 
-#########################################
-#    _____               _   _          #
-#   |  __ \             | | (_)         #
-#   | |__) |   ___    __| |  _   ___    #
-#   |  _  /   / _ \  / _` | | | / __|   #
-#   | | \ \  |  __/ | (_| | | | \__ \   #
-#   |_|  \_\  \___|  \__,_| |_| |___/   #
-#                                       #
-#########################################
-
 ###########Connection Line####################
-redis_set = redis.Redis(host=secret["Redis"], decode_responses=True)
+redis = rdb.Redis(host=secret["Redis"], decode_responses=True)
 
 def is_owner(msg): #Checking if you are owner of bot
     return msg.message.author.id == "105853969175212032"
 
 ############Checking if cogs for that server is enable or disable##########
-def is_enable(msg,Cogs):
-    data = redis_set
+def is_enable(ctx,cog):
     try:
-        check = data.hget("{}:Config:Cogs".format(msg.message.server.id),Cogs)
-        if check == "on":
-            return True
-        else:
-            return False
+        return redis.hget("{}:Config:Cogs".format(ctx.message.server.id),cog) == "on"
     except:
         return False
-    pass
 
 ######################Checking if Role is able######################################
-def check_roles(msg,Cogs,Get_Roles): #Server ID  then which plugin, and Roles with set
-    data = redis_set
+def check_roles(msg,cog,get_role): #Server ID  then which plugin, and Roles with set
     try:
-        Roles= data.smembers("{}:{}:{}".format(msg.message.server.id,Cogs,Get_Roles))
-        checking=msg.message.author.roles
-        for name in checking:
-            for role in Roles:
-                if role == name.id:
-                    return True
+        db_role= redis.smembers("{}:{}:{}".format(msg.message.server.id,cog,get_role))
+        author_roles= [role.id for role in msg.message.author.roles]
+        for role in db_role:
+            if role in author_roles:
+                return True
     except Exception as e:
         prRed("ERROR\n{}".format(e))
         return False
-#####################Checking if it cooldown#####################################
-def is_cooldown(msg):
-    return redis_set
 
 

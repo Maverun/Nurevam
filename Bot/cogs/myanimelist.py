@@ -1,6 +1,6 @@
 from discord.ext import commands
-from .utils import utils
 from xml.etree import ElementTree
+from .utils import utils
 import aiohttp
 import html
 
@@ -9,6 +9,9 @@ def synopis(term):
     if len(term) >= 1500:
         return term[:1500]+"..."
     return term
+
+def is_enable(ctx): #Checking if cogs' config for this server is off or not
+    return utils.is_enable(ctx, "myanimelist")
 
 class Myanimelist():
     """
@@ -109,6 +112,7 @@ class Myanimelist():
                 await self.bot.says_edit("You entered a number that is out of range!")
 
     @commands.command(brief="Is able to acquire anime info from the Myanimelist database",pass_context=True)
+    @commands.check(is_enable)
     async def anime(self, ctx, *, name: str):
         """
         Is able to give you the data of an anime from Myanimelist
@@ -124,6 +128,7 @@ class Myanimelist():
         await self.data(ctx, "anime", link_name)
 
     @commands.command(brief="Is able to acquire manga info from the Myanimelist database",pass_context=True)
+    @commands.check(is_enable)
     async def manga(self, ctx, *, name: str):
         """
         Is able to give you the data of a Manga from Myanimelist
@@ -175,6 +180,7 @@ class Myanimelist():
             await self.bot.says_edit("```xl\n{}\n```\n<https://myanimelist.net/{}/{}>".format(stats,site,name))
 
     @commands.command(pass_context=True,brief="link out MAL user's profile")
+    @commands.check(is_enable)
     async def mal(self,ctx,name = None):
         """
         Is able to link a MAL Profile.
@@ -184,6 +190,7 @@ class Myanimelist():
 
 
     @commands.command(name="list",pass_context=True,brief = "link out MAL user's anime or manga list")
+    @commands.check(is_enable)
     async def show_list(self,ctx,_type,name=None):
         """
         Is able to give you the anime/manga list of a user.

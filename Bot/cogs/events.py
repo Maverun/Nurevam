@@ -148,7 +148,7 @@ class Events:
             cog_error =  '```fix\nCogs:{}\tCommand:{}\tAuthor:{}\n{}\nError:\n{}```'.format(ctx.command.cog_name,ctx.command,ctx.message.author,ctx.message.clean_content,error)
             user=discord.utils.get(self.bot.get_all_members(),id="105853969175212032")
             await self.bot.send_message(user, "```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors)))
-            await self.bot.send_message(ctx.message.channel,"There is problem, I have send report to creator,\n hopefully it will fixed in time?,Maybe you did it wrongly.")
+            await self.bot.send_message(ctx.message.channel,"You either used the command incorrectly or an unexpected error occured. A report has been sent to the creator so you can hope for a fix soon.")
 
     @commands.command(hidden = True)
     @commands.check(utils.is_owner)

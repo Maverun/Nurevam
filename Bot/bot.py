@@ -11,7 +11,7 @@ import re
 description = '''Nurevam's Command List. '''
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True))
 bot.db= storage.Redis()
-redis = utils.redis_set
+redis = utils.redis
 
 def check_post(check):
     if check == "None":
@@ -47,7 +47,7 @@ async def say_edit(msg = None,embed = None):
         utils.prRed(traceback.format_exc())
 bot.says_edit=say_edit
 
-@bot.check
+# @bot.check
 def global_check(ctx):
     """
     This is function that will do a global check for all command.

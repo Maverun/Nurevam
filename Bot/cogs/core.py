@@ -5,6 +5,7 @@ import datetime
 import discord
 import asyncio
 import aiohttp
+import os
 
 class Core():
     """
@@ -118,6 +119,34 @@ class Core():
 
         """
         await self.bot.say("Yes this is a category.")
+
+    @commands.command(hidden = True,pass_context = True)
+    async def plugin(self,ctx):
+        plugin_setting = await self.redis.hgetall("{}:Config:Cogs".format(ctx.message.server.id))
+        embed = discord.Embed()
+        cogs = [x.lower() for x in list(self.bot.cogs.keys())]
+        files_cogs = [x.strip(".py") for x in os.listdir("cogs") if ".py" in x and x != "__init__.py"]
+        print(files_cogs)
+        for x in files_cogs:
+            setting =  	u"\U0001F534"
+            if x in cogs:
+                if x in ("core", "remindme", "tools", "repl","events"):  # A Owner's thing only.
+                    if ctx.message.author.id != self.bot.owner.id:
+                        continue
+                    setting = u"\U0001F535"
+                if x in plugin_setting:
+                    setting =  	u"\U0001F535"
+            else:
+                setting = u"\u26AA"
+            embed.add_field(name = x,value = setting)
+        if ctx.message.server.me.colour.value:
+            embed.colour = ctx.message.server.me.colour
+
+        await self.bot.says_edit(embed=embed)
+
+    @commands.group(hidden = True)
+    async def log(self):
+        pass
 
 def setup(bot):
     bot.add_cog(Core(bot))
