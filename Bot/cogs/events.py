@@ -97,9 +97,10 @@ class Events:
                 else:
                     if msg.embeds:
                         table = PrettyTable() #best to use it i guess
-                        data = msg.embeds[0]["fields"]
-                        for x in data:
-                            table.add_column(x["name"],x["value"].split("\n"))
+                        data = msg.embeds[0].get("fields")
+                        if data:
+                            for x in data:
+                                table.add_column(x["name"],x["value"].split("\n"))
                         content ="\n" + str(table)
                     else:
                         content = msg.clean_content

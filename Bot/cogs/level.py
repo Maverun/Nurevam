@@ -11,7 +11,7 @@ def is_cooldown(msg):
     return not(bool(config))
 
 def is_enable(ctx): #Checking if cogs' config for this server is off or not
-    return utils.is_enable(ctx, "discourse")
+    return utils.is_enable(ctx, "level")
 
 class Level:
     """
