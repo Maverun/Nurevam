@@ -90,6 +90,8 @@ class Myanimelist():
                     "{}\n**Name**: {}\n{}**Score**: {}\n**Status**: {}\n**Published**: {} to {}\n**Synopis**:```{}```".format(
                         link, x("title"), chapt, x("score"), x("status"), x("start_date"), end_date,
                         synopis(x("synopsis")).replace("<br />", "")))
+            if len("\n".join(name_data)) >= 1800:
+                break
         if len(root) == 1:
             await self.bot.say("".join(data))
         else:  # if there is more than one of data, it will ask user which one do they want
