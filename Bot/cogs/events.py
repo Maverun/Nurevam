@@ -101,7 +101,8 @@ class Events:
                         if data:
                             for x in data:
                                 table.add_column(x["name"],x["value"].split("\n"))
-                        content ="\n" + str(table)
+                        content = msg.embeds[0].get("description","No description") +"\n"
+                        content +="\n" + str(table)
                     else:
                         content = msg.clean_content
                     utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.server.name,msg.server.id, content))

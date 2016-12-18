@@ -762,7 +762,7 @@ def memes(cog,server_id):
     return render_template("memes.html",data_memes = meme_link,server_id = server_id)
 
 @app.route('/Memes/<int:server_id>/add/memes/', methods=['POST'])
-@plugin_method
+@require_role
 def add_memes(server_id):
     print(request.form)
     name = request.form.get("meme_name")

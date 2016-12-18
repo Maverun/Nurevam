@@ -101,7 +101,7 @@ class Level:
             await self.redis.hincrby(self.name,"Message Count",increment = 1)
             next_xp = await self.redis.hget(self.name,"Next_XP")
             if next_xp == None: #Some reason i get error that Next XP is missing, so best to this way to stop giving error while setting it
-                next_xp = await self.redis.hset(self.name,"Next_XP",100)
+                return await self.redis.hset(self.name,"Next_XP",100)
             next_xp = int(next_xp)
             if current_xp >= next_xp:
                 remain_xp = current_xp - next_xp

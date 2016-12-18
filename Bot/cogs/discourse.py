@@ -10,7 +10,6 @@ import html
 def is_enable(ctx): #Checking if cogs' config for this server is off or not
     return utils.is_enable(ctx, "discourse")
 
-@commands.check(is_enable)
 def html_unscape(term):
     return html.unescape(term)
 
@@ -20,7 +19,11 @@ class Discourse(): #Discourse, a forums types.
         self.redis = bot.db.redis
         self.counter= 0
         self.log_error = {}
-        bot.cogs["Core"].log.command(pass_context = True,brief="show Logging of discourse",name = "discourse")(self.dstatus)
+        try:
+            bot.cogs["Core"].log.command(pass_context = True,brief="show Logging of discourse",name = "discourse")(self.dstatus)
+        except Exception as e:
+            utils.prRed("Cannot load dstatus of log command.")
+            utils.prRed(e)
         loop = asyncio.get_event_loop()
         self.loop_discourse_timer = loop.create_task(self.timer())
 
@@ -36,8 +39,14 @@ class Discourse(): #Discourse, a forums types.
                 status = "Missing."
             elif status == 403:
                 status = "Cannot access it."
-        elif status == 200:
+            else:
+                status = "???"
+        elif bool(status) is True:
             status = "Working."
+        elif bool(status) is False:
+            status = "Cannot connect."
+        else:
+            status = "???"
         self.log_error[server_id] = {"status":status,"link":link,"id":thread_id,"time":datetime.datetime.now()}
 
     async def get_data(self,link,api,username,domain):
@@ -47,22 +56,23 @@ class Discourse(): #Discourse, a forums types.
         try:
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
+            # print(link)
             with aiohttp.ClientSession() as discourse:
                 async with discourse.get(link,headers=headers) as resp:
                     if resp.status == 200:
-                        return [True,await resp.json()]
+                        return True,await resp.json()
                     else:
-                        return [False,resp.status]
+                        return False,resp.status
         except asyncio.CancelledError: #Just in case here for some reason
             utils.prRed("Under get_data function")
             utils.prRed("Asyncio Cancelled Error")
-            return None
+            return False,None
         except:
             utils.prRed("Under get_data function")
             utils.prRed(traceback.format_exc())
-            return None
+            return False,None
 
-    async def post(self,server_id):#TODO, make it look better, Serious.
+    async def new_post(self,server_id):
         if await self.redis.hget('{}:Config:Cogs'.format(server_id),"discourse") is None:
             return
         config = await self.redis.hgetall("{}:Discourse:Config".format(server_id))
@@ -71,78 +81,44 @@ class Discourse(): #Discourse, a forums types.
         id_post = await self.redis.get("{}:Discourse:ID".format(server_id))
         if not(id_post):
             return
-        id_post=int(id_post)
+        id_post = int(id_post)
         counter = 0
-        data=[]
-        data_bool = False
-        status =0
-        link = "???"
+        data = []
+        status,link,get_post = "???"
         while True:
-            try:
-                counter +=1
-                link = "{}/t/{}".format(config['domain'],id_post+counter)
-                get_post = await self.get_data(link,config['api_key'],config['username'],config['domain'])
-                status = get_post[1]
-                self.logging_info(status,link,id_post+counter,server_id)
-                # utils.prYellow(get_post)
-                if get_post is None:
-                    return
-                if get_post[0] is False: #If there is error return
-                    #Run one more bonus to see if there is new post yet, if not, then it mean it is offical end.
-                    if status == 404 or status==410:
-                        counter -=1
-                        break
-                    elif status == 200:
-                        continue
-                    elif status == 403:
-                        count = await self.redis.get("{}:cooldown:403".format(server_id))
-                        # print(count)
-                        if count is not None: #If key is atually exists, then check how many time it already got 403
-                            if int(count) >= 10:
-                                break
-                        await self.redis.incr("{}:cooldown:403".format(server_id)) #adding up by 1
-                        await self.redis.expire("{}:cooldown:403".format(server_id),10) #add timer by 10 second, recall it will reset timer.
-                        continue
+            self.logging_info(get_post, link, id_post + counter, server_id)
+            counter += 1
+            link = "{}/t/{}".format(config['domain'],id_post+counter)
+            status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'])
+            # print(status,get_post)
+            # print(get_post)
+            # print(type(status))
+            if status is False:
+                if get_post in (404,410):
+                    counter -= 1
                     break
-
-                elif get_post[0] is True:
-                    get_post=get_post[1]
-                    data_bool = True #so it dont get error if there is empty string, which hence set this true
-                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
-                else: #Appear this is a reason why it stuck for ever... I think.
-                    utils.prRed("Found Nothing in Discourse, returning..")
-                    return
-            except:
-                utils.prRed("Failed to get Discourse site!\n{}".format(config["domain"]))
-                Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
-                error =  '```py\n{}\n```'.format(traceback.format_exc())
-                utils.prRed(error)
-                user=self.bot.owner
-                if len(error) >2000: #so it can nicely send me a error message.
-                    error_1=error[:1900]
-                    error_2=error[1900:]
-                    await self.bot.send_message(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_1)
-                    await self.bot.send_message(user,"```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error_2)
-                else:
-                    await self.bot.send_message(user, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
-                return
-        self.logging_info(status, link, id_post + counter, server_id)
-        if data_bool:
-            try:
-                if len("\n".join(data)) >=1500:
-                    first= data[:int(len(data)/2)]
-                    second = data[int(len(data)/2):]
-                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(first))
-                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(second))
-                else:
-                    await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
-                await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
-                utils.prLightPurple("\n".join(data))
-            except:
-                Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
-                error =  '```py\n{}\n```'.format(traceback.format_exc())
-                await self.bot.send_message(self.bot.owner, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" +  error)
-                return
+                elif get_post == 403:
+                    count = await self.redis.get("{}:cooldown:403".format(server_id))
+                    # print(count)
+                    if count is not None:  # If key is atually exists, then check how many time it already got 403
+                        if int(count) >= 10:
+                            break
+                    await self.redis.incr("{}:cooldown:403".format(server_id))  # adding up by 1
+                    await self.redis.expire("{}:cooldown:403".format(server_id),10)  # add timer by 10 second, recall it will reset timer.
+                    continue
+                break
+            elif status is True:
+                data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
+        if data:
+            if len("\n".join(data)) >=1500:
+                first= data[:int(len(data)/2)]
+                second = data[int(len(data)/2):]
+                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(first))
+                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(second))
+            else:
+                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
+            await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
+            utils.prLightPurple("\n".join(data))
 
     async def timer(self):
         self.bot.id_discourse += 1
@@ -159,8 +135,8 @@ class Discourse(): #Discourse, a forums types.
                 if self.bot.id_discourse != id_count:  # if it dont match, it will return
                     return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
                 self.bot.background.update({"discourse":datetime.datetime.now()})
-                for server in self.bot.servers:
-                    await self.post(server.id)
+                for server in list(self.bot.servers):
+                    await self.new_post(server.id)
                 counter_loops += 1
                 await asyncio.sleep(30)
                 # utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
