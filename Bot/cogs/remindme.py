@@ -10,6 +10,14 @@ class Remindme(): #Allow to welcome new members who join server. If it enable, w
         self.redis = bot.db.redis
         self.loop = asyncio.get_event_loop()
         self.loop_reminder_timer = self.loop.create_task(self.timer())
+        self.loop_list = []
+
+    def __unload(self):
+        self.loop_reminder_timer.cancel()
+        for x in self.loop_list:
+            x.cancel()
+        utils.prPurple("unload remindme task")
+
 
     async def timer(self): #Checking if there is remindme task that bot lost during shutdown/restart (losing data from memory)
         await asyncio.sleep(10)#give it a moment..
@@ -32,7 +40,7 @@ class Remindme(): #Allow to welcome new members who join server. If it enable, w
                             await self.redis.hdel("{}:Remindme:channel".format(server.id), x)
                             await self.redis.hdel("{}:Remindme:time".format(server.id), x)
                         else:
-                            self.loop.create_task(self.time_send(channel[x],data[x],remain_time,server.id,x))
+                            self.loop_list.append(self.loop.create_task(self.time_send(channel[x],data[x],remain_time,server.id,x)))
                     except:
                         utils.prRed(traceback.format_exc())
 

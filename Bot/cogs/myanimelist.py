@@ -57,7 +57,7 @@ class Myanimelist():
                         await self.bot.says_edit("This username does not exist!")
 
     async def send(self,ctx,data):
-        print(data)
+        # print(data)
         embed = discord.Embed(description = data[0])
         embed.set_image(url = data[1])
         if ctx.message.server.me.colour.value:
@@ -87,8 +87,7 @@ class Myanimelist():
                        "**Status**: {}\n" \
                        "**Aired**: {} to {}\n" \
                        "**Synopsis**: \n{}\n".format(x("title"),link,x("episodes"), x("score"),x("status"), x("start_date"), end_date,synopis(x("synopsis")))
-                pic = x("image")
-                data.append([info,pic])
+                data.append([info,x("image")])
             elif category == "manga":
                 chapt = "" if not int(x("chapters")) > 0 else "**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))
                 info = "**Name**: [{}]({})\n" \
@@ -96,11 +95,11 @@ class Myanimelist():
                        "**Status**: {}\n" \
                        "**Published**: {} to {}\n" \
                        "**Synopsis**: \n{}\n".format(x("title"),link, chapt, x("score"), x("status"), x("start_date"), end_date,synopis(x("synopsis")))
-                data.append([info,pic])
+                data.append([info,x("image")])
             if len("\n".join(list_data)) >= 1800:
                 break
         if len(root) == 1:
-            await self.send(ctx,data)
+            await self.send(ctx,data[0])
         else:  # if there is more than one of data, it will ask user which one do they want
             def digit_check(num):  # to ensure that answer is int
                 return num.content.isdigit()
@@ -118,64 +117,6 @@ class Myanimelist():
                 await self.send(ctx,data[int(answer.content) - 1])
             else:
                 return await self.bot.says_edit("You entered a number that is out of range!")
-
-    # async def data(self, ctx, category, name):
-    #     data = await self.get_data(category, name)
-    #     try:
-    #         root = ElementTree.fromstring(data)
-    #     except:
-    #         await self.bot.say("{} does not exist!".format(name.replace("_"," ")))
-    #         return
-    #     name_data = []
-    #     data = []
-    #     count = 0
-    #     for tag in root:
-    #         count += 1
-    #         x = tag.findtext  # so it can be easy to call it
-    #         name_data.append("{}. {}".format(count, x("title"))) #So user can see what are in list and called them
-    #         if x("end_date") == "0000-00-00":  # check if there is end date,it will give 0000-00-00 if anime/manga is still airing/publishing
-    #             end_date = "???"
-    #         else:
-    #             end_date = x("end_date")
-    #         link = "https://myanimelist.net/{}/{}".format(category, x("id"))
-    #         if category == "anime":  # Check which category that user ask for
-    #             data.append(
-    #                 "{}\n**Name**: {}\n**Episodes**: {}\n"
-    #                 "**Score**: {}\n**Status**:{}"
-    #                 "\n**Aired**: {} to {}\n**Synopis**:```{}```".format(
-    #                     link, x("title"), x("episodes"), x("score"),x("status"), x("start_date"), end_date,
-    #                     synopis(x("synopsis")).replace("<br />", "")))
-    #         elif category == "manga":
-    #             if int(x("chapters")) > 0:
-    #                 chapt = "**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))
-    #             else:
-    #                 chapt = ""
-    #             data.append(
-    #                 "{}\n**Name**: {}\n{}**Score**: {}\n**Status**: {}\n**Published**: {} to {}\n**Synopis**:```{}```".format(
-    #                     link, x("title"), chapt, x("score"), x("status"), x("start_date"), end_date,
-    #                     synopis(x("synopsis")).replace("<br />", "")))
-    #         if len("\n".join(name_data)) >= 1800:
-    #             break
-    #     if len(root) == 1:
-    #         await self.bot.say("".join(data))
-    #     else:  # if there is more than one of data, it will ask user which one do they want
-    #         def digit_check(num):  # to ensure that answer is int
-    #             return num.content.isdigit()
-    #         asking = await self.bot.say("```{}```\nWhich number?".format("\n".join(name_data)))
-    #         answer = await self.bot.wait_for_message(timeout=15, author=ctx.message.author, check=digit_check)
-    #         try:
-    #             await self.bot.delete_message(asking)
-    #             await self.bot.delete_message(answer)
-    #         except:
-    #             pass
-    #         if answer is None:  # if user didnt reply any or not, it will print this
-    #             await self.bot.says_edit("You took too long, try again!")
-    #             return
-    #         elif int(answer.content) <= len(
-    #                 data):  # Check if it below in list range so it dont split out of error about out of range
-    #             await self.bot.says_edit(data[int(answer.content) - 1])
-    #         else:
-    #             await self.bot.says_edit("You entered a number that is out of range!")
 
     @commands.command(brief="Is able to acquire anime info from the Myanimelist database",pass_context=True)
     @commands.check(is_enable)
