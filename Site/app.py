@@ -130,6 +130,7 @@ def require_role(f):
     @wraps(f)
     def wrapper(*args,**kwargs):
         print("require role")
+        print(kwargs)
         cog = kwargs.get("cog").title()
         print(cog)
         server_id = kwargs.get("server_id")
@@ -761,9 +762,9 @@ def memes(cog,server_id):
     meme_link = db.hgetall("{}:Memes:link".format(server_id))
     return render_template("memes.html",data_memes = meme_link,server_id = server_id)
 
-@app.route('/Memes/<int:server_id>/add/memes/', methods=['POST'])
+@app.route('/<string:cog>/<int:server_id>/add/memes/', methods=['POST'])
 @require_role
-def add_memes(server_id):
+def add_memes(cog,server_id):
     print(request.form)
     name = request.form.get("meme_name")
     link = request.form.get("meme_link")
