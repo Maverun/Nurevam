@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row">
             {% set csrf = csrf_token() %}
-            <form id="add_form" method="post" action="{{url_for('add_memes', server_id=server_id,cog=memes) }}">
+            <form id="add_form" method="post" action="{{url_for('add_memes',cog="memes",server_id=server_id)}}">
                 {% include 'flash.html' %}
                 <h2>Memes add</h2>
                     <div class="well well-sm">
