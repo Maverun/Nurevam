@@ -56,6 +56,9 @@ class Level:
         # Setting cooldown, in case somthing happen, it wont increase xp twice while it still affect some reason, such as data slow.
         await self.redis.set("Info:Level:Global_cooldown:{}".format(msg.author.id), 'cooldown', expire=60)
         # If Cooldown expire, Add xp and stuff
+        check_exist = msg.author.id in await self.redis.smembers("Info:Level:Player")  # Call of name and ID to get boolean
+        if check_exist is False:  # if it False, then it will update a new list for player who wasn't in level record
+            await self.redis.sadd("Info:Level:Player",msg.author.id)
         total_xp = await self.redis.hincrby("Info:Level:Player_Total_XP",msg.author.id,increment = xp)
         current_xp = await self.redis.hincrby("Info:Level:Player_Current_XP",msg.author.id,increment = xp)
         next_xp = await self.redis.hget("Info:Level:Player_Next_XP",msg.author.id)
@@ -178,7 +181,7 @@ class Level:
         # adding them to field
         # Rank | Name | Level | EXP | TOTAL EXP
         embed.add_field(name="Rank", value="`{}`".format("\n".join(rank_list)))
-        embed.add_field(name="User", value="`{}`".format("\n".join(name_list)))
+        embed.add_field(name="User", value="`{}`".format("\n".join(name_list).replace("`","")))
         embed.add_field(name="Level", value="`{}`".format("\n".join(level_list)))
         embed.add_field(name="EXP", value="`{}`".format("\n".join(exp_list)))
         embed.add_field(name="Total EXP", value="`{}`".format("\n".join(total_list)))

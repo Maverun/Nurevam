@@ -60,6 +60,8 @@ class Myanimelist():
         # print(data)
         embed = discord.Embed(description = data[0])
         embed.set_image(url = data[1])
+        embed.title = data[2]
+        embed.url = data[3]
         if ctx.message.server.me.colour.value:
             embed.colour = ctx.message.server.me.colour
         await self.bot.says_edit(embed=embed)
@@ -80,30 +82,19 @@ class Myanimelist():
             link = "https://myanimelist.net/{}/{}".format(category, x("id"))
             #doing append list within list so that we can do something with synopsis later
             if category == "anime":
-                #putting info before
-                info = "**Name**: [{}]({})\n" \
-                       "**Episodes**: {}\n" \
-                       "**Score**: {}\n" \
-                       "**Status**: {}\n" \
-                       "**Aired**: {} to {}\n" \
-                       "**Synopsis**: \n{}\n".format(x("title"),link,x("episodes"), x("score"),x("status"), x("start_date"), end_date,synopis(x("synopsis")))
-                data.append([info,x("image")])
+                info = "\n**Episodes**: {}\n".format(x("episodes"))
             elif category == "manga":
-                chapt = "" if not int(x("chapters")) > 0 else "**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))
-                info = "**Name**: [{}]({})\n" \
-                       "**Score**: {}\n" \
-                       "**Status**: {}\n" \
-                       "**Published**: {} to {}\n" \
-                       "**Synopsis**: \n{}\n".format(x("title"),link, chapt, x("score"), x("status"), x("start_date"), end_date,synopis(x("synopsis")))
-                data.append([info,x("image")])
+                info = "\n" if not int(x("chapters")) > 0 else "\n**Volume**:{}\n**Chapter**:{}\n".format(x("volumes"), x("chapters"))
+            info += "**Score**: {}\n" \
+                   "**Status**: {}\n" \
+                   "**Published**: {} to {}\n" \
+                   "**Synopsis**: \n{}\n".format(x("score"), x("status"), x("start_date"), end_date,synopis(x("synopsis")))
+            data.append([info,x("image"),x("title"),link])
             if len("\n".join(list_data)) >= 1800:
                 break
         if len(root) == 1:
             await self.send(ctx,data[0])
         else:  # if there is more than one of data, it will ask user which one do they want
-            def digit_check(num):  # to ensure that answer is int
-                return num.content.isdigit()
-
             asking = await self.bot.say("```{}```\nWhich number?".format("\n".join(list_data)))
             answer = await self.bot.wait_for_message(timeout=30, author=ctx.message.author, check=lambda msg: msg.content.isdigit())
             try: #we want to clear up those usless so they dont fill up chat
