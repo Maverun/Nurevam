@@ -108,7 +108,8 @@ class Discourse(): #Discourse, a forums types.
                     continue
                 break
             elif status is True:
-                data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
+                if get_post["archetype"] == "regular":
+                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
         if data:
             if len("\n".join(data)) >=1500:
                 first= data[:int(len(data)/2)]
