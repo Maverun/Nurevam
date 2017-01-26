@@ -238,8 +238,11 @@ def get_user_guilds(token):
     # print(req.headers)
     if req.status_code == 429:
         print("429!")
-        current = datetime.datetime.now()
-        time.sleep(int(req.headers["X-RateLimit-Reset"])-current.timestamp())
+        try:
+            current = time.time()
+            time.sleep(int(req.headers["X-RateLimit-Reset"])-current)
+        except:
+            pass
         print("OK")
         return get_user_guilds(token) #rerun it again.
     elif req.status_code != 200:
