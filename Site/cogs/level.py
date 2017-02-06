@@ -246,7 +246,7 @@ def reset_player(server_id, player_id):
     log.info("Reset that player's data")
     db.delete('{}:Level:Player:{}'.format(server_id, player_id))
     db.srem('{}:Level:Player'.format(server_id), player_id)
-    return redirect(url_for('levels', server_id=server_id))
+    return redirect(url_for('level.levels', server_id=server_id))
 
 @blueprint.route('/reset_all/<int:server_id>')
 @utils.plugin_method
@@ -255,7 +255,7 @@ def reset_all_players(server_id):
     for player_id in db.smembers('{}:Level:Player'.format(server_id)):
         db.delete('{}:Level:Player:{}'.format(server_id, player_id))
         db.srem('{}:Level:Player'.format(server_id), player_id)
-    return redirect(url_for('levels', server_id=server_id))
+    return redirect(url_for('level.levels', server_id=server_id))
 
 @blueprint.route('/private_set/<int:server_id>/<int:bool>')
 @utils.plugin_method
