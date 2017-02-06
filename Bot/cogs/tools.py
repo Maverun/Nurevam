@@ -266,6 +266,24 @@ class Tools():
                 await self.update_check()
                 await asyncio.sleep(300)
 
+    @commands.group(invoke_without_command = True)
+    @commands.check(utils.is_owner)
+    async def site(self):
+        pass
+
+    @site.command()
+    @commands.check(utils.is_owner)
+    async def add(self,cog):
+        await self.redis.sadd("Website:Cogs",cog.lower())
+        return await self.bot.say(u"\U0001F44C")
+
+    @site.command()
+    @commands.check(utils.is_owner)
+    async def remove(self, cog):
+        await self.redis.srem("Website:Cogs", cog.lower())
+        return await self.bot.say(u"\U0001F44C")
+
+
 def setup(bot):
     bot.add_cog(Tools(bot))
 

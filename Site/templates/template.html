@@ -1,0 +1,76 @@
+{% set csrf = csrf_token() %}
+
+{% macro text_box(html_name,name,description = "",data = "") %}
+
+<div class="form-group">
+    <input name=_csrf_token type=hidden value="{{ csrf }}">
+    <label class="control-label" for="{{html_name}}">{{name|safe}}</label>
+    <input class="form-control input-lg" name="{{html_name}}" value="{{data}}" type="text" id="{{html_name}}">
+</div>
+{% if description != ""%}
+    <div class="well well-sm">
+        {{description|safe}}
+    </div>
+{%endif%}
+
+{% endmacro %}
+
+{% macro typeahead(html_name,name,data,guild_data,var_key,item_text,description = "") %}
+
+                    <label class="control-label" for="{{html_name}}">{{name}}</label>
+                    <input type="text" data-member="tagsinput" name="{{html_name}}" class="{{html_name}}"/><br/>
+                    {% if description != ""%}
+                        <div class="well well-sm">
+                            {{description|safe}}
+                        </div>
+                    {%endif%}
+                    <script>
+				$(function() {
+				var {{var_key}} = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('{{item_text}}'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_data|tojson|safe}}
+                                });
+                                {{var_key}}.initialize();
+                                var elt = $('.{{data}}');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: '{{item_text}}',
+                                    typeaheadjs: {
+                                        name: '{{var_key}}',
+                                        displayKey: '{{item_text}}',
+                                        source: {{var_key}}.ttAdapter()
+                                    }
+                                });
+                                {% for user in data %}
+                                    elt.tagsinput('add', {{user|tojson|safe}});
+                                {% endfor %}
+				});
+
+
+                    </script>
+
+
+{% endmacro %}
+
+
+{% macro channel_list(html_name,title,guild_channel,description = "",data = "") %}
+
+{% if description != ""%}
+<div>
+    <label class="control-label" for="{{html_name}}">{{title|safe}}</label>
+    <select class="input-lg form-control" name="{{html_name}}">
+        {% for channel in guild_channel %}
+        <option value="{{channel.id}}" {%if channel.id==data%} selected{%endif%}>
+            #{{channel.name}}
+        </option>
+        {% endfor %}
+    </select>
+    <div class="well well-sm">
+        {{description|safe}}
+    </div>
+</div>
+
+{%endif%}
+
+{% endmacro %}

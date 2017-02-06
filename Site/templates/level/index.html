@@ -7,36 +7,32 @@
         <div class="col-md-8">
             <h3>Levels <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
-            <form id="levels" method="POST" action="{{url_for('update_levels', server_id=server['id'])}}">
+            <form id="levels" method="POST" action="{{url_for('level.update_levels', server_id=server['id'])}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="announcement">Level UP announcement</label>
-                    <input class="form-control input-lg" name="announcement" value="{{config["announce_message"]}}" type="text"
-                           id="announcement">
+                    {{template.text_box("announcement","Level UP announcement",data =config["announce_message"])}}
                     <div class="checkbox">
                         <label>
                             <input type="checkbox" name="enable" {% if config["announce"] =="on" %} checked {% endif %}>
                             Enable/Disable
                         </label>
                         <label>
-                            <input type="checkbox" name="whisp" {% if config["whisper"] == "on" %} checked {% endif %}> Whisp only
+                            <input type="checkbox" name="whisp" {% if config["whisper"] == "on" %} checked {% endif %}>
+                            Whisp only
                         </label>
                     </div>
+                    {{template.text_box("cooldown","<strong>!rank</strong> command cooldown","In order to avoid people
+                    flooding the <strong>!rank</strong> command, you can set a cooldown in
+                    seconds.",cooldown if cooldown else 0)}}
+
                     <div class="well well-sm">
                         <strong>Tips: </strong> <i>{player}</i> refers to the player, <i>{level}</i> to his/her
                         level.<br/><br/>
                         <strong>Commands: !rank !levels</strong><br/><br/>
-                        <strong>Leaderboard: </strong><a href="{{url_for('levels', server_id=server['id'])}}"
+                        <strong>Leaderboard: </strong><a href="{{url_for('level.levels', server_id=server['id'])}}"
                                                          target="_blank">HERE</a> !
                     </div>
 
-                    <label class="control-label" for="cooldown"><strong>!rank</strong> command cooldown</label>
-                    <input class="form-control input-lg" name="cooldown"
-                           value="{% if cooldown is defined %}{{cooldown}}{%else%}0{%endif%}" ype="text" id="cooldown">
-                    <div class="well well-sm">
-                        In order to avoid people flooding the <strong>!rank</strong> command, you can set a cooldown in
-                        seconds.
-                    </div>
                     <label class="control-label" for="banned_members">Banned Member</label>
                     <input type="text" data-member="tagsinput" name="banned_members" class="banned_members"/><br/>
                     <div class="well well-sm">
@@ -64,6 +60,7 @@
                                     elt.tagsinput('add', {{user|tojson|safe}});
                                 {% endfor %}
 				});
+
 
 
                     </script>
@@ -96,13 +93,54 @@
                                 {% endfor %}
 				});
 
+                    </script>
 
 
-
-
+                    <label class="control-label" for="banned_channels">Banned Channels</label>
+                    <input type="text" data-role="tagsinput" name="banned_channels" class="banned_channels"/><br/>
+                    <div class="well well-sm">
+                        These channel that user speak won't get <strong>xp</strong>.
+                    </div>
+                    <script>
+				$(function() {
+				var channels = new Bloodhound({
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                    local: {{guild_channels|tojson|safe}}
+                                });
+                                channels.initialize();
+                                var elt = $('.banned_channels');
+                                elt.tagsinput({
+                                    itemValue: 'id',
+                                    itemText: 'name',
+                                    typeaheadjs: {
+                                        name: 'channels',
+                                        displayKey: 'name',
+                                        source: channels.ttAdapter()
+                                    }
+                                });
+                                {% for channel in banned_channels %}
+                                    elt.tagsinput('add', {{channel|tojson|safe}});
+                                {% endfor %}
+				});
 
                     </script>
                     <br/>
+                    <h3>Roles Rewards</h3>
+                    <div class="well well-sm">
+                        <strong>Note:</strong> 0 mean no reward. Please make sure Nurevam have role that have manage role permission and above most of role (due to hierarchy)
+                    </div>
+
+                    {% for reward_roles_half in reward_roles %}
+                    <div class="col-md-6">
+                        {% for role in reward_roles_half if role.id != server.id %}
+                            <label class="control-label" for="level_role_{{role.id}}"><h5
+                                    style="font-weight: bold; color:#{{role.color}}">{{role.name}}</h5></label>
+                            <input class="form-control" name="level_role_{{role.id}}" value="{{role.level or 0}}"
+                                   type="text" id="level_role_{{role.id}}">
+                        {%endfor%}
+                    </div>
+                    {%endfor%}
                     <button type="submit" class="btn btn-primary">Update</button>
                 </div>
             </form>
@@ -110,5 +148,4 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
 {% endblock %}

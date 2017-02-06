@@ -1,77 +1,21 @@
-{% import 'macros/plugin.html' as plugin %}
-<h3>Plugins</h3>
-<div class="list-group">
-    {{ plugin.view(
-    'myanimelist',
-    pretty_name='Anime and Manga',
-    view='plugin_myanimelist',
-    description='Search the web for your favorite anime and manga.',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'discourse',
-    pretty_name="Discourse",
-    view='plugin_discourse',
-    description='A Discourse forum! Allow Nurevam check if there is new post, if there is, it will post it out!',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{ plugin.view(
-    'level',
-    pretty_name="Levels",
-    view='plugin_levels',
-    description='Let your members gain <strong>XP</strong> and <strong>levels</strong> by participating in the chat !',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'log',
-    pretty_name="Log",
-    view='plugin_log',
-    description='Allow bot give you a log of what happen, edit,delete etc on channel.',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'memes',
-    pretty_name="Memes",
-    view='plugin_memes',
-    description='Allow to post a custom memes you like!',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'mod',
-    pretty_name="Mod",
-    view='plugin_mod',
-    description='A simple mod command,allow to clean message! Be it itself,role,person or all!',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'osu',
-    pretty_name="Osu",
-    view='plugin_osu',
-    description='Allow bot to tell you about stats of your OSU profile.',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'welcome',
-    pretty_name="Welcome",
-    view='plugin_welcome',
-    description='Send a welcome/greet message to newcomer who just join your server!',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-    {{plugin.view(
-    'weather',
-    pretty_name="Weather",
-    view='plugin_weather',
-    description='Allow bot to tell you about stats in city you ask for.',
-    server=server,
-    enabled_plugins=enabled_plugins
-    )}}
-
-</div>
+                <h3>Plugins</h3>
+                <div class="list-group">
+                    {% for cog in info %}
+                        <a href="{{url_for('dashboard_cog', server_id=server.id,cog = cog[0])}}" class="{{cog[0]}} list-group-item">
+                        {% if cog[0].lower() in enable_plugin %}
+                            <span class="badge enabled">Enabled</span>
+                        {% else %}
+                            <span class="badge disabled">Disabled</span>
+                            <script>
+                                $('.{{cog[0]}}').click(function(e) {
+                                  e.preventDefault();
+                                  var $link = $(this);
+                                  bootbox.confirm("Enable the plugin ?", function (confirmation) {
+                                      confirmation && document.location.assign($link.attr('href'));});});
+                            </script>
+                        {% endif %}
+                        <h4 class="list-group-item-heading">{{cog[1]}}</h4>
+                        <p class="list-group-item-text">{{cog[2]|safe}}</p>
+                    {% endfor %}
+                            </a>
+                    </div>

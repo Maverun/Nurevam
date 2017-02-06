@@ -3,28 +3,28 @@
 <div class="container">
     {% if is_owner %}
         {% if is_private %}
-            <small><a class="btn btn-warning btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id,bool=0)}}">Private</a></small>
+            <small><a class="btn btn-warning btn-xs private" href="{{url_for('level.private_profile', server_id=server['id'],player_id=player_id,bool=0)}}">Private</a></small>
         {% else %}
-            <small><a class="btn btn-primary btn-xs private" href="{{url_for('private_profile', server_id=server['id'],player_id=player_id,bool=1)}}">Public</a></small>
+            <small><a class="btn btn-primary btn-xs private" href="{{url_for('level.private_profile', server_id=server['id'],player_id=player_id,bool=1)}}">Public</a></small>
         {% endif %}
     {% endif %}
     {% if is_private and not is_owner %}
     <h1>Sorry, This page have set as private!</h1>
     {% else %}
     <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <div class="panel panel-primary">
                     <div class="panel-body">
                         {% if icon ==None %}
-                            <center><img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:100%" class="img-circle"></center>
+                            <center><img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:25%" class="img-circle"></center>
                         {%elif icon !=None %}
-                            <center><img src="https://discordapp.com/api/users/{{player_id}}/avatars/{{icon}}.jpg" style="width:100%" class="img-circle"></center>
+                            <center><img src="https://discordapp.com/api/users/{{player_id}}/avatars/{{icon}}.jpg" style="width:25%" class="img-circle"></center>
                         {%endif%}
-                    <center><p style = "font-size:150%;">{{name}}<sup>#{{level["Discriminator"]}}</sup></p></center>
+                    <center><p style = "font-size:150%;">{{name}}</p></center>
+                    </div>
                 </div>
             </div>
-        </div>
-            {% if level !=None %}
+        {% if level !=None %}
             <div class="col-md-5">
                 <div class = "list-group">
                     <div class="list-group-item">

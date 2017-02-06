@@ -1,0 +1,6 @@
+2017-02-05 20:39:17,751:	INFO:	Nurevam.site:	Function:<module> ||| MSG: Loading done, dict_keys(['welcome', 'discourse', 'level', 'osu', 'weather', 'myanimelist', 'memes', 'mod', 'log'])
+2017-02-05 20:41:10,209:	INFO:	Nurevam.site:	Function:setup_logging ||| MSG: [92mName: Maverun (´･ω･`)|||ID: 105853969175212032[00m
+2017-02-05 20:41:10,209:	INFO:	Nurevam.site:	Function:dashboard ||| MSG: Dashboard currently
+2017-02-05 20:41:13,709:	INFO:	Nurevam.site:	Function:dashboard_cog ||| MSG: running cog, 111512980620910592, memes
+2017-02-05 20:41:15,542:	INFO:	Nurevam.site:	Function:wrapper ||| MSG: Complete Admin
+2017-02-05 20:41:17,181:	INFO:	Nurevam.site:	Function:dashboard ||| MSG: loading cog pages

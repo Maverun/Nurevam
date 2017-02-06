@@ -7,7 +7,7 @@
         <div class="col-md-8">
             <h3>Log <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
-            <form id="log" method="POST" action="{{url_for('update_log', server_id=server['id'])}}">
+            <form id="log" method="POST" action="{{url_for('log.update_log', server_id=server['id'])}}">
                 <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <div class="checkbox">
                         <label>
@@ -39,21 +39,7 @@
                             Changing avatar
                         </label>
                     </div>
-
-                <div>
-                    <label class="control-label" for="channel_name">Channel for posting log</label>
-                    <select class="input-lg form-control" name="channel">
-                        {% for channel in guild_channel %}
-                        <option value="{{channel.id}}" {%if channel.id== log_channel%} selected{%endif%}>
-                            #{{channel.name}}
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                    <div class="well well-sm">
-                        Note,make sure Nurevam are able to speak on that channel!
-                    </div>
-                </div>
+                {{ template.channel_list("channel_name","Channel for posting log",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",log_channel)}}
                 <button type="submit" class="btn btn-primary">Update</button>
             </form>
         </div>

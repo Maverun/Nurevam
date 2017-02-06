@@ -1,0 +1,28 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            <h3>Discourse <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            {% include 'flash.html' %}
+            <form id="discourse" method="POST" action="{{url_for('discourse.update_discourse', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                {{template.text_box("domain","Domain link","<strong>Enter the Domain link here</strong>: for example https://discuss.moe",config['domain'])}}
+                {{template.text_box("api_key","API Key","<strong>Enter API Key</strong>",config['api_key'])}}
+                {{template.text_box("username","Username","<strong>Enter the username</strong>",config['username'])}}
+                {{template.channel_list("channel","Channel for posting info",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",discourse_channel)}}
+
+                <div class="well well-sm">
+                    <strong>For people who want to have each category for different each channel can click <a href="{{url_for('discourse.category', server_id=server['id'])}}" target="_blank">this</a>
+                    </strong></div>
+
+
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

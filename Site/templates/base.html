@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% import 'template.html' as template %}
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -6,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Nurevam, a discord bot!">
     <meta name="author" content="Maverun">
-    <link rel="shortcut icon" type="image/png" href="{{url_for('static', filename='img/146076208897954.png')}}"/>
+    <link rel="shortcut icon" type="image/png" href="{{url_for('static', filename='img/favicon.ico')}}"/>
 
     <title>{{ title or 'Nurevam : the Discord bot !'}}</title>
 
@@ -46,5 +47,7 @@
     <script src="{{url_for('static', filename='js/morphext.min.js')}}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/bloodhound.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+
   </body>
 </html>

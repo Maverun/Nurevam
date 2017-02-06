@@ -7,7 +7,7 @@
         <div class="col-md-8">
             <h3>Mod <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
-            <form id="mod" method="POST" action="{{url_for('update_mod', server_id=server['id'])}}">
+            <form id="mod" method="POST" action="{{url_for('mod.update_mod', server_id=server['id'])}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <label class="control-label" for="admin_roles">Admin Role</label>
@@ -37,8 +37,6 @@
                                     elt.tagsinput('add', {{role|tojson|safe}});
                                 {% endfor %}
 				});
-
-
                     </script>
                     <br/>
                     <button type="submit" class="btn btn-primary">Update</button>

@@ -2,7 +2,10 @@ from discord.ext import commands
 from operator import itemgetter
 from random import randint
 from .utils import utils
+import traceback
+import datetime
 import discord
+import asyncio
 import math
 
 def is_cooldown(msg):
@@ -22,8 +25,14 @@ class Level:
         self.redis = bot.db.redis
         self.bot.say_edit = bot.says_edit
         self.column = utils.secret["column"] #U mad bro?
+        loop = asyncio.get_event_loop()
+        self.loop_level_timer = loop.create_task(self.level_reward())
 
-#Those will set expire when member leave server, to get new "space", they have 2 weeks to return, other wise, level data of their will be lost.
+    def __unload(self):
+        self.loop_level_timer.cancel()
+        utils.prLightPurple("Unloading Level")
+
+    #Those will set expire when member leave server, to get new "space", they have 2 weeks to return, other wise, level data of their will be lost.
     async def on_member_remove(self,member):
         await self.redis.srem("{}:Level:Player".format(member.server.id),member.id)
         await self.redis.expire("{}:Level:Player:{}".format(member.server.id,member.id),1209600)#setting expire dated for member, will last for 2 weeks, if there is change, it will stop expire, aka talk in server
@@ -85,6 +94,8 @@ class Level:
             await self.on_message_global(msg,xp)
             if await self.is_ban(msg.author) is True:
                 return
+            if msg.channel.id in await self.redis.smembers("{}:Level:banned_channels".format(msg.server.id)): #a banned channel
+                return
             #Getting ID
             player = msg.author.id
             server = msg.server.id
@@ -92,6 +103,9 @@ class Level:
             check_exist = await self.redis.exists(self.name) #Call of name and ID to get boolean
             if check_exist is False: # if it False, then it will update a new list for player who wasn't in level record
                 await self.new_profile(msg)
+            check_id = await self.redis.hget(self.name,"ID")
+            if check_id is None: #some reason ID wasnt found and hence didn't show in table
+                await self.redis.hset(self.name,"ID",player)
             await self.redis.hincrby(self.name,"Total Message Count",increment = 1)
             if await self.redis.get("{}:Level:{}:xp:check".format(server,player)):#If it true, return, it haven't cool down yet
                 return
@@ -142,6 +156,49 @@ class Level:
             level = 1
         next_xp = int(100 * (1.2 ** level)) #getting next require
         return level,next_xp
+
+    async def level_reward(self):
+        while True:
+            try:
+                for server in list(self.bot.servers):
+                    if await self.redis.hget("{}:Config:Cogs".format(server.id),"level") in (None,"off"):
+                        continue
+                    if server.me.top_role.permissions.manage_roles: #if got Manage roles permission, can grant roles
+                        raw_data = await self.redis.hgetall("{}:Level:role_reward".format(server.id))
+                        raw_member = await self.redis.smembers("{}:Level:Player".format(server.id))
+                        server_roles = server.roles
+                        for member in server.members:
+                            if member.id not in raw_member:
+                                continue
+                            member_role = [x.id for x in member.roles]
+                            member_level = self.next_Level(await self.redis.hget("{}:Level:Player:{}".format(server.id,member.id),"Total_XP"))[0]
+                            remove_role = []
+                            add_role = []
+                            for role_id, role_level in raw_data.items():
+                                role_level = int(role_level)
+                                if role_level == 0:
+                                    continue
+                                if role_id in member_role:
+                                    if role_level > member_level:#if change role, and no more grant for that, remove it
+                                        remove_role.append([x for x in server_roles if x.id == role_id][0])
+                                elif role_id not in member_role:
+                                    if member_level >= role_level:
+                                        add_role.append([x for x in server_roles if x.id == role_id][0])
+                            if remove_role or add_role:
+                                if server.me.top_role > member.top_role:
+                                    if remove_role:
+                                        await self.bot.remove_roles(member,*remove_role)
+                                        await asyncio.sleep(1)
+                                    elif add_role:
+                                        await self.bot.add_roles(member,*add_role)
+
+            except asyncio.CancelledError:
+                return utils.prRed("Asyncio Cancelled Error")
+            except Exception as e:
+                utils.prRed(e)
+                utils.prRed(traceback.format_exc())
+            self.bot.background.update({"level":datetime.datetime.now()})
+            await asyncio.sleep(30)
 
 #########################################################################
 #     _____                                                       _     #

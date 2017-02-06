@@ -5,9 +5,9 @@
         {% include 'sidebar.html' %}
         {% set csrf = csrf_token() %}
         <div class="col-md-8">
-            <h3>Mod <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+            <h3>Memes <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
-            <form id="mod" method="POST" action="{{url_for('update_memes', server_id=server['id'])}}">
+            <form id="memes" method="POST" action="{{url_for('memes.update_memes', server_id=server['id'])}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <label class="control-label" for="roles">Creator Role</label>
@@ -16,7 +16,7 @@
                         Whoever have a role, can add memes they like. Make sure to include admin if wish to view it.
                     </div>
                     <div class="well well-sm">
-                        People who have right to make memes can access <a href={{url_for('memes', server_id=server['id'],cog="memes")}}>here</a>
+                        People who have right to make memes can access <a href={{url_for('memes.memes', server_id=server['id'],cog="memes")}}>here</a>
                     </div>
                     <script>
 				$(function() {

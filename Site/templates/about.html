@@ -4,14 +4,13 @@
   <div class="container">
     <div class="row">
         <div class="col-md-6 animated bounceInLeft v-align">
-            {% import 'macros/plugin.html' as plugin %}
             <h3>Star Features</h3>
             <div class="list-group" style="color:#00bc8c; opacity:1.0;">
                 <div class="list-group-item">
-                    {% for key in content %}
-                     <h2 class="list-group-item-heading">{{key[0]}}</h2>
-                        <p class="list-group-item-text">{{key[1]}}</p>
-                        <hr>
+                    {% for cog in plugin_list %}
+                    <h2 class="list-group-item-heading">{{cog[0]}}</h2>
+                        <p class="list-group-item-text">{{cog[1]|safe}}</p>
+                     <hr>
                     {% endfor %}
                 </div>
             </div>

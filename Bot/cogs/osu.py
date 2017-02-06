@@ -1,6 +1,7 @@
 from osuapi import OsuApi, AHConnector
 from discord.ext import commands
 from .utils import utils
+import discord
 
 def is_enable(ctx):
     return utils.is_enable(ctx,"osu")
@@ -27,12 +28,12 @@ class Osu:
 
         boolean = False
         mention = False
-        user = ctx.message.author.id
+        user = ctx.message.author
         if ctx.message.mentions: #If mention is true, it will get from mention ID instead.
             user = ctx.message.mentions[0]
-            user = user.id
+            user = user
             mention = True
-        setting = await self.redis.hget("Profile:{}".format(user),"osu")
+        setting = await self.redis.hget("Profile:{}".format(user.id),"osu")
         if name is None: #if name is None then meaning it is in profile.
             if setting is None: #If it not found in profile, meaning it wasnt enter in
                 await self.bot.says_edit("You need to enter a name! Or you can enter your own name in your profile at <http://nurevam.site>")
@@ -52,15 +53,29 @@ class Osu:
             results =(await self.api.get_user(name))
             if results:
                 results = results[0]
-                msg = "{0.username}: #{0.pp_rank}\n" \
-                      "Level: {0.level}, PP: {0.pp_raw}\n" \
-                      "Country:{0.country} #{0.pp_country_rank}\n" \
-                      "Total Play:{0.playcount}\n"\
-                      "Rank Score: {0.ranked_score}\n" \
-                      "Total Score: {0.total_score}\n".format(results)
-
-                link = "<https://osu.ppy.sh/u/{0}>\nhttps://a.ppy.sh/{0}".format(results.user_id)
-                await self.bot.say_edit("```xl\n{}\n```{}".format(msg,link))
+                if ctx.message.channel.permissions_for(ctx.message.server.me).embed_links:
+                    embed = discord.Embed()
+                    if user.color:
+                        embed.colour = user.color.value
+                    embed.set_author(name = user,url="https://osu.ppy.sh/u/{}".format(results.user_id),icon_url=user.avatar_url)
+                    embed.set_thumbnail(url = "https://a.ppy.sh/{}".format(results.user_id))
+                    embed.title = "{0.username}: #{0.pp_rank}".format(results)
+                    embed.url ="https://osu.ppy.sh/u/{}".format(results.user_id)
+                    embed.description ="**Level**: {0.level}, **PP**: {0.pp_raw}\n" \
+                          "**Country**:{0.country} #{0.pp_country_rank}\n" \
+                          "**Total Play**:{0.playcount}\n"\
+                          "**Rank Score**: {0.ranked_score:,d}\n" \
+                          "**Total Score**: {0.total_score:,d}\n".format(results)
+                    await self.bot.say_edit(embed = embed)
+                else:
+                    msg = "{0.username}: #{0.pp_rank}\n" \
+                          "Level: {0.level}, PP: {0.pp_raw}\n" \
+                          "Country:{0.country} #{0.pp_country_rank}\n" \
+                          "Total Play:{0.playcount}\n"\
+                          "Rank Score: {0.ranked_score}\n" \
+                          "Total Score: {0.total_score}\n".format(results)
+                    link = "<https://osu.ppy.sh/u/{0}>\nhttps://a.ppy.sh/{0}".format(results.user_id)
+                    await self.bot.say_edit("```xl\n{}\n```{}".format(msg,link))
             else:
                 await self.bot.say_edit("I am sorry, but that name does not exist.")
 def setup(bot):

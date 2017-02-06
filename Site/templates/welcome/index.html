@@ -7,63 +7,34 @@
         <div class="col-md-8">
             <h3>Welcome <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
-            <form id="welcome" method="POST" action="{{url_for('update_welcome', server_id=server['id'])}}">
+            <form id="welcome" method="POST" action="{{url_for('welcome.update_welcome', server_id=server['id'])}}">
                 <div class="form-group">
-
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="enable_message" {% if config["enable_message"] =="on" %} checked {% endif %}>
                         If it enable, allow to send welcome message, other wise, disable it, Some server just want a assign role.
                     </label>
                 </div>
-                    <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="time">A Welcome message to newcomer!</label>
-                    <input class="form-control input-lg" name="message"
-                           value="{{message}}" type="text" id="message">
-                    <div class="well well-sm">
-                        <strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
+                    {{ template.text_box("time","A Welcome message to newcomer!","<strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
                         mention use <strong>
-                        {user_mention}</strong>, <strong><{server}</strong> is server name of your.
-                    </div>
-
+                        {user_mention}</strong>, <strong><{server}</strong> is server name of your.",message)}}
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="enable_delete" {% if config["enable_delete"] =="on" %} checked {% endif %}>
                         Allow to time to delete message, otherwise, ignore below this.
                     </label>
                 </div>
+                    {{ template.text_box("delete_msg","Custom time to delete message","Given time to make bot delete message. Recommend not to this if you set Whisper Options.",delete_msg)}}
 
-                    <label class="control-label" for="delete_msg">Custom time to delete message</label>
-                    <input class="form-control input-lg" name="delete_msg"
-                           value="{{delete_msg}}" type="text" id="delete_msg">
-                    <div class="well well-sm">
-                        Given time to make bot delete message. Recommend not to this if you set Whisper Options.
-
-                    </div>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="whisper" {% if config["whisper"] =="on" %} checked {% endif %}>
-                            Whisper Only, If you want Nurevam send welcome message by whisper new member instead of public
-                            server.
-                            If check, ignore below
-                        </label>
-                    </div>
-
-                <div>
-                    <label class="control-label" for="channel_name">Welcome channel</label>
-                    <select class="input-lg form-control" name="channel">
-                        {% for channel in guild_channel %}
-                        <option value="{{channel.id}}" {%if channel.id== welcome_channel%} selected{%endif%}>
-                            #{{channel.name}}
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                    <div class="well well-sm">
-                        Note,make sure Nurevam are able to speak on that channel!
-                    </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="whisper" {% if config["whisper"] =="on" %} checked {% endif %}>
+                        Whisper Only, If you want Nurevam send welcome message by whisper new member instead of public
+                        server.
+                        If check, ignore below
+                    </label>
                 </div>
-
+                {{ template.channel_list("channel_name","Welcome channel",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",welcome_channel)}}
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="role" {% if config["role"] =="on" %} checked {% endif %}>

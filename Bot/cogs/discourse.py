@@ -83,25 +83,22 @@ class Discourse(): #Discourse, a forums types.
             return
         id_post = int(id_post)
         counter = 0
-        data = []
+        data = {}
         status,link,get_post = "???"
         while True:
             self.logging_info(get_post, link, id_post + counter, server_id)
             counter += 1
             link = "{}/t/{}".format(config['domain'],id_post+counter)
             status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'])
-            # print(status,get_post)
-            # print(get_post)
-            # print(type(status))
             if status is False:
                 if get_post in (404,410):
                     counter -= 1
                     break
                 elif get_post == 403:
                     count = await self.redis.get("{}:cooldown:403".format(server_id))
-                    # print(count)
                     if count is not None:  # If key is atually exists, then check how many time it already got 403
                         if int(count) >= 10:
+                            await self.redis.set("{}:Discourse:ID".format(server_id), id_post + counter)
                             break
                     await self.redis.incr("{}:cooldown:403".format(server_id))  # adding up by 1
                     await self.redis.expire("{}:cooldown:403".format(server_id),10)  # add timer by 10 second, recall it will reset timer.
@@ -109,17 +106,25 @@ class Discourse(): #Discourse, a forums types.
                 break
             elif status is True:
                 if get_post["archetype"] == "regular":
-                    data.append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
+                    check_exist = data.get(get_post["category_id"])
+                    if check_exist is None:
+                        data[get_post["category_id"]] = []
+                    data[get_post["category_id"]].append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
         if data:
-            if len("\n".join(data)) >=1500:
-                first= data[:int(len(data)/2)]
-                second = data[int(len(data)/2):]
-                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(first))
-                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(second))
-            else:
-                await self.bot.send_message(self.bot.get_channel(config["channel"]),"\n".join(data))
+            raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(server_id))
+            for key,values in data.items():
+                channel = raw_channel.get(str(key),config["channel"])
+                if channel == "0":
+                    channel = config["channel"]
+                if len("\n".join(values)) >=1500:
+                    first = values[:int(len(values)/2)]
+                    second = values[int(len(values)/2):]
+                    await self.bot.send_message(self.bot.get_channel(channel),"\n".join(first))
+                    await self.bot.send_message(self.bot.get_channel(channel),"\n".join(second))
+                else:
+                    await self.bot.send_message(self.bot.get_channel(channel),"\n".join(values))
+                utils.prLightPurple("\n".join(values))
             await self.redis.set("{}:Discourse:ID".format(server_id),id_post+counter)
-            utils.prLightPurple("\n".join(data))
 
     async def timer(self):
         self.bot.id_discourse += 1
@@ -142,8 +147,9 @@ class Discourse(): #Discourse, a forums types.
                 await asyncio.sleep(30)
                 # utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
             except asyncio.CancelledError:
-                utils.prRed("Asyncio Cancelled Error")
-                return
+                return utils.prRed("Asyncio Cancelled Error")
+            except:
+                raise
 
 
 #########################################################################
