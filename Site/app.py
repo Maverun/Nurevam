@@ -40,8 +40,6 @@ if platform.system() == "Windows": #due to different path for linux and window
     path = "secret.json"
 else:
     path = "/home/mave/Nurevam/secret.json"
-    # from systemd.journal import JournalHandler
-    # log.addHandler(JournalHandler())
 
 #read files and save it to secret
 with open (path,"r") as f:

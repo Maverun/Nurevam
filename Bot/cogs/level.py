@@ -85,7 +85,7 @@ class Level:
         return
 
     async def on_message(self,msg): #waiting for player reply
-        if msg.author == self.bot.user or msg.channel.is_private:
+        if msg.author == self.bot.user or msg.channel.is_private or msg.author.bot:
             return
         if int(msg.author.discriminator) == 0000:
             return #Webhook
