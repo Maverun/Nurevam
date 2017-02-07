@@ -213,12 +213,12 @@ class Level:
     @commands.group(name="levels",aliases=["level","leaderboard"],brief="Prints a link of the server's leaderboard",pass_context=True,invoke_without_command=True)
     @commands.check(is_enable)
     async def level_link(self,ctx):
-        await self.bot.says_edit("Check this out!\nhttp://nurevam.site/levels/{}".format(ctx.message.server.id))
+        await self.bot.says_edit("Check this out!\nhttp://nurevam.site/level/{}".format(ctx.message.server.id))
 
     @level_link.command(name="server",brief="Prints a link of the server leaderboard",pass_context=True)
     @commands.check(is_enable)
     async def server_level_link(self,ctx):
-        await self.bot.says_edit("Check this out!\nhttp://nurevam.site/server/levels".format(ctx.message.server.id))
+        await self.bot.says_edit("Check this out!\nhttp://nurevam.site/level/server".format(ctx.message.server.id))
 
     def rank_embed(self,player,level,current_exp,next_xp,total_exp,rank,total_rank,description=""):
         embed = discord.Embed(description=description)
@@ -232,7 +232,7 @@ class Level:
             embed.colour = player.color
         return embed
 
-    def table_embed(self,rank_list,name_list,level_list,exp_list,total_list,description="",server=None):
+    def table_embed(self,rank_list,name_list,level_list,exp_list,total_list,description="",page = "",server=None):
         embed = discord.Embed(description=description)
 
         # adding them to field
@@ -242,7 +242,7 @@ class Level:
         embed.add_field(name="Level", value="`{}`".format("\n".join(level_list)))
         embed.add_field(name="EXP", value="`{}`".format("\n".join(exp_list)))
         embed.add_field(name="Total EXP", value="`{}`".format("\n".join(total_list)))
-        embed.set_footer(text=self.column)  # A Cheat trick to make it one line of all field.
+        embed.set_footer(text=page+self.column)  # A Cheat trick to make it one line of all field.
         if server:
             if server.me.colour.value:
                 embed.colour = server.me.colour
@@ -364,7 +364,7 @@ class Level:
                 if rank == current_page * 10 or (len(player_data) < 30):
                     break
             #Make embed.
-            embed = self.table_embed(rank_list, name_list, level_list, exp_list, total_list,description)
+            embed = self.table_embed(rank_list, name_list, level_list, exp_list, total_list,description,"{}/{}".format(current_page,max_page-1))
             if server:
                 if server.me.colour.value:
                     embed.colour = server.me.colour

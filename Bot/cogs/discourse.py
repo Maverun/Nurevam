@@ -113,7 +113,10 @@ class Discourse(): #Discourse, a forums types.
         if data:
             raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(server_id))
             for key,values in data.items():
-                channel = raw_channel.get(str(key),config["channel"])
+                channel = config["channel"]
+                for x in raw_channel:
+                    if str(key) in x:
+                        channel = raw_channel[x]
                 if channel == "0":
                     channel = config["channel"]
                 if len("\n".join(values)) >=1500:
@@ -148,8 +151,9 @@ class Discourse(): #Discourse, a forums types.
                 # utils.prLightPurple("Loops done {}".format(counter_loops)) #Temp
             except asyncio.CancelledError:
                 return utils.prRed("Asyncio Cancelled Error")
-            except:
-                raise
+            except Exception as e:
+                print(e)
+                utils.prRed(traceback.format_exc())
 
 
 #########################################################################
@@ -270,7 +274,6 @@ class Discourse(): #Discourse, a forums types.
             embed.add_field(name = "ID", value = "[{0[id]}]({0[link]})".format(data))
             embed.timestamp = data["time"]
             await self.bot.say_edit(embed=embed)
-
 
 def setup(bot):
     bot.add_cog(Discourse(bot))

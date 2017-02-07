@@ -69,6 +69,10 @@ def category(server_id):
     domain =  db.hget("{}:Discourse:Config".format(server_id), "domain")
     default = db.hget("{}:Discourse:Config".format(server_id), "channel")
     channel = db.hgetall("{}:Discourse:Category".format(server_id))
+    if domain is None:
+        log.info("Missing domain, assume user didn't do set up")
+        flash("You haven't finish config, please enter info in and click update!")
+        return dashboard(server_id = server_id)
     guild_channel = utils.get_channel(server_id)
     default = [x["name"] for x in guild_channel if x["id"] == default][0]
     server = {
@@ -76,17 +80,27 @@ def category(server_id):
         'name':db.hget("Info:Server",server_id),
         'icon':db.hget("Info:Server_Icon",server_id)}
 
-
     r = requests.get("{}/categories.json".format(domain))
     raw_data = r.json()["category_list"]["categories"]
-    data = [{"id":str(x["id"]),"name":x["name"]} for x in raw_data]
+    data = []
+    for x in raw_data: #checking subcategory and category
+        category_id = str(x['id'])
+        sub_id_list = x.get("subcategory_ids")
+        if sub_id_list:
+            category_id += "," + ",".join(str(x) for x in sub_id_list)
+        data.append({"id":category_id,"name":x["name"]})
     return render_template("category.html",default_channel = default,category = data,guild_channel = guild_channel,cate_channel=channel,server=server)
 
 @blueprint.route('/category/update/<int:server_id>', methods=['POST'])
 @utils.plugin_method
 def update_category(server_id):
-    data = dict(request.form)
-    data.pop("_csrf_token")
-    data = dict([[key,values[0]] for key,values in data.items()])
-    db.hmset("{}:Discourse:Category".format(server_id),data)
+    try:
+        data = dict(request.form)
+        data.pop("_csrf_token")
+        data = dict([[key,values[0]] for key,values in data.items()])
+        db.delete("{}:Discourse:Category".format(server_id))
+        db.hmset("{}:Discourse:Category".format(server_id),data)
+        flash("Update!","success")
+    except Exception as e:
+        log.info("There is error\n{}".format(e))
     return redirect(url_for("discourse.category",server_id = server_id))
