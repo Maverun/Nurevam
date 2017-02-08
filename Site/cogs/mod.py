@@ -27,4 +27,4 @@ def update_mod(server_id):
     db.delete("{}:Mod:admin_roles".format(server_id))
     if len(admin_roles) > 0:
         db.sadd("{}:Mod:admin_roles".format(server_id), *admin_roles)
-    return redirect(url_for('plugin_mod', server_id=server_id))
+    return dashboard(server_id=server_id)

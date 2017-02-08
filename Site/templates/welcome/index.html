@@ -8,6 +8,7 @@
             <h3>Welcome <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
             {% include 'flash.html' %}
             <form id="welcome" method="POST" action="{{url_for('welcome.update_welcome', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
                 <div class="form-group">
                 <div class="checkbox">
                     <label>
@@ -15,7 +16,7 @@
                         If it enable, allow to send welcome message, other wise, disable it, Some server just want a assign role.
                     </label>
                 </div>
-                    {{ template.text_box("time","A Welcome message to newcomer!","<strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
+                    {{ template.text_box("message","A Welcome message to newcomer!","<strong>Super Pro Tips:</strong> <strong>{user}</strong> is refer to new member's name,if you want a
                         mention use <strong>
                         {user_mention}</strong>, <strong><{server}</strong> is server name of your.",message)}}
                 <div class="checkbox">
@@ -24,7 +25,7 @@
                         Allow to time to delete message, otherwise, ignore below this.
                     </label>
                 </div>
-                    {{ template.text_box("delete_msg","Custom time to delete message","Given time to make bot delete message. Recommend not to this if you set Whisper Options.",delete_msg)}}
+                    {{ template.text_box("delete_msg","Custom time second to delete message","Given time to make bot delete message. Recommend not to this if you set Whisper Options.",delete_msg)}}
 
                 <div class="checkbox">
                     <label>

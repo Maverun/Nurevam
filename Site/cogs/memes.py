@@ -31,7 +31,7 @@ def update_memes(server_id):
     db.delete("{}:Memes:editor_role".format(server_id))
     if len(roles) > 0:
         db.sadd("{}:Memes:editor_role".format(server_id), *roles)
-    return redirect(url_for('plugin_memes', server_id=server_id))
+    return dashboard(server_id=server_id)
 
 
 def check_memes_link(link):

@@ -41,7 +41,7 @@ def dashboard(server_id):
         'delete_msg': delete_msg}
 
 
-@blueprint.route('/update', methods=['POST'])
+@blueprint.route('/update/<int:server_id>', methods=['POST'])
 @utils.plugin_method
 def update_welcome(server_id):
     welcome_message = request.form.get('message')
@@ -71,4 +71,4 @@ def update_welcome(server_id):
     db.delete("{}:Welcome:Assign_role".format(server_id))
     if len(role_id) > 0:
         db.sadd("{}:Welcome:Assign_Roles".format(server_id), *role_id)
-    return redirect(url_for('plugin_welcome', server_id=server_id))
+    return dashboard(server_id=server_id)

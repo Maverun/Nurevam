@@ -44,4 +44,4 @@ def update_log(server_id):
         db.sadd("Info:Log", server_id)
     flash('Settings updated!', 'success')
     log.info("Clear")
-    return redirect(url_for('plugin_log', server_id=server_id))
+    return dashboard(server_id=server_id)

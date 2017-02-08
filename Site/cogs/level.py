@@ -109,7 +109,6 @@ def update_levels(server_id):
         for key,values in data.items():
             if "level_role" in key:
                 key = key.strip("level_role")
-                print(key,values)
                 if values[0].isdigit():
                     role_reward[key] = values[0]
                 else:
