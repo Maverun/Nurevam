@@ -35,7 +35,7 @@
                         If check, ignore below
                     </label>
                 </div>
-                {{ template.channel_list("channel_name","Welcome channel",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",welcome_channel)}}
+                {{ template.channel_list("channel","Welcome channel",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",welcome_channel)}}
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="role" {% if config["role"] =="on" %} checked {% endif %}>

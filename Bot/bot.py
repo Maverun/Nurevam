@@ -47,26 +47,6 @@ async def say_edit(msg = None,embed = None):
         utils.prRed(traceback.format_exc())
 bot.says_edit=say_edit
 
-# @bot.check
-def global_check(ctx):
-    """
-    This is function that will do a global check for all command.
-    Instead of doing same check for each function if they are able or not.
-    If it dev bot and creator, will always return Trues for a test purpose.
-    """
-    try:
-        #If bot is dev, and owner is me, it will alway return true, so useful for testing code etc
-        if bot.user.id == "181503794532581376" and ctx.message.author.id == bot.owner.id:
-            return True
-        if ctx.command.cog_name is None or ctx.command.cog_name in ("Core","Remind","Tools","Repl","Events"): #None for such as help command, and rest didnt require enable plugins, so have to do this way
-            return True
-        elif redis.hget("{}:Config:Cogs".format(ctx.message.server.id),ctx.command.cog_name.lower()): #If plugin is enabled,then it will return true, so meaning one check is done.
-            return True
-    except: #In case of error.
-        utils.prRed("ERROR")
-        utils.prRed(traceback.format_exc())
-    return False
-
 @bot.event
 async def on_ready():
     print('Logged in')
