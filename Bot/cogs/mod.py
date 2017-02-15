@@ -3,6 +3,8 @@ from .utils import utils
 import asyncio
 import discord
 
+import datetime
+
 def check_roles(ctx):
     if ctx.message.author.id == "105853969175212032":
         return True
@@ -22,6 +24,17 @@ class Mod():
 
     def delete_mine(self,m):
         return m.author == self.bot.user
+
+    async def on_member_join(self,member): #this is only temp patch for friend of mine...
+        if member.server.id == "241901242220150784":
+            created = member.created_at
+            current = datetime.datetime.now()
+            age = current - created
+            print(age)
+            if int(age.total_seconds()) <= 600:
+                print("Yes ban this one")
+                await self.bot.ban(member)
+
 
 
 #########################################
