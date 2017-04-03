@@ -215,11 +215,11 @@ class Level:
 
     @commands.group(name="levels",aliases=["level","leaderboard"],brief="Prints a link of the guild's leaderboard",pass_context=True,invoke_without_command=True)
     async def level_link(self,ctx):
-        await self.bot.say("Check this out!\nhttp://nurevam.site/level/{}".format(ctx.message.guild.id))
+        await self.bot.say(ctx, content = "Check this out!\nhttp://nurevam.site/level/{}".format(ctx.message.guild.id))
 
     @level_link.command(name="guild",brief="Prints a link of the guild leaderboard",pass_context=True)
     async def guild_level_link(self,ctx):
-        await self.bot.say("Check this out!\nhttp://nurevam.site/level/guild".format(ctx.message.guild.id))
+        await self.bot.say(ctx, content = "Check this out!\nhttp://nurevam.site/level/guild".format(ctx.message.guild.id))
 
     def rank_embed(self,player,level,remain_xp,next_xp,total_exp,rank,total_rank,description=""):
         embed = discord.Embed(description=description)

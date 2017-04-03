@@ -208,7 +208,7 @@ class Tools():
         """
         repo = git.cmd.Git("../")
         result = repo.pull()
-        await ctx.send(result)
+        await ctx.send("```\n{}\n```".format(result))
 
     @owner.command()
     @commands.check(utils.is_owner)
