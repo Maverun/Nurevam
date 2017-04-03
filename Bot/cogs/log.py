@@ -59,7 +59,7 @@ class Log():
         fp = io.BytesIO()
         update.save(fp,format='PNG')
         fp.seek(0)
-        dest = self.bot.get_channel(self.config[after.guild.id]["channel"])
+        dest = self.bot.get_channel(int(self.config[after.guild.id]["channel"]))
         await dest.send(file = fp,filename="Pic.png",content="{} **change avatar**".format(self.format_msg(after)))
 
     async def on_member_update(self,before,after):
@@ -94,8 +94,8 @@ class Log():
                         msg = "{}".format(after.channel.mention)
                         embed = self.format_embed(after.author,"Edited")
                         embed.description = msg
-                        embed.add_field(name = "Before",value = before.clean_content,inline=False)
-                        embed.add_field(name = "After",value = after.clean_content,inline=False)
+                        embed.add_field(name = "Before",value = before.content,inline=False)
+                        embed.add_field(name = "After",value = after.content,inline=False)
                         # msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-").replace("`","\`"),after.clean_content.replace("\n","\n+").replace("`","\`"))
                         await self.send(after.guild.id,embed)
 
