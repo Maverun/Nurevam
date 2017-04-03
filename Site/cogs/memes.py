@@ -33,23 +33,6 @@ def update_memes(server_id):
         db.sadd("{}:Memes:editor_role".format(server_id), *roles)
     return dashboard(server_id=server_id)
 
-
-def check_memes_link(link):
-    try:
-        r = requests.get(link)
-    except:
-        flash("There is somthing wrong with a link...", "warning")
-        return 2
-    if r.status_code == 200:
-        if r.headers['content-type'] in ['image/png', 'image/jpeg']:
-            return 0  # to say it is True
-        elif r.headers == 'image/gif':
-            flash("Gif memes are not support!", "warning")
-            return 1  # to say it is not support yet for gif... some day?
-    flash("This type of files does not support!", "warning")
-    return 2  # return False
-
-
 @blueprint.route("/<string:cog>/<int:server_id>/")
 @utils.require_role
 def memes(cog, server_id):
@@ -62,7 +45,7 @@ def memes(cog, server_id):
 def add_memes(cog, server_id):
     name = request.form.get("meme_name")
     link = request.form.get("meme_link")
-    status = check_memes_link(link)
+    status = utils.check_link(link)
     if status == 0:  # if is true
         if name in db.smembers("{}:Memes:name".format(server_id)):
             flash("This name already exists!", "warning")
@@ -70,7 +53,7 @@ def add_memes(cog, server_id):
             db.hset("{}:Memes:link".format(server_id), name, link)
             db.sadd("{}:Memes:name".format(server_id), name)
             flash("You have add a new memes!", "success")
-    return redirect(url_for("memes", server_id=server_id, cog="memes"))
+    return redirect(url_for("memes.memes", server_id=server_id, cog="memes"))
 
 
 @blueprint.route('/update/<int:server_id>/<string:name>', methods=['POST'])
@@ -78,7 +61,7 @@ def add_memes(cog, server_id):
 def edit_memes(server_id, name):
     new_name = request.form.get("meme_name")
     link = request.form.get("meme_link")
-    status = check_memes_link(link)
+    status = utils.check_link(link)
     if status == 0:
         # delete old database
         db.hdel("{}:Memes:link".format(server_id), name)

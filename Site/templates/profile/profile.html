@@ -22,7 +22,7 @@
         </div>
     <div class ="row">
         <div class="col-md-8">
-            <form id="profile" method="POST" action="{{url_for('update_profile')}}">
+            <form id="profile" method="POST" action="{{url_for('profile.update_profile')}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <label class="control-label" for="myanimelist">Myanimelist username</label>
@@ -33,7 +33,7 @@
         </div>
     <div class ="row">
         <div class="col-md-8">
-            <form id="profile" method="POST" action="{{url_for('update_profile')}}">
+            <form id="profile" method="POST" action="{{url_for('profile.update_profile')}}">
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <label class="control-label" for="osu">OSU username</label>

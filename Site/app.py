@@ -3,10 +3,10 @@ from itsdangerous import JSONWebSignatureSerializer
 from osuapi import OsuApi, ReqConnector
 from flaskext.markdown import Markdown
 from datetime import timedelta
+import traceback
 import importlib
 import platform
 import binascii
-import requests
 import logging
 import redis
 import utils
@@ -16,7 +16,6 @@ import os
 #Getting database connected
 Redis= os.environ.get('Redis')
 db = redis.Redis(host=Redis,decode_responses=True, db = 0)
-
 #Getting Flask
 app = Flask(__name__)
 app.permanent_session_lifetime = timedelta(hours = 6)
@@ -67,6 +66,7 @@ osu_api = OsuApi(secret["osu"], connector=ReqConnector())
 
 files_cogs = db.smembers("Website:Cogs")
 blueprint_lib = {}
+
 #loading cogs within dirty way, so I can test other files without need to edit this (when push to server)
 for x in files_cogs:
     lib = importlib.import_module("cogs.{}".format(x))
@@ -75,6 +75,11 @@ for x in files_cogs:
     lib.db = app.db
 app.blueprint_lib = blueprint_lib
 log.info("Loading done, {}".format(blueprint_lib.keys()))
+
+lib = importlib.import_module("non-cogs.profile")
+app.register_blueprint(lib.blueprint, url_prefix="/profile")
+lib.db = app.db
+lib.osu_api = osu_api
 
 
 @app.template_filter('avatar')
@@ -178,7 +183,7 @@ def logout():
 def index():
     info ={
         "Server":db.hlen("Info:Server"),
-        "Member":db.hlen("Info:Name")}
+        "Member":db.get("Info:Total Member")}
     return render_template('/app/index.html',info=info)
 
 @app.route('/about')
@@ -211,56 +216,6 @@ def debug_token():
         return jsonify({'error': 'no api_token'})
     token = db.get('user:{}:discord_token'.format(session['api_token']['user_id']))
     return token
-
-@app.route('/profile')
-@utils.require_auth
-def profile():
-    """
-    A user profile.
-    It's purpose is for globals setting across server.
-    """
-    user = session['user']
-    setting = db.hgetall("Profile:{}".format(user["id"]))
-    return render_template('profile.html',user=user,setting=setting)
-
-@app.route('/profile/update', methods=['POST'])
-@utils.require_auth
-def update_profile(): #Update a setting.
-    list_point = dict(request.form)
-    list_point.pop('_csrf_token',None)
-    path = "Profile:{}".format(session['user']['id'])
-    warning = False
-    warning_msg = "One of those have failed, Please double check {} "
-    warning_list =[]
-    for  x in list_point:
-        if request.form.get(x) == "":
-            db.hdel(path,x)
-            continue
-        if x == "myanimelist":
-            status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
-            if status is False:
-                warning = True
-                warning_list.append(x)
-                continue
-        elif x == "osu":
-            results = osu_api.get_user(request.form.get(x))
-            if results == []:
-                warning = True
-                warning_list.append(x)
-                continue
-        db.hset(path,x,request.form.get(x))
-    if warning:
-        flash(warning_msg.format(",".join(warning_list)), 'warning')
-    else:
-        flash('Settings updated!', 'success')
-    return redirect(url_for('profile'))
-
-def status_site(site):
-    r = requests.get(site)
-    if r.status_code == 200:
-        return True
-    else:
-        return False
 
 
 @app.route('/servers')
@@ -325,6 +280,10 @@ def code_401(e):
 def code_404(e):
     #If page is not found, it will info you that page is not found.
     return render_template("error/code_404_not_found.html")
+
+@app.errorhandler(500)
+def code_500(e):
+    return render_template("error/code_500_internal_error.html")
 
 if __name__ == '__main__':
     app.debug = True

@@ -1,5 +1,10 @@
 {% extends 'dash_base.html' %}
 {% block dash_content %}
+
+{% if css_theme %}
+    <link href="{{ url_for('static', filename=css_theme) }}" rel="stylesheet">
+{% endif %}
+
     <div class="container">
         <div class="row">
             <div class="col-md-3">
@@ -49,6 +54,7 @@
                         {% else %}
                             <small><a class="btn btn-primary btn-xs private" href="{{url_for('level.private_server', server_id=server['id'],bool=1)}}">Public from Leaderboard</a></small>
                         {% endif %}
+                        <small><a class="btn btn-success btn-xs css" href="{{url_for('level.css_theme',server_id = server['id'])}}">CSS edit</a></small>
                     {% endif %}
                 </h1>
                 <div class="list-group">

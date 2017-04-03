@@ -1,0 +1,24 @@
+{% extends 'full-page.html' %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            {% include 'flash.html' %}
+            <form id="css" method="POST" action="{{url_for('level.update_css', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                <div class="panel panel-primary">
+                    <div class="panel-body">
+                        Enter css below in test box, once you are done, click update.
+                        To remove them, leave it a blank.
+                    </div>
+                </div>
+
+                <textarea class="form-control" rows="3" name = "css_info" style="width: 417px; height: 127px;">{{css}}</textarea>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{%endblock%}

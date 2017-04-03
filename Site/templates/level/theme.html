@@ -1,0 +1,41 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            {% include 'flash.html' %}
+            <form id="theme" method="POST" action="{{url_for('level.update_theme', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="enable" {% if enable =="on" %} checked {% endif %}>
+                            Enable picture theme
+                        </label>
+                </div>
+                {{template.text_box("pic_link","Picture Link","Link given, if it is just a empty box, then background will be default.",pic)}}
+                <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="border" {% if setting["border"] =="on" %} checked {% endif %}> Enable Border
+                        </label>
+                        <label>
+                            <input type="checkbox" name="row" {% if setting["row"]=="on" %} checked {% endif %}> Enable Row/Column
+                        </label>
+                        <label>
+                            <input type="checkbox" name="blur" {% if setting["blur"]=="on" %} checked {% endif %}> Enable blur background(picture require)
+                        </label>
+                </div>
+
+            <img src="data:image/png;base64,{{ pic_show }}" alt="Ehum something wrong..."/>
+            <div class="well well-sm">
+                Please note this, This is just an example picture, size will be vary depends on name and other.
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{%endblock%}

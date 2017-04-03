@@ -32,7 +32,7 @@ class REPL:
             'ctx': ctx,
             'bot': self.bot,
             'message': msg,
-            'server': msg.server,
+            'guild': msg.guild,
             'channel': msg.channel,
             'author': msg.author,
             '_': None,
@@ -44,15 +44,14 @@ class REPL:
             return
 
         self.sessions.add(msg.channel.id)
-        await self.bot.say('Enter code to execute or evaluate. `exit()` or `quit` to exit.')
+        await ctx.send('Enter code to execute or evaluate. `exit()` or `quit` to exit.')
         while True:
-            response = await self.bot.wait_for_message(author=msg.author, channel=msg.channel,
-                                                       check=lambda m: m.content.startswith('`'))
+            response = await self.bot.wait_for("message", check=lambda m: m.content.startswith('`') and m.author == msg.author and m.channel == msg.channel)
 
             cleaned = self.cleanup_code(response.content)
 
             if cleaned in ('quit', 'exit', 'exit()'):
-                await self.bot.say('Exiting.')
+                await ctx.send('Exiting.')
                 self.sessions.remove(msg.channel.id)
                 return
 
@@ -70,7 +69,7 @@ class REPL:
                 try:
                     code = compile(cleaned, '<repl session>', 'exec')
                 except SyntaxError as e:
-                    await self.bot.say(self.get_syntax_error(e))
+                    await ctx.send(self.get_syntax_error(e))
                     continue
 
             variables['message'] = response
@@ -97,13 +96,13 @@ class REPL:
             try:
                 if fmt is not None:
                     if len(fmt) > 2000:
-                        await self.bot.send_message(msg.channel, 'Content too big to be printed.')
+                        await ctx.send(await utils.send_hastebin(fmt))
                     else:
-                        await self.bot.send_message(msg.channel, fmt)
+                        await ctx.send(fmt)
             except discord.Forbidden:
                 pass
             except discord.HTTPException as e:
-                await self.bot.send_message(msg.channel, 'Unexpected error: `{}`'.format(e))
+                await ctx.send('Unexpected error: `{}`'.format(e))
 
 def setup(bot):
     bot.add_cog(REPL(bot))

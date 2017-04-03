@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template,request,flash,redirect,url_for,jsonify
+from flask import Blueprint, render_template,request,flash,redirect,url_for,jsonify,send_file
+from PIL import Image,ImageFont,ImageDraw,ImageFilter
+import requests
 import logging
+import base64
 import utils
 import math
+import io
+import os
 
 log = logging.getLogger("Nurevam.site")
 
@@ -11,7 +16,6 @@ name = "levels"
 description = "Let your members gain <strong>XP</strong> and <strong> levels</strong> by participating in the chat!"
 
 db = None  #Database
-
 
 @utils.plugin_page('level')
 def dashboard(server_id):
@@ -119,23 +123,18 @@ def update_levels(server_id):
     log.info("Clear")
     return dashboard(server_id = server_id)
 
-def next_Level(total):
-    """
-    Formula to get next xp is 100*1.2^level
-    It will do calculate level by using log
-    then use that level to sub first equations for next level
-    This to ensure to make it accurate as it could.
-    """
-    if int(total) >= 100:  # if it greater than 100, it mean it above level 1
-        level = int(math.log(int(total) / 100, 1.2))  # getting level
-    else:  # when total exp is less than 100, it is still level 1, reason for that is due to -level via log equations
-        level = 1
-    next_xp = int(100 * (1.2 ** level))  # getting next require
-    return level, next_xp
+def next_Level(xp,lvl=0):
+    f = 2*(lvl**2)+20*(lvl)+100
+    if xp >= f:
+        return next_Level(xp-f,lvl+1)
+    return lvl,xp,f
 
 @blueprint.route('/<int:server_id>')
 def levels(server_id):
     is_admin = False
+    css_theme  = "css/custom/{}.css".format(server_id) if os.path.isfile("static/css/custom/{}.css".format(server_id)) else None
+    print(css_theme)
+
     if utils.session.get('api_token'):
         user_servers = utils.get_user_managed_servers(
             utils.get_user(utils.session['api_token']),
@@ -165,28 +164,28 @@ def levels(server_id):
     total_member = len(db.smembers("{}:Level:Player".format(server_id)))
     player_data = db.sort("{}:Level:Player".format(server_id), by="{}:Level:Player:*->Total_XP".format(server_id), get=[
                                                                                                           "{}:Level:Player:*->ID".format(server_id),
-                                                                                                          "{}:Level:Player:*->XP".format(server_id),
                                                                                                           "{}:Level:Player:*->Total_XP".format(server_id),], start=0, num=total_member, desc=True)
     data = []
     total_exp = 0
-    for x in range(0,len(player_data),3):
-            if name_list.get(player_data[x+1]) is None:
-                db.srem("{}:Level:Player".format(server_id),player_data[x+1])
+    for x in range(0,len(player_data),2):
+
+            if name_list.get(player_data[x]) is None:
+                db.srem("{}:Level:Player".format(server_id),player_data[x])
             if player_data[x] is None: continue
             # print(player_data[x],player_data[x+1]) #for future references
-            total_exp += int(player_data[x+2])
-            level, next_xp = next_Level(player_data[x+2])
-            name = name_list[player_data[x]].split("#")
+            total_exp += int(player_data[x+1])
+            level, remain,next_xp= next_Level(int(player_data[x+1]))
+            name = name_list.get(player_data[x],"None#1234").split("#")
             temp = {
                 "Name":name[0],
                 "ID":player_data[x],
                 "Level":level,
-                "XP":player_data[x+1],
+                "XP": remain,
                 "Next_XP":next_xp,
-                "Total_XP":player_data[x+2],
+                "Total_XP":player_data[x+1],
                 "Discriminator":name[1],
                 "Avatar":avatar_list.get(player_data[x]),
-                "XP_Percent":100*(float(player_data[x+1])/float(next_xp))
+                "XP_Percent":100*(float(remain)/float(next_xp))
             }
             data.append(temp)
     log.info("Done gather player infos")
@@ -208,7 +207,7 @@ def levels(server_id):
         log.info("Requesting Json")
         return jsonify({"server:":server,"reward_roles":reward_roles,"players":data})
 
-    return render_template('level/levels.html', players=data, stats = stats, reward_roles = reward_roles,server=server, title="{} leaderboard".format(server['name']),is_admin=is_admin,is_private=is_private)
+    return render_template('level/levels.html', players=data, stats = stats, reward_roles = reward_roles,server=server, title="{} leaderboard".format(server['name']),is_admin=is_admin,is_private=is_private,css_theme = css_theme)
 
 @blueprint.route('/server')
 def server_levels():
@@ -314,3 +313,178 @@ def profile_level(player_id,server_id):
     return render_template("level/profile_level.html",data=data,icon=icon,name=name,player_id=player_id,
                            server=server,level=level_data,XP_Percent=xp,title="{} Profile".format(name),
                             is_owner=is_owner,is_private=is_private)
+
+@blueprint.route("/theme/<int:server_id>")
+@utils.plugin_method
+def theme(server_id):
+    server = {
+        'id':server_id,
+        'name':db.hget("Info:Server",server_id),
+        'icon':db.hget("Info:Server_Icon",server_id)}
+
+    setting = db.hgetall("{}:Level:pic_setting".format(server_id))
+
+    if bool(setting)is False:
+        setting = {"border":"on","row":"on","blur":None}
+
+
+    pic_link = db.hget("{}:Level:Config".format(server_id),"pic")
+
+    enable = db.get("{}:Level:pic".format(server_id))
+
+    raw_data = [["Rank", "User", "Level", "EXP","Total EXP"]]
+    for x in range(1,11):
+        raw_data.append([str(x),"name","1","100","200"])
+
+    img = Image.new("RGBA", (1000,1000), color=(0, 0, 0, 0))
+
+    fnt = ImageFont.truetype('WhitneyBook.ttf', 12)
+    fntb = ImageFont.truetype('WhitneySemiBold.ttf', 12)
+
+    draw = ImageDraw.Draw(img)
+
+    m = [0] * len(raw_data[0])
+    for i, el in enumerate(raw_data):
+        for j, e in enumerate(el):
+            # if i == 0:
+            #     wdth, hght = draw.textsize(e, font=fntb)
+            #     if wdth > m[j]: m[j] = wdth
+            # else:
+            wdth, hght = draw.textsize(e, font=fnt)
+            if wdth > m[j]: m[j] = wdth
+    crop_width,crop_height = (10 + sum(m[:]) + 8 * len(m), 10 + 18 * len(raw_data) + 7)
+
+    pic_data = db.hget("{}:Level:Config".format(server_id), "pic")
+
+    if pic_data:
+        r = requests.get(pic_data)
+        if r.status_code == 200:
+            pic = Image.open(io.BytesIO(r.content)) #read pic and save it to memory then declare new object called im (Image)
+            aspectratio =  pic.width / pic.height
+            pic = pic.resize((crop_width,int(crop_width / aspectratio)),Image.ANTIALIAS)
+            pic = pic.crop(box = (0,int((pic.height-crop_height)/2),crop_width,int(crop_height+(pic.height-crop_height)/2)))
+            if setting.get("blur") == "on":
+                pic = pic.filter(ImageFilter.BLUR)
+            img.paste(pic)
+        else:
+            flash("There is something wrong with this link, did they delete it?","warning")
+
+
+    #adding text to picture
+    """
+    Runs enumerate twice as list is 2D
+    It will take size of text and then return width and height
+    then check if statement, for first run, which is first row (rank,user,level,exp,total exp)
+    once i is not 0 anymore, It will run second statement which we can assume after first rows
+
+    Those math are done to taken positions of putting text in
+
+    draw.text(...)x4 for outlier then last one for overwrite and put white
+    so it can be look like white text with black outlier
+    """
+    for i, el in enumerate(raw_data):
+        for j, txt in enumerate(el):
+            wdth, hght = draw.textsize(txt, font=fntb)
+            font = fntb
+            if i == 0:
+                if j == 0:
+                    w,h = (int(10 + (m[j] - wdth) / 2), 10)
+                else:
+                    w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10)
+            else:
+                if j == 0:
+                    w,h = (int(10 + (m[j] - wdth) / 2), 10 + 18 * i + 5)
+                else:
+                    font = fnt
+                    wdth, hght = draw.textsize(txt, font=fnt)
+                    w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
+
+            draw.text((w - 1, h), txt, font=font,fill="black")
+            draw.text((w + 1, h), txt, font=font,fill="black")
+            draw.text((w, h - 1), txt, font=font,fill="black")
+            draw.text((w, h + 1), txt, font=font,fill="black")
+            draw.text((w, h), txt, font=font) #White
+    del draw
+    #making pic crop
+
+    img = img.crop(box=(0, 0,crop_width,crop_height))
+
+
+    draw = ImageDraw.Draw(img)
+
+    if setting.get("border") == "on":
+        #border area
+        draw.line((5, 5, 5, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
+        draw.line((5, 5, img.size[0] - 5, 5), fill=(255, 255, 255, 96), width=2)
+        draw.line((5, img.size[1] - 5, img.size[0] - 4, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
+        draw.line((img.size[0] - 5, 5, img.size[0] - 5, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
+    if setting.get("row") == "on":
+        #row/column lines
+        for i in range(1, len(m)):
+            draw.line((int(5 + sum(m[:i]) + 8 * i), 7, int(5 + sum(m[:i]) + 8 * i), img.size[1] - 5),fill=(255, 255, 255, 48), width=1)
+
+        for i in range(1, len(raw_data)):
+            if i == 1:
+                draw.line((7, 7 + 18 * i + 2, img.size[0] - 5, 7 + 18 * i + 2), fill=(255, 255, 255, 48), width=2)
+            else:
+                draw.line((7, 7 + 18 * i + 7, img.size[0] - 5, 7 + 18 * i + 7), fill=(255, 255, 255, 48), width=1)
+        del draw
+
+
+    fp = io.BytesIO()
+    img.save(fp, format='PNG')
+    fp.seek(0)
+    byes_pic = base64.b64encode(fp.read()).decode() #magic trick to make it like "str"....?
+
+    return render_template("level/theme.html",pic = pic_link,pic_show = byes_pic,enable = enable, server=server,setting=setting)
+
+@blueprint.route('/update/theme/<int:server_id>', methods=['POST'])
+@utils.plugin_method
+def update_theme(server_id):
+    print(dict(request.form))
+    enable = request.form.get("enable")
+    pic = request.form.get("pic_link")
+    border = request.form.get("border")
+    row = request.form.get("row")
+    blur = request.form.get("blur")
+    print(border)
+    print(row)
+    if pic != "":
+        status = utils.check_link(pic)
+    else:
+        status = 0
+    if status == 0:  # if is true
+        db.hset("{}:Level:Config".format(server_id),"pic",pic)
+        db.hset("{}:Level:pic_setting".format(server_id),"border",border)
+        db.hset("{}:Level:pic_setting".format(server_id),"row",row)
+        db.hset("{}:Level:pic_setting".format(server_id),"blur",blur)
+        if enable is None:
+            db.delete("{}:Level:pic".format(server_id))
+        else:
+            db.set("{}:Level:pic".format(server_id),enable)
+        flash("Successfully add!","success")
+    return redirect(url_for("level.theme",server_id = server_id))
+
+@blueprint.route('/css/<int:server_id>')
+@utils.plugin_method
+def css_theme(server_id):
+    server = {
+    'id':server_id,
+    'name':db.hget("Info:Server",server_id),
+    'icon':db.hget("Info:Server_Icon",server_id)}
+    css = "Enter info here"
+    try:
+        with open("static/css/custom/{}.css".format(server_id),"r") as fp:
+            css = fp.read()
+    except FileNotFoundError:
+        pass
+
+    return render_template("css_page.html",server = server, css = css)
+
+@blueprint.route('/update/css/<int:server_id>', methods=['POST'])
+@utils.plugin_method
+def update_css(server_id):
+    with open("static/css/custom/{}.css".format(server_id),"w+") as fp:
+        fp.write(request.form.get("css_info"))
+        flash("Update","success")
+    return redirect(url_for("level.css_theme",server_id = server_id))

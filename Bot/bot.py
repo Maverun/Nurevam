@@ -1,15 +1,16 @@
 from discord.ext import commands
+from discord import errors
 from cogs.utils import utils
 import traceback
 import datetime
 import storage
 import discord
-import inspect
 import glob
-import re
+
+import helpformat
 
 description = '''Nurevam's Command List. '''
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True))
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True),formatter=helpformat.Custom_format())
 bot.db= storage.Redis()
 redis = utils.redis
 
@@ -19,33 +20,11 @@ def check_post(check):
     elif check == "on":
         return 30
 
-def get_channel(name):
-    stack = inspect.stack()
-    try:
-        for frames in stack:
-            try:
-                frame = frames[0]
-                current_locals = frame.f_locals
-                if name in current_locals:
-                    return current_locals[name]
-            finally:
-                del frame
-    finally:
-        del stack
+async def say(ctx,**kwargs):
+    check = await bot.db.redis.hget("{}:Config:Delete_MSG".format(ctx.message.guild.id),ctx.command.cog_name.lower())
+    return await ctx.send(**kwargs,delete_after=check_post(check))
 
-async def say_edit(msg = None,embed = None):
-    try:
-        key = str(inspect.getmodule(inspect.currentframe().f_back.f_code))
-        regex = re.compile(r"(cogs.[a-zA-Z]*)")
-        get = re.search(regex,key)
-        if get:
-            check = await bot.db.redis.hgetall("{}:Config:Delete_MSG".format(get_channel("_internal_channel").server.id))
-            check = check.get(get.groups()[0][5:])
-            await bot.say(content = msg,embed = embed,delete_after=check_post(check))
-        return
-    except:
-        utils.prRed(traceback.format_exc())
-bot.says_edit=say_edit
+bot.say=say
 
 @bot.event
 async def on_ready():
@@ -62,17 +41,17 @@ async def on_ready():
 
 async def command_checker(msg):
     try:
-        if bot.user.id == "181503794532581376":
+        if bot.user.id == 181503794532581376:
             bot.command_prefix = commands.when_mentioned_or("$")
             bot.pm_help = False
             return
-        cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.server.id)))
-        cmd_prefix=cmd_prefix.split(",")
-        if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevert any spam in case, lower chance of getting kick heh.
+        cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id)))
+        cmd_prefix= cmd_prefix.split(",")
+        if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevent any spam in case, lower chance of getting kick heh.
             return
         bot.command_prefix = commands.when_mentioned_or(*cmd_prefix)
-        if "help" in msg.content: #changing setting for help, if server owner want Help command to be via PM or to server.
-            if await bot.db.redis.get("{}:Config:Whisper".format(msg.server.id)) == "on":
+        if "help" in msg.content: #changing setting for help, if guild owner want Help command to be via PM or to guild.
+            if await bot.db.redis.get("{}:Config:Whisper".format(msg.guild.id)) == "on":
                 bot.pm_help =True
             else:
                 bot.pm_help=False
@@ -119,7 +98,7 @@ async def on_error(event,*args,**kwargs):
     utils.prRed("Error!")
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
-    await bot.send_message(bot.owner, "```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+    await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
 
 if __name__ == '__main__':
     bot.run(utils.secret["nurevam_token"])

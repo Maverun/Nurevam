@@ -1,4 +1,4 @@
-from flask import session,redirect,url_for,request,render_template,abort,current_app
+from flask import session,redirect,url_for,request,render_template,abort,current_app,flash
 from requests_oauthlib import OAuth2Session
 from functools import wraps
 import requests
@@ -97,18 +97,19 @@ def plugin_page(plugin_name):
         def wrapper(server_id):
             # user = get_user(session['api_token'])
             disable = request.args.get('disable')
+            print("the dashboard disable is ",disable,plugin_name)
             if disable:
                 log.info("Disable plugins, {} for {}".format(plugin_name,server_id))
                 db.hdel('{}:Config:Cogs'.format(server_id), plugin_name)
                 db.hdel("{}:Config:Delete_MSG".format(server_id),plugin_name)
-                db.hincrby("Info:Cogs_Enables",plugin_name,amount=-1)
                 return redirect(url_for('dashboard', server_id=server_id))
 
             db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
             db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
-            db.hincrby('Info:Cogs_Enables',plugin_name,amount=1)
+
             servers = get_user_guilds(session['api_token'])
             server = list(filter(lambda g: g['id']==str(server_id), servers))[0]
+
             get_enable_list = db.hgetall("{}:Config:Cogs".format(server_id))
             info = [[key, values.name.title(), values.description] for key, values in current_app.blueprint_lib.items()]
             enable_plugin = [x for x in current_app.blueprint_lib if x in get_enable_list]
@@ -223,3 +224,18 @@ def make_session(token=None, state=None, scope=None):
         auto_refresh_url=data_info.TOKEN_URL,
         token_updater=token_updater
 )
+
+def check_link(link):
+    try:
+        r = requests.get(link)
+    except:
+        flash("There is somthing wrong with a link...", "warning")
+        return 2
+    if r.status_code == 200:
+        if r.headers['content-type'] in ['image/png', 'image/jpeg']:
+            return 0  # to say it is True
+        elif r.headers == 'image/gif':
+            flash("Gif memes are not support!", "warning")
+            return 1  # to say it is not support yet for gif... some day?
+    flash("This type of files does not support!", "warning")
+    return 2  # return False

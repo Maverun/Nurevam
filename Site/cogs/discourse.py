@@ -69,10 +69,16 @@ def category(server_id):
     domain =  db.hget("{}:Discourse:Config".format(server_id), "domain")
     default = db.hget("{}:Discourse:Config".format(server_id), "channel")
     channel = db.hgetall("{}:Discourse:Category".format(server_id))
+    log.info("The channel is {}".format(channel))
     if domain is None:
         log.info("Missing domain, assume user didn't do set up")
         flash("You haven't finish config, please enter info in and click update!")
         return dashboard(server_id = server_id)
+    elif channel is None:
+        log.info("Channel is None")
+        flash("There is something wrong with channel, please try set it again")
+        return dashboard(server_id = server_id)
+
     guild_channel = utils.get_channel(server_id)
     default = [x["name"] for x in guild_channel if x["id"] == default][0]
     server = {

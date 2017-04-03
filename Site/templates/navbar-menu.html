@@ -14,7 +14,7 @@
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
             <img src="{{session['user']|avatar}}" class="profile-image img-circle"> {{session['user']['username']}} <b class="caret"></b></a>        <ul class="dropdown-menu">
-            <li><a href="{{url_for('profile')}}">Profiles</a></li>
+            <li><a href="{{url_for('profile.profile')}}">Profiles</a></li>
             <li><a href="{{url_for('select_server')}}">Servers</a></li>
             <li><a href="{{url_for('logout')}}"><i class="fa fa-sign-out"></i> Sign-out</a></li>
         </ul>
