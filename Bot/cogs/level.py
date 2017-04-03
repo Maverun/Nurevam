@@ -379,7 +379,8 @@ class Level:
                 exp = "{} / {}".format(remain_xp, next_exp)
 
                 if guild:
-                    the_id = int(player_data.pop(0))
+                    the_id = player_data.pop(0)
+                    if the_id is None: continue
                     name = guild.get_member(int(the_id))
                     log.debug("under guild and member name is {} ||| {}".format(name,the_id))
                     if name is None: #assuming player left server and Nure didn't knew he/she have left
@@ -578,7 +579,7 @@ class Level:
             for member in member_list:
                 old_xp = await self.redis.hget("{}:Level:Player:{}".format(guild.id,member),"Total_XP")
                 lvl,xp,f = self.next_Level(int(old_xp))
-                await self.redis.hget("{}:Level:Player:{}".format(guild.id,member),"lvl",lvl)
+                await self.redis.hset("{}:Level:Player:{}".format(guild.id,member),"lvl",lvl)
 
 def setup(bot):
     bot.add_cog(Level(bot))
