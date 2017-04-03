@@ -39,11 +39,11 @@ class Log():
             try:
                 async with session.get(before.avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
-                        old.thumbnail((128,128),Image.ANTIALIAS)
+                        old = old.thumbnail((128,128),Image.ANTIALIAS)
             except:
                 async with session.get(before.default_avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
-                        old = old.thumbnail((128,128),Image.ANTIALIAS)
+                        old.thumbnail((128,128),Image.ANTIALIAS)
             try:
                 async with session.get(after.avatar_url) as resp:
                     new = Image.open(io.BytesIO(await resp.read()))
@@ -54,8 +54,8 @@ class Log():
                     new.thumbnail((128,128),Image.ANTIALIAS)
 
         update = Image.new('RGB',(256,128))
-        update.paste(old,(0,0,128,128))
-        update.paste(new,(128,0,256,256))
+        update.paste(old,(0,0))
+        update.paste(new,(128,0))
         fp = io.BytesIO()
         update.save(fp,format='PNG')
         fp.seek(0)
