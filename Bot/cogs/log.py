@@ -39,7 +39,7 @@ class Log():
             try:
                 async with session.get(before.avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
-                        old = old.thumbnail((128,128),Image.ANTIALIAS)
+                        old.thumbnail((128,128),Image.ANTIALIAS)
             except:
                 async with session.get(before.default_avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))
