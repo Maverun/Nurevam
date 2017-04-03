@@ -41,10 +41,16 @@ async def on_ready():
 
 async def command_checker(msg):
     try:
+        if isinstance(msg.channel,discord.DMChannel):
+            if "!reply" in msg.content:
+                bot.command_prefix = commands.when_mentioned_or("!")
+                return
+
         if bot.user.id == 181503794532581376:
             bot.command_prefix = commands.when_mentioned_or("$")
             bot.pm_help = False
             return
+
         cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id)))
         cmd_prefix= cmd_prefix.split(",")
         if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevent any spam in case, lower chance of getting kick heh.

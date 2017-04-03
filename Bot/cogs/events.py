@@ -45,18 +45,20 @@ class Events:
         print("\033[91m<EVENT LEFT>:\033[94m[ {} : \033[96m({})\033[92m -- {}\033[00m".format(self.Time(), guild.id, guild.name))
         utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.guilds), len(self.bot.user)))
         await self.redis.hdel("Info:Server",guild.id)
+        age = datetime.datetime.utcnow() - guild.me.joined_at
         #Set all database to expire, will expire in 30 days, so This way, it can save some space,it would unto when it is back to that guild and setting changed.
         count = 0
         async for key in self.redis.iscan(match="{}*".format(guild.id)):
             await self.redis.expire(key,1209600)
             count += 1
+        utils.prGreen("{0.days} day, {0.seconds} seconds".format(age))
         utils.prGreen("Set {} expire".format(count))
 
     async def on_guild_update(self,before,after): #If guild update name and w/e, just in case, Update those
         print("\033[95m<EVENT Update>:\033[94m {} :\033[96m {} \033[93m | \033[92m({}) -- {}\033[00m".format(self.Time(),after.name,after.id, after))
         if after.icon:
             await self.redis.set("{}:Icon".format(after.id),after.icon)
-        await self.redis.hset("Info:Server",after.id,after)
+        await self.redis.hset("Info:Server",after.id,after.name)
 
     async def on_member_join(self,member):
         print("\033[98m<Event Member Join>:\033[94m {} :\033[96m {} ||| \033[93m ({})\033[92m  -- {} ||| {}\033[00m".format(self.Time(), member.guild.name, member.guild.id, member.name, member.id))
@@ -90,7 +92,7 @@ class Events:
                 if isinstance(msg.channel,discord.DMChannel) is False:
                     try:
                         if self.bot.log_config.get(msg.guild.id):
-                            if msg.channel.id in self.bot.log_config[msg.guild.id]['channel']:
+                            if str(msg.channel.id) in self.bot.log_config[msg.guild.id]['channel']:
                                 return
                     except:
                         pass

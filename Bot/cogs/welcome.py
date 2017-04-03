@@ -26,7 +26,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                     if config.get("whisper") == "on":
                         msg = member.send(config["message"].format(user=member.name,guild=member.guild,user_mention=member.mention))
                     else:
-                        msg = self.bot.get_channel(int(config["channel"])).send(config["message"].format(user=member.name,server=member.guild,user_mention=member.mention))
+                        msg = await self.bot.get_channel(int(config["channel"])).send(config["message"].format(user=member.name,server=member.guild,user_mention=member.mention))
                     if config.get("enable_delete") == "on":
                             await asyncio.sleep(int(config["delete_msg"]))
                             await msg.delete()
