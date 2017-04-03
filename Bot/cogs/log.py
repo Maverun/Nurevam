@@ -54,8 +54,8 @@ class Log():
                     new.thumbnail((128,128),Image.ANTIALIAS)
 
         update = Image.new('RGB',(256,128))
-        update.paste(old,(0,0))
-        update.paste(new,(128,0))
+        update.paste(old,(0,0,128,128))
+        update.paste(new,(128,0,256,256))
         fp = io.BytesIO()
         update.save(fp,format='PNG')
         fp.seek(0)

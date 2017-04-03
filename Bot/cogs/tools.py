@@ -208,7 +208,7 @@ class Tools():
         """
         repo = git.cmd.Git("../")
         repo.pull()
-        await self.bot.say("Upgrade done")
+        await ctx.send("Upgrade done\n{}".format(repo))
 
     @owner.command()
     @commands.check(utils.is_owner)
