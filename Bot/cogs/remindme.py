@@ -18,7 +18,6 @@ class Remindme(): #Allow to welcome new members who join guild. If it enable, wi
             x.cancel()
         utils.prPurple("unload remindme task")
 
-
     async def timer(self): #Checking if there is remindme task that bot lost during shutdown/restart (losing data from memory)
         await asyncio.sleep(10)#give it a moment..
         utils.prYellow("Remindme Timer start")
@@ -35,9 +34,9 @@ class Remindme(): #Allow to welcome new members who join guild. If it enable, wi
                         remain_time = int(time[x]) - int(get_time)
                         utils.prYellow("Time: {},Channel: {}, Message: {}".format(remain_time,channel[x],data[x]))
                         if remain_time <= 0:
-                            channel = self.bot.get_channel(int(channel[x]))
-                            if channel:
-                                await channel.send("I am deeply sorry for not reminding you earlier! You were reminded of the following:\n{}".format(data[x]))
+                            chan = self.bot.get_channel(int(channel[x]))
+                            if chan:
+                                await chan.send("I am deeply sorry for not reminding you earlier! You were reminded of the following:\n{}".format(data[x]))
                             await self.redis.hdel("{}:Remindme:data".format(guild.id), x)
                             await self.redis.hdel("{}:Remindme:channel".format(guild.id), x)
                             await self.redis.hdel("{}:Remindme:time".format(guild.id), x)
