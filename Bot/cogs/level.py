@@ -570,6 +570,15 @@ class Level:
         fp.seek(0)
         await ctx.send(file=fp, filename="top10.png")
 
+    @commands.command()
+    @commands.check(utils.is_owner)
+    async def temp_update_level(self,ctx):
+        for guild in list(self.bot.guilds):
+            member_list = await self.redis.smembers("{}:Level:Player".format(guild.id))
+            for member in member_list:
+                old_xp = await self.redis.hget("{}:Level:Player:{}".format(guild.id,member),"Total_XP")
+                lvl,xp,f = self.next_Level(int(old_xp))
+                await self.redis.hget("{}:Level:Player:{}".format(guild.id,member),"lvl",lvl)
 
 def setup(bot):
     bot.add_cog(Level(bot))
