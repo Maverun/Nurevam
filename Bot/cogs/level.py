@@ -490,7 +490,10 @@ class Level:
                 # else:
                 wdth, hght = draw.textsize(e, font=fnt)
                 if wdth > m[j]: m[j] = wdth
+
         crop_width,crop_height = (10 + sum(m[:]) + 8 * len(m), 10 + 18 * len(raw_data) + 7)
+
+        setting = await self.redis.hgetall("{}:Level:pic_setting".format(ctx.message.guild.id))
 
         pic_data = await self.redis.hget("{}:Level:Config".format(ctx.message.guild.id), "pic")
         if pic_data:
@@ -500,7 +503,8 @@ class Level:
                     aspectratio =  pic.width / pic.height
                     pic = pic.resize((crop_width,int(crop_width / aspectratio)),Image.ANTIALIAS)
                     pic = pic.crop(box = (0,int((pic.height-crop_height)/2),crop_width,int(crop_height+(pic.height-crop_height)/2)))
-                    pic = pic.filter(ImageFilter.BLUR)
+                    if setting.get("blur") == "on":
+                        pic = pic.filter(ImageFilter.BLUR)
                     img.paste(pic)
 
 
@@ -543,7 +547,6 @@ class Level:
 
         img = img.crop(box=(0, 0,crop_width,crop_height))
 
-        setting = await self.redis.hgetall("{}:Level:pic_setting".format(ctx.message.guild.id))
         utils.prCyan(setting)
         draw = ImageDraw.Draw(img)
 
@@ -553,6 +556,7 @@ class Level:
             draw.line((5, 5, img.size[0] - 5, 5), fill=(255, 255, 255, 96), width=2)
             draw.line((5, img.size[1] - 5, img.size[0] - 4, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
             draw.line((img.size[0] - 5, 5, img.size[0] - 5, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
+
         if setting.get("row") == "on":
             #row/column lines
             for i in range(1, len(m)):
@@ -570,16 +574,6 @@ class Level:
         img.save(fp, format='PNG')
         fp.seek(0)
         await ctx.send(file=fp, filename="top10.png")
-
-    @commands.command()
-    @commands.check(utils.is_owner)
-    async def temp_update_level(self,ctx):
-        for guild in list(self.bot.guilds):
-            member_list = await self.redis.smembers("{}:Level:Player".format(guild.id))
-            for member in member_list:
-                old_xp = await self.redis.hget("{}:Level:Player:{}".format(guild.id,member),"Total_XP")
-                lvl,xp,f = self.next_Level(int(old_xp))
-                await self.redis.hset("{}:Level:Player:{}".format(guild.id,member),"lvl",lvl)
 
 def setup(bot):
     bot.add_cog(Level(bot))

@@ -207,8 +207,8 @@ class Tools():
         Allow to update, so i can just simple do reload afterward.
         """
         repo = git.cmd.Git("../")
-        test = repo.pull()
-        await ctx.send("Upgrade done\n{}".format(test))
+        result = repo.pull()
+        await ctx.send(result)
 
     @owner.command()
     @commands.check(utils.is_owner)

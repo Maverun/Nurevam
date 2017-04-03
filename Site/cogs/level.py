@@ -352,6 +352,7 @@ def theme(server_id):
             # else:
             wdth, hght = draw.textsize(e, font=fnt)
             if wdth > m[j]: m[j] = wdth
+
     crop_width,crop_height = (10 + sum(m[:]) + 8 * len(m), 10 + 18 * len(raw_data) + 7)
 
     pic_data = db.hget("{}:Level:Config".format(server_id), "pic")
