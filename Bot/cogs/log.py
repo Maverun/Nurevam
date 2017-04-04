@@ -136,6 +136,7 @@ class Log():
                         else:
                             x = "{} min ago".format(int(age.seconds/60)) #min
                         embed.set_footer(text = "Account created {}".format(x))
+                embed.timestamp = datetime.datetime.utcnow()
                 await self.send(member.guild.id,embed)
                 # await self.send(member.guild.id,msg)
 

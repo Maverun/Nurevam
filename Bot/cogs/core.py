@@ -73,7 +73,7 @@ class Core():
             for x in setting:
                 info.append("{}: {}".format(x,setting[x]))
             msg = "To register, you can do !profile add osu <username here>"
-            await self.bot.whisper("```xl\n{}\n```\n{}".format("\n".join(info),msg))
+            await ctx.author.send("```xl\n{}\n```\n{}".format("\n".join(info),msg))
         else:
             await self.bot.say(ctx,content = "You didn't add any data! Make sure you add something first!")
 
@@ -167,7 +167,7 @@ class Core():
 
         channel = self.bot.get_channel(292133726370922497)
         await channel.send(embed=embed)
-        await ctx.send(u"\U0001F44C"+", Thank you for your valuable feedback. \n Hopefully, the owner will reply to you soon.")
+        await ctx.send(u"\U0001F44C"+", Thank you for your valuable feedback. \nHopefully, the owner will reply to you soon.")
 
     @commands.command()
     @commands.check(utils.is_owner)
