@@ -148,7 +148,7 @@ class Level:
         f = 2*(lvl**2)+20*(lvl)+100
         if xp >= f:
             return self.next_Level(xp-f,lvl+1)
-        return lvl,xp,f
+        return lvl if lvl != 0 else 1,xp,f
 
     async def level_reward(self):
         while True:

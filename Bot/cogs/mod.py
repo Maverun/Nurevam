@@ -30,7 +30,7 @@ class Mod():
     async def on_member_join(self,member): #this is only temp patch for friend of mine...
         if member.guild.id == 241901242220150784:
             created = member.created_at
-            current = datetime.datetime.now()
+            current = datetime.datetime.utcnow()
             age = current - created
             print(age)
             if int(age.total_seconds()) <= 600:

@@ -43,7 +43,7 @@ class Events:
 
     async def on_guild_remove(self,guild): #IF bot left or no longer in that guild. It will remove this
         print("\033[91m<EVENT LEFT>:\033[94m[ {} : \033[96m({})\033[92m -- {}\033[00m".format(self.Time(), guild.id, guild.name))
-        utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.guilds), len(self.bot.user)))
+        utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.guilds), len(self.bot.users)))
         await self.redis.hdel("Info:Server",guild.id)
         age = datetime.datetime.utcnow() - guild.me.joined_at
         #Set all database to expire, will expire in 30 days, so This way, it can save some space,it would unto when it is back to that guild and setting changed.

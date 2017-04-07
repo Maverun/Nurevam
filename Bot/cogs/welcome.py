@@ -1,7 +1,6 @@
 from .utils import utils
 import traceback
 import datetime
-import asyncio
 import discord
 
 class Welcome(): #Allow to welcome new members who join guild. If it enable, will send them a message.
@@ -23,26 +22,27 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
             config = await self.redis.hgetall("{}:Welcome:Message".format(member.guild.id))
             try:
                 if config.get("enable_message") == "on":
-                    if config.get("whisper") == "on":
-                        msg = member.send(config["message"].format(user=member.name,guild=member.guild,user_mention=member.mention))
-                    else:
-                        msg = await self.bot.get_channel(int(config["channel"])).send(config["message"].format(user=member.name,server=member.guild,user_mention=member.mention))
+                    msg = config["message"].format(user=member.name,server=member.guild,user_mention=member.mention)
                     if config.get("enable_delete") == "on":
-                            await asyncio.sleep(int(config["delete_msg"]))
-                            await msg.delete()
-            except Exception as e:
-                await self.error(member.guild.owner,e)
+                            time = int(config["delete_msg"])
+                    else:
+                        time = None
 
-            #Now assign a roles.
-            if config.get("role") == "on":
-                try:
+                    if config.get("whisper") == "on":
+                         member.send(msg,delete_after = time)
+                    else:
+                        await self.bot.get_channel(int(config["channel"])).send(msg,delete_time = time)
+
+                #Now assign a roles.
+                if config.get("role") == "on":
                     role_list = await self.redis.smembers('{}:Welcome:Assign_Roles'.format(member.guild.id))
                     role_obj=[]
                     for x in role_list:
                         role_obj.append(discord.utils.get(member.guild.roles,id=int(x)))
                     await member.add_roles(*role_obj)
-                except Exception as e:
-                    await self.error(member.guild.owner, e)
+
+            except Exception as e:
+                await self.error(member.guild.owner, e)
 
 def setup(bot):
     bot.add_cog(Welcome(bot))

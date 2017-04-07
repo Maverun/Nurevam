@@ -185,7 +185,7 @@ class Discourse(): #Discourse, a forums types.
         utils.prGreen(data)
         data = data[1]
         if data == 404: #If there is error  which can be wrong user
-            await self.bot.say(ctx,"{} is not found! Please double check case and spelling!".format(name))
+            await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
             return
         summary=data["user_summary"] #Dict short for print_data format
         print_data= "Topics Created:{0[topic_count]}\n" \
@@ -194,7 +194,7 @@ class Discourse(): #Discourse, a forums types.
                     "Likes Received:{0[likes_received]}\n" \
                     "Days Visited:{0[days_visited]}\n" \
                     "Posts Read:{0[posts_read_count]}".format(summary)
-        await self.bot.say(ctx,"```xl\n{}\n```".format(print_data))
+        await self.bot.say(ctx,content = "```xl\n{}\n```".format(print_data))
 
     @commands.command(name="stats",brief="Show a Site Statistics")
     async def statistics(self,ctx): #To show a stats of website of what have been total post, last 7 days, etc etc
@@ -205,7 +205,7 @@ class Discourse(): #Discourse, a forums types.
         data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
         data = data[1]
         stat=data["about"]["stats"]
-        await self.bot.say(ctx,"```xl"
+        await self.bot.say(ctx,content = "```xl"
                            "\n┌──────────────┬──────────┬──────────────┬──────────────┐\n"
                            "│              │ All Time │ Lasts 7 Days │ Last 30 Days │"
                            "\n├──────────────┼──────────┼──────────────┼──────────────┤"
@@ -238,12 +238,12 @@ class Discourse(): #Discourse, a forums types.
         Bio:
         """
         if " " in name:
-            await self.bot.say("There is space in! There is no such name that have space in! Please Try again!")
+            await self.bot.say(ctx,content = "There is space in! There is no such name that have space in! Please Try again!")
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
         read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
         if read[1] == 404: #If there is error  which can be wrong user
-            await self.bot.say("{} is not found! Please double check case and spelling!".format(name))
+            await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
             return
         read= read[1]
         data =read["user"]
@@ -258,7 +258,7 @@ class Discourse(): #Discourse, a forums types.
         data_array.append("**Join**:\n\tDate:{}".format(data["created_at"][:-5].strip().replace("T", " \n\tTime:")))
         if "bio_raw" in data:
             data_array.append("**Bio**: \n```\n{}\n```".format(data["bio_raw"]))
-        await self.bot.say(ctx,"\n".join(data_array))
+        await self.bot.say(ctx,content = "\n".join(data_array))
 
     @commands.command(brief="show Logging of discourse",hidden = True)
     async def dstatus(self,ctx):
@@ -267,7 +267,7 @@ class Discourse(): #Discourse, a forums types.
         """
         data = self.log_error.get(ctx.message.guild.id)
         if data is None:
-            await self.bot.say_edit("I cannot check it at this moment!")
+            await self.bot.say(ctx,content = "I cannot check it at this moment!")
         else:
             embed = discord.Embed()
             embed.add_field(name = "Status", value=data["status"])
