@@ -131,7 +131,7 @@ class Level:
             lvl_db = await self.redis.hget(name,"lvl")
 
             if lvl_db is None:
-                return await self.redis.hset(name,"lvl",1)
+                return await self.redis.hset(name,"lvl",0)
 
             elif level != int(lvl_db):
                 await self.redis.hset(name, "lvl", level)
@@ -148,7 +148,7 @@ class Level:
         f = 2*(lvl**2)+20*(lvl)+100
         if xp >= f:
             return self.next_Level(xp-f,lvl+1)
-        return lvl if lvl != 0 else 1,xp,f
+        return lvl,xp,f
 
     async def level_reward(self):
         while True:
