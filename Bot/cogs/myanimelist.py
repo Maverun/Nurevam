@@ -98,7 +98,10 @@ class Myanimelist():
             await self.send(ctx,data[0])
         else:  # if there is more than one of data, it will ask user which one do they want
             asking = await ctx.send("```{}```\nWhich number?".format("\n".join(list_data)))
-            answer = await self.bot.wait_for("message",timeout=30, check=lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)
+            try:
+                answer = await self.bot.wait_for("message",timeout=30, check=lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)
+            except:#timeout error
+                pass
             try: #we want to clear up those usless so they dont fill up chat
                 await asking.delete() #two different delete, in case one don't have permission.
                 await answer.delete()

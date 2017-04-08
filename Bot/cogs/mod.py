@@ -35,7 +35,7 @@ class Mod():
             print(age)
             if int(age.total_seconds()) <= 600:
                 print("Yes ban this one")
-            await member.ban()
+                await member.ban()
 
 #########################################
 #     _____   _                         #

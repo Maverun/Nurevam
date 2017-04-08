@@ -9,7 +9,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
         self.redis = bot.db.redis
 
     async def error(self,owner,e):
-        await owner.send("There is an error with a newcomer, please report this to the creator.\n {}".format(e))
+        # await owner.send("There is an error with a newcomer, please report this to the creator.\n {}".format(e))
         Current_Time = datetime.datetime.utcnow().strftime("%b/%d/%Y %H:%M:%S UTC")
         utils.prRed(Current_Time)
         utils.prRed("Error!")
