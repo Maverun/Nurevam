@@ -28,9 +28,12 @@ class Myanimelist():
         return utils.is_enable(ctx,"myanimelist")
 
     async def get_data(self, category, name):
-        with aiohttp.ClientSession(auth=self.auth,headers=self.header) as session:
-            async with session.get('https://myanimelist.net/api/{}/search.xml?q={}'.format(category, name),headers=self.header) as resp:
-                return (await resp.read())
+        try:
+            with aiohttp.ClientSession(auth=self.auth,headers=self.header) as session:
+                async with session.get('https://myanimelist.net/api/{}/search.xml?q={}'.format(category, name),headers=self.header) as resp:
+                    return (await resp.read())
+        except aiohttp.ClientResponseError: # some reason, mal dont return API, just nothing... causing error
+            return None
 
     async def check_status(self,ctx,name):
         with aiohttp.ClientSession() as session:
@@ -73,7 +76,7 @@ class Myanimelist():
         try: #Check if this exist, otherwise, return error
             root = ElementTree.fromstring(data)
         except:
-            return await self.bot.say("{} does not exist!".format(name.replace("_"," ")))
+            return await self.bot.say(ctx,content = "{} does not exist!".format(name.replace("_"," ")))
         list_data = []
         data = []
         for index,tag in enumerate(root,start = 1):
