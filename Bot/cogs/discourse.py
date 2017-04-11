@@ -119,7 +119,7 @@ class Discourse(): #Discourse, a forums types.
                 log.debug("{} and {}".format(key,values))
                 channel = config["channel"]
                 for x in raw_channel:
-                    if str(key) in x:
+                    if str(key) in x.split(","): #since category ID are in this way 1,34,53 as str
                         channel = raw_channel[x]
                 if channel == "0":
                     channel = config["channel"]
