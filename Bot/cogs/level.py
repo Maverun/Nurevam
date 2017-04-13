@@ -347,7 +347,7 @@ class Level:
             log.debug("Global requests")
             temp_id = await self.redis.smembers("Info:Level:Player")
             temp_total = await self.redis.hgetall("Info:Level:Player_Total_XP")
-            data = sorted([(int(temp_total[x]),x) for x in temp_id],key = itemgetter(0),reverse=True)
+            data = sorted([(temp_total[x],x) for x in temp_id],key = itemgetter(0),reverse=True)
             full_data = [main for x in data for main in x]
             log.debug(full_data)
 
