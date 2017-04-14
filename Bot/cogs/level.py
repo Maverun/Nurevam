@@ -167,7 +167,6 @@ class Level:
                         for member in guild.members:
                             if member.id not in raw_member:
                                 continue
-                            log.debug(member)
                             member_role = [x.id for x in member.roles]
                             member_level = self.next_Level(await self.redis.hget("{}:Level:Player:{}".format(guild.id,member.id),"Total_XP"))[0]
                             remove_role = []
@@ -185,6 +184,7 @@ class Level:
                                         log.debug("role_level is less than member_level, so adding it")
                                         add_role.append([x for x in guild_roles if x.id == role_id][0])
                             if remove_role or add_role:
+                                log.debug(member)
                                 log.debug("checking if nure can add roles to member")
                                 if guild.me.top_role > member.top_role:
                                     if remove_role:
@@ -347,8 +347,8 @@ class Level:
             log.debug("Global requests")
             temp_id = await self.redis.smembers("Info:Level:Player")
             temp_total = await self.redis.hgetall("Info:Level:Player_Total_XP")
-            data = sorted([(temp_total[x],x) for x in temp_id],key = itemgetter(0),reverse=True)
-            full_data = [main for x in data for main in x]
+            data = sorted([(int(temp_total[x]),x) for x in temp_id],key = itemgetter(0),reverse=True)
+            full_data = [str(main) for x in data for main in x]
             log.debug(full_data)
 
         max_page = int(len(full_data)/30 + 1)
@@ -374,7 +374,6 @@ class Level:
             for x in range(0, len(player_data), 2):
                 rank += 1
                 total_exp = player_data.pop(0)
-                # level, next_exp = self.next_Level(total_exp)
                 level,remain_xp,next_exp = self.next_Level(int(total_exp))
                 exp = "{} / {}".format(remain_xp, next_exp)
 
@@ -428,7 +427,6 @@ class Level:
             embed_list.append(embed)
 
         first_start = True
-        utils.prYellow(embed_list)
         while True:
             if first_start:
                 first_start = False
