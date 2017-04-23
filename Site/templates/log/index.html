@@ -38,6 +38,11 @@
                             <input type="checkbox" name="avatar" {% if config["avatar"] =="on" %} checked {% endif %}>
                             Changing avatar
                         </label>
+                        <label>
+                            <input type="checkbox" name="bot" {% if config["bot"] =="on" %} checked {% endif %}>
+                            Disable log on Bot account for edit/delete (if it is enable, Nurevam will ignore bot when they do delete or edit message)
+                        </label>
+
                     </div>
                 {{ template.channel_list("channel","Channel for posting log",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",log_channel)}}
                 <button type="submit" class="btn btn-primary">Update</button>

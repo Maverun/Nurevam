@@ -1,4 +1,5 @@
 import redis as rdb
+import datetime
 import platform
 import aiohttp
 import json
@@ -57,3 +58,14 @@ async def send_hastebin(info):
         async with session.post("https://hastebin.com/documents",data = str(info)) as resp:
             if resp.status is 200:
                 return "https://hastebin.com/{}.py".format((await resp.json())["key"])
+
+class Background:
+    """
+    Background, allow to run auto background task easily without worry.
+    """
+
+    current = datetime.datetime.utcnow() #datetime obj
+
+    def __init__(self,name,max_time):
+        self.name = name
+        self.max_time = max_time

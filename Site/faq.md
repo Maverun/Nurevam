@@ -9,14 +9,14 @@
 >Make sure you have the `Manage Server` permission, log in on the website with your discord account and you will see a list of the servers that you have the `Manage Server` permission for.
 Select the server you want Nurevam to join.
 
-##How can I enable a permission?
+##How can I enable the plugins?
 >Select the plugin you want to run and confirm that you want to enable it.
 
-##Why did a command not work?
->Please make sure you have the respective plugin enabled. It may ask for roles, permissions etc, or it is a subcommand.
+##Why did a command not working?
+>Please make sure you have the respective plugin enabled. It may ask for the roles, permissions etc, also checked if this command is a subcommand which you will need to use the chain command.
 
-##What is a subcommand?
->A subcommand comes after a main command. For example: role from mod plugin or clean as well are subcommands.
+##What is the subcommand?
+>The subcommand comes after a main command. For example: role from mod plugin or clean as well are subcommands, so you would have to say !role add @person role_name
 
 >If i write `!clean`, it will just clean all bot messages, however if i write `!clean all` it will clean all message, including user messages. Role does the same thing with add/remove.
 
@@ -33,7 +33,7 @@ Select the server you want Nurevam to join.
 >This is, so that you can stay informed. Normally, this is for admins/mods who want to be kept informed and not confused about what happens.(I kinda don't like the edit/delete message, it is the user's privacy, right...)
 
 ##I got request about...
->You got an idea or any request? Feel free to PM me or [join the server here](https://discordapp.com/invite/010erZHcMcH15gTLZ) and I will hink about it.
+>You got an idea or any request? Feel free to PM me or [join the server here](https://discordapp.com/invite/010erZHcMcH15gTLZ) and I will think about it.
 
 ##I found a bug/problem...
 >Really?! Rats, those are hiding from me! Please PM me or [join the server here](https://discordapp.com/invite/010erZHcMcH15gTLZ), I will gladly do my best to fix them! 

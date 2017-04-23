@@ -19,6 +19,9 @@ class Discourse(): #Discourse, a forums types.
         self.redis = bot.db.redis
         self.counter= 0
         self.log_error = {}
+        self.bg_dis = utils.Background("discourse",1)
+        self.bot.background.update({"disourse":self.bg_dis})
+
         loop = asyncio.get_event_loop()
         self.loop_discourse_timer = loop.create_task(self.timer())
 
@@ -145,7 +148,7 @@ class Discourse(): #Discourse, a forums types.
                     counter_loops = 0
                 if self.bot.id_discourse != id_count:  # if it don't match, it will return
                     return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
-                self.bot.background.update({"discourse":datetime.datetime.now()})
+                self.bg_dis.current = datetime.datetime.utcnow()
                 for guild in list(self.bot.guilds):
                     await self.new_post(guild.id)
                 counter_loops += 1
@@ -182,7 +185,6 @@ class Discourse(): #Discourse, a forums types.
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
         link ="{}/users/{}/summary".format(config["domain"],name)
         data = await self.get_data(link,config["api_key"],config['username'],config["domain"])  #Get info of that users
-        utils.prGreen(data)
         data = data[1]
         if data == 404: #If there is error  which can be wrong user
             await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
@@ -256,8 +258,11 @@ class Discourse(): #Discourse, a forums types.
         data_array.append("**Total Badge**: {}".format(data["badge_count"]))
         data_array.append("**View**: {}".format(data["profile_view_count"]))
         data_array.append("**Join**:\n\tDate:{}".format(data["created_at"][:-5].strip().replace("T", " \n\tTime:")))
-        if "bio_raw" in data:
-            data_array.append("**Bio**: \n```\n{}\n```".format(data["bio_raw"]))
+        bio = data.get("bio_raw")
+        if bio:
+            if len(bio) >= 1800:
+                bio = bio[:1800]+"..."
+            data_array.append("**Bio**: \n```\n{}\n```".format(bio))
         await self.bot.say(ctx,content = "\n".join(data_array))
 
     @commands.command(brief="show Logging of discourse",hidden = True)

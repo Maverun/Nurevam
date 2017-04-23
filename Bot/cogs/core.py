@@ -181,6 +181,7 @@ class Core():
                   "\n\nPlease note that the owner will not able to see any message of this before or after.\n" \
                   "To reply back, please use {}reply <message>".format(self.bot.owner,msg,ctx.prefix)
         await user.send(message)
+        await ctx.send(u"\U0001F44C")
 
     @commands.command(hidden = True)
     async def reply(self,ctx,*,msg):
@@ -189,7 +190,7 @@ class Core():
             return await ctx.send("Appear so, reply system is down...")
         embed = discord.Embed()
         embed.set_author(name = ctx.message.author,icon_url=ctx.message.author.avatar_url or ctx.message.author.default_avatar_url)
-        embed.add_field(name = "Author",value = "**ID**:{0.id}".format(ctx.message))
+        embed.add_field(name = "Author",value = "**ID**:{0.author.id}".format(ctx.message))
         embed.add_field(name = "Reply",value = msg,inline=False)
         await channel.send(embed=embed)
         await ctx.send(u"\U0001F44C")

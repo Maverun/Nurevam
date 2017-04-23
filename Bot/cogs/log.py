@@ -15,6 +15,8 @@ class Log():
         self.bot = bot
         self.redis = bot.db.redis
         self.config = {}
+        self.bg_log = utils.Background("log",1)
+        self.bot.background.update({"log":self.bg_log})
         loop = asyncio.get_event_loop()
         self.loop_log_timer = loop.create_task(self.timer())
 
@@ -88,16 +90,18 @@ class Log():
     async def on_message_edit(self,before,after):
         if isinstance(before.channel,discord.TextChannel):
             if self.config.get(after.guild.id):
-                if self.config[after.guild.id].get('edit'):
-                    if before.content != after.content:
-                        # msg = self.format_msg(after.author)
-                        msg = "{}".format(after.channel.mention)
-                        embed = self.format_embed(after.author,"Edited")
-                        embed.description = msg
-                        embed.add_field(name = "Before",value = before.content,inline=False)
-                        embed.add_field(name = "After",value = after.content,inline=False)
-                        # msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-").replace("`","\`"),after.clean_content.replace("\n","\n+").replace("`","\`"))
-                        await self.send(after.guild.id,embed)
+                if self.config[after.guild.id].get('edit') and before.content != after.content:
+                    if after.author.bot and self.config[after.guild.id].get("bot"):
+                        return
+                    before.content = u"\uFFFC" if bool(before.content) is False else before.content
+                    # msg = self.format_msg(after.author)
+                    msg = "{}".format(after.channel.mention)
+                    embed = self.format_embed(after.author,"Edited")
+                    embed.description = msg
+                    embed.add_field(name = "Before",value = before.content,inline=False)
+                    embed.add_field(name = "After",value = after.content,inline=False)
+                    # msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-").replace("`","\`"),after.clean_content.replace("\n","\n+").replace("`","\`"))
+                    await self.send(after.guild.id,embed)
 
     async def on_message_delete(self,msg):
         if isinstance(msg.channel,discord.DMChannel):
@@ -106,6 +110,8 @@ class Log():
             return
         if self.config.get(msg.guild.id):
             if self.config[msg.guild.id].get("delete"):
+                if msg.author.bot and self.config[msg.guild.id].get("bot"):
+                        return
                 message = self.format_msg(msg.author)
                 if msg.attachments:
                     message += "*has deleted attachments*"
@@ -125,16 +131,16 @@ class Log():
                 print(age.seconds)
                 if age.seconds <= 600:
                     embed.colour = 0xdda453
-                    embed.set_footer(text="Account created {0:.2f} min ago".format(age.seconds/60))
+                    embed.set_footer(text="Account created {0:.2f} mins ago".format(age.seconds/60))
                 else:
                     embed.colour = 0x53dda4
                     if age.days >= 1:
-                        embed.set_footer(text = "Account created {0} day ago".format(age.days))
+                        embed.set_footer(text = "Account created {0} days ago".format(age.days))
                     else:
                         if age.seconds >= 3600:
-                            x = "{} hour ago".format(int(age.seconds/3600)) #hours
+                            x = "{} hours ago".format(int(age.seconds/3600)) #hours
                         else:
-                            x = "{} min ago".format(int(age.seconds/60)) #min
+                            x = "{} mins ago".format(int(age.seconds/60)) #min
                         embed.set_footer(text = "Account created {}".format(x))
                 embed.timestamp = datetime.datetime.utcnow()
                 await self.send(member.guild.id,embed)
@@ -143,9 +149,12 @@ class Log():
     async def on_member_remove(self,member):
         if self.config.get(member.guild.id):
             if self.config[member.guild.id].get("left"):
-                msg = self.format_msg(member)
-                msg += "has left the guild "
-                await self.send(member.guild.id,msg)
+                # msg = self.format_msg(member)
+                # msg += "has left the guild "
+                embed = self.format_embed(member,"Left")
+                age = datetime.datetime.utcnow() - member.joined_at
+                embed.set_footer(text = "Was here since {}".format(age))
+                await self.send(member.guild.id,embed)
 
     async def send(self,guild_id,msg):
         channel_id = self.config[guild_id].get("channel")
@@ -170,7 +179,7 @@ class Log():
                     config = await self.redis.hgetall("{}:Log:Config".format(x))
                     self.config.update({int(x):config})
             self.bot.log_config = self.config
-            self.bot.background.update({"log":datetime.datetime.now()})
+            self.bg_log.current = datetime.datetime.utcnow()
             log.debug(self.config)
             await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1 min by miracle
 

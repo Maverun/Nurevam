@@ -1,17 +1,17 @@
 from discord.ext import commands
 from .utils import utils
+import datetime
 import asyncio
 import discord
-import datetime
+import logging
+
+log = logging.getLogger(__name__)
 
 def check_roles(ctx):
     print(ctx)
     if ctx.message.author.id == 105853969175212032:
         return True
-    admin = utils.check_roles(ctx, "Mod", "admin_roles")
-    print(admin)
-    print("uh ok")
-    return admin
+    return utils.check_roles(ctx, "Mod", "admin_roles")
 
 class Mod():
     """
@@ -19,7 +19,18 @@ class Mod():
     """
     def __init__(self, bot):
         self.bot = bot
+        self.redis = bot.db.redis
         self.bot.say_edit = bot.say
+        self.config = {}
+        self.bg_mod = utils.Background("mod",1)
+        self.bot.background.update({"mod":self.bg_mod})
+
+        loop = asyncio.get_event_loop()
+        self.loop_log_timer = loop.create_task(self.timer())
+
+    def __unload(self):
+        self.loop_log_timer.cancel()
+        utils.prLightPurple("Unloading Mod")
 
     def __local_check(self,ctx):
         return utils.is_enable(ctx,"mod")
@@ -188,6 +199,20 @@ class Mod():
         """
         await user.remove_roles(user,*role)
         await self.bot.say(ctx,content = "Remove role from {}".format(user.name))
+
+    async def timer(self):
+        while True:
+            log.debug("Refreshing log info")
+            guild_list = await self.redis.smembers("Info:Mod")
+            for x in guild_list:
+                if await self.redis.hget("{}:Config:Cogs".format(x),"Mod") == "on":
+                    config = await self.redis.hgetall("{}:Mod:Config".format(x))
+                    self.config.update({int(x):config})
+            self.bot.mod_config = self.config
+            self.bg_mod.current = datetime.datetime.utcnow()
+            log.debug(self.config)
+            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1 min by miracle
+
 
 def setup(bot):
     bot.add_cog(Mod(bot))

@@ -318,21 +318,22 @@ class Tools():
 
     async def update_check(self):
         data = self.bot.background
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         info = []
         failed = []
         failed_boolean = False
         for x in data:
-            c = now - data[x]
+            bg = data[x]
+            c = now - bg.current
             time = divmod(c.days * 86400 + c.seconds, 60)
             minutes = time[0]
             second = time[1]
-            if minutes >= 1:
-                if x in self.bot.cogs:
+            if minutes >= bg.max_time:
+                if bg.name.title() in self.bot.cogs:
                     failed.append("-{}: {} min, {} second".format(x, minutes, second))
-                    self.bot.unload_extension("cogs.{}".format(x))
+                    self.bot.unload_extension("cogs.{}".format(bg.name))
                     await asyncio.sleep(2)
-                    self.bot.load_extension("cogs.{}".format(x))
+                    self.bot.load_extension("cogs.{}".format(bg.name))
                     failed_boolean = True
             else:
                 info.append("+{}: {} min, {} second".format(x, minutes, second))
@@ -342,7 +343,6 @@ class Tools():
             await self.bot.owner.send(msg)
         else:
             self.update_info = "\n".join(info)
-
 
     async def update_check_loop(self):
         utils.prPurple("Starting update_check_loop")

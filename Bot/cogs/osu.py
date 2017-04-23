@@ -55,20 +55,21 @@ class Osu:
             results =(await self.api.get_user(name))
             if results:
                 results = results[0]
-                description = "Level: {0.level}, PP: {0.pp_raw}\n" \
-                          "Country:{0.country} #{0.pp_country_rank}\n" \
-                          "Total Play:{0.playcount}\n"\
-                          "Rank Score: {0.ranked_score}\n" \
-                          "Total Score: {0.total_score}\n".format(results)
+                description = "**Level**: {0.level}, **PP**: {0.pp_raw}\n" \
+                          "**Country**: {0.country} #{0.pp_country_rank}\n" \
+                          "**Total Play**: {0.playcount}\n"\
+                          "**Rank Score**: {0.ranked_score}\n" \
+                          "**Total Score**: {0.total_score}\n".format(results)
                 if ctx.message.channel.permissions_for(ctx.message.guild.me).embed_links:
                     embed = discord.Embed()
-                    if user.color:
-                        embed.colour = user.color.value
+                    embed.colour = 0xFF66AA
+                    # if user.color:
+                    #     embed.colour = user.color.value
                     if setting:
                         embed.set_author(name = user,url="https://osu.ppy.sh/u/{}".format(results.user_id),icon_url=user.avatar_url)
 
                     embed.set_thumbnail(url = "https://a.ppy.sh/{}".format(results.user_id))
-                    embed.title = "{0.username}: #{0.pp_rank}".format(results)
+                    embed.title = "**{0.username}: #{0.pp_rank}**".format(results)
                     embed.url ="https://osu.ppy.sh/u/{}".format(results.user_id)
                     embed.description = description
                     await self.bot.say(ctx,embed = embed)

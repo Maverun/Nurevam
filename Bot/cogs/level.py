@@ -29,6 +29,9 @@ class Level:
         self.redis = bot.db.redis
         self.bot.say_edit = bot.say
         self.column = utils.secret["column"] #U mad bro?
+        self.bg_lvl = utils.Background("level",1)
+        self.bot.background.update({"level_reward":self.bg_lvl})
+
         loop = asyncio.get_event_loop()
         self.loop_level_timer = loop.create_task(self.level_reward())
 
@@ -200,7 +203,7 @@ class Level:
             except Exception as e:
                 utils.prRed(e)
                 utils.prRed(traceback.format_exc())
-            self.bot.background.update({"level":datetime.datetime.now()})
+            self.bg_lvl.current = datetime.datetime.utcnow()
             await asyncio.sleep(30)
 
 #########################################################################
