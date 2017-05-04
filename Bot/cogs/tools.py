@@ -272,12 +272,12 @@ class Tools():
         time = self.get_bot_uptime()
         redis_last_save = datetime.datetime.fromtimestamp(await self.redis.lastsave()).strftime("%Y-%m-%d %H:%M:%S")
         redis_info = await self.redis.info()
-        redis_info_msg = "**Uptime Day**:{0[server][uptime_in_days]}\n" \
-                         "**Uptime Second**:{0[server][uptime_in_seconds]}\n" \
-                         "**Total Key**:{0[keyspace][db0][keys]}\n" \
-                         "**Expire Key**:{0[keyspace][db0][expires]}\n" \
-                         "**RAM**:{0[memory][used_memory_human]}\n" \
-                         "**CPU**:{0[cpu][used_cpu_sys]}\n".format(redis_info)
+        redis_info_msg = "**Uptime Day**: {0[server][uptime_in_days]}\n" \
+                         "**Uptime Second**: {0[server][uptime_in_seconds]}\n" \
+                         "**Total Key**: {0[keyspace][db0][keys]}\n" \
+                         "**Expire Key**: {0[keyspace][db0][expires]}\n" \
+                         "**RAM**: {0[memory][used_memory_human]}\n" \
+                         "**CPU**: {0[cpu][used_cpu_sys]}\n".format(redis_info)
 
         embed = discord.Embed()
 

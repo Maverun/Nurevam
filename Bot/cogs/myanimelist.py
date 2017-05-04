@@ -1,6 +1,7 @@
 from discord.ext import commands
 from xml.etree import ElementTree
 from .utils import utils
+import asyncio
 import aiohttp
 import discord
 import html
@@ -101,18 +102,17 @@ class Myanimelist():
             await self.send(ctx,data[0])
         else:  # if there is more than one of data, it will ask user which one do they want
             asking = await ctx.send("```{}```\nWhich number?".format("\n".join(list_data)))
+
             try:
                 answer = await self.bot.wait_for("message",timeout=30, check=lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)
-            except:#timeout error
-                pass
-            try: #we want to clear up those usless so they dont fill up chat
-                await asking.delete() #two different delete, in case one don't have permission.
                 await answer.delete()
-            except:
-                pass
-            if answer is None:
-                return await self.bot.say(ctx,content = "You took too long, try again!")
-            elif int(answer.content) <= len(data): #checking if it below range, so don't split out error
+            except asyncio.TimeoutError:#timeout error
+                await asking.delete()
+                return await self.bot.say(ctx,content = "You took too long, please try again!")
+
+            await asking.delete() #bot delete it own msg.
+
+            if int(answer.content) <= len(data): #checking if it below range, so don't split out error
                 await self.send(ctx,data[int(answer.content) - 1])
             else:
                 return await self.bot.say(ctx,content = "You entered a number that is out of range!")
