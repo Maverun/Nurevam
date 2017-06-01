@@ -41,7 +41,7 @@ class Core():
     @commands.command(hidden=True)
     async def prefix(self,ctx):
         prefix = (await self.redis.get("{}:Config:CMD_Prefix".format(ctx.message.guild.id)))
-        await self.bot.say(ctx,content = "```\n{}\n```".format(prefix))
+        await self.bot.say(ctx,ccontent = "```\n{}\n```".format(prefix))
 
     @commands.command(hidden=True)
     async def info(self,ctx):

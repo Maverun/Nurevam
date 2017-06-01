@@ -38,26 +38,6 @@ class Mod():
     def delete_mine(self,m):
         return m.author.id == self.bot.user.id
 
-    async def on_message(self,msg):
-        if msg.author.id == self.bot.user.id and isinstance(msg.channel,discord.DMChannel):
-            return
-
-        if "discord.gg/" in msg.content:
-            if self.config.get(msg.guild.id) and self.config[msg.guild.id].get("invite"):
-                list_invite = await msg.guild.invites()
-                if len([x for x in list_invite if x.code in msg.content]) is 0:
-                    await msg.channel.send("Invite link are not allowed!")
-
-        # if self.config.get(msg.guild.id) and self.config[msg.guild.id].get("invite"):
-        count = await self.redis.hincrby("{0.guild.id}:Mod:Raid:{0.author.id}".format(msg),msg.content)
-
-        if await self.redis.ttl("{0.guild.id}:Mod:Raid:{0.author.id}".format(msg)) == -1:
-            print("setting expire")
-            await self.redis.expire("{0.guild.id}:Mod:Raid:{0.author.id}".format(msg),10)
-        print(count)
-        if int(count) >= 5:
-            await msg.channel.send("STOP IT!")
-
     async def on_member_join(self,member): #this is only temp patch for friend of mine...
         if member.guild.id == 241901242220150784:
             created = member.created_at
@@ -85,7 +65,7 @@ class Mod():
         Does not affect any user's messages.
         """
         counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
-        await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
+        await self.bot.say(ctx,content = "```py\nClean up message: {}\n```".format(len(counter)))
 
     @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)
@@ -100,7 +80,7 @@ class Mod():
             print(m.author)
             return roles.id in [r.id for r in m.author.roles]
         counter =await ctx.message.channel.purge(limit=limit,check=delete_role)
-        await self.bot.say(ctx, content = "```py\nI cleared {} from person who have role of {}\n```".format(len(counter),roles.name))
+        await self.bot.say(ctx, content = "```py\nClean up message: {} from {}\n```".format(len(counter),roles.name))
 
     @clean.command(brief="Is able to clear a certain user's messages",invoke_without_command=True)
     @commands.check(check_roles)
@@ -113,7 +93,7 @@ class Mod():
         def delete_player(m):
                 return m.author.id == user.id
         counter = await ctx.message.channel.purge(check=delete_player,limit=limit)
-        await self.bot.say(ctx,content = "```py\nI cleared {} posts from {}```".format(len(counter),user.name))
+        await self.bot.say(ctx,content = "```py\nI have clean {} message from {}```".format(len(counter),user.name))
 
     @clean.command(name = "all",brief="Allow to clear all message", invoke_without_command=True)
     @commands.check(check_roles)
@@ -124,7 +104,7 @@ class Mod():
         Allow to clear all message, nothing can stop it.
         """
         counter = await ctx.message.channel.purge(limit =limit)
-        await self.bot.say(ctx,content = "```py\nI cleared {} posts```".format(len(counter)))
+        await self.bot.say(ctx,content = "```py\nI have clean {}```".format(len(counter)))
 
 
 #############################################################
