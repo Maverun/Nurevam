@@ -293,7 +293,7 @@ def profile_level(player_id,server_id):
     level_data =db.hgetall("{}:Level:Player:{}".format(server_id,player_id))
 
     if len(level_data) > 0:
-        level, next_exp = next_Level(level_data["Total_XP"])
+        level, next_exp = next_Level(int(level_data["Total_XP"]))
         level_data.update({"Level":level,"Next_XP":next_exp})
         xp = 100*float(float(level_data["XP"])/float(next_exp))
         level_data.update({"Percents":int(xp)})

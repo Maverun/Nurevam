@@ -125,8 +125,7 @@ class Log():
             if self.config[member.guild.id].get("join"):
                 # msg = self.format_msg(member)
                 # msg += "has joined the guild "
-                embed = discord.Embed()
-                embed.set_author(name = member,icon_url=member.avatar_url or member.default_avatar_url)
+                embed = self.format_embed(member,"Join")
                 age = datetime.datetime.utcnow() - member.created_at
                 print(age.seconds)
                 if age.seconds <= 600:
@@ -142,7 +141,6 @@ class Log():
                         else:
                             x = "{} mins ago".format(int(age.seconds/60)) #min
                         embed.set_footer(text = "Account created {}".format(x))
-                embed.timestamp = datetime.datetime.utcnow()
                 await self.send(member.guild.id,embed)
                 # await self.send(member.guild.id,msg)
 
