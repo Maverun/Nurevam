@@ -165,13 +165,13 @@ class Level:
                     if guild.me.top_role.permissions.manage_roles: #if got Manage roles permission, can grant roles
                         log.debug("Got manage roles permissions")
                         raw_data = await self.redis.hgetall("{}:Level:role_reward".format(guild.id))
-                        raw_member = await self.redis.smembers("{}:Level:Player".format(guild.id))
+                        raw_member = [int(x) for x in await self.redis.smembers("{}:Level:Player".format(guild.id))] #Rewrite, ID Str -> Int
                         guild_roles = guild.roles
                         for member in guild.members:
                             if member.id not in raw_member:
                                 continue
                             member_role = [x.id for x in member.roles]
-                            member_level = self.next_Level(await self.redis.hget("{}:Level:Player:{}".format(guild.id,member.id),"Total_XP"))[0]
+                            member_level = self.next_Level(int(await self.redis.hget("{}:Level:Player:{}".format(guild.id,member.id),"Total_XP")))[0] #return first index, which is level
                             remove_role = []
                             add_role = []
                             for role_id, role_level in raw_data.items():

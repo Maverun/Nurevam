@@ -104,6 +104,9 @@ def generate_csrf_token():
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
 @app.route('/dashboard/<int:server_id>')
+@utils.require_auth
+@utils.require_bot_admin
+@utils.server_check
 def dashboard(server_id):
     log.info("Dashboard currently")
     guilds = utils.get_user_guilds(session['api_token'])
@@ -223,13 +226,13 @@ def debug_token():
 def select_server():
     guild_id = request.args.get('guild_id')
     if guild_id:
+        log.info("Got guild ID, {}".format(guild_id))
         return redirect(url_for('dashboard', server_id=int(guild_id)))
 
     user = utils.get_user(session['api_token'])
     guilds = utils.get_user_guilds(session['api_token'])
-    user_servers = sorted(
-        utils.get_user_managed_servers(user, guilds),
-        key=lambda s: s['name'].lower())
+    user_servers = sorted(utils.get_user_managed_servers(user, guilds),key=lambda s: s['name'].lower())
+    log.info("User servers: {}".format(user_servers))
     return render_template('select-server.html', user=user, user_servers=user_servers)
 
 #Core
