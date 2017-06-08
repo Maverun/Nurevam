@@ -176,6 +176,7 @@ class Level:
                             add_role = []
                             for role_id, role_level in raw_data.items():
                                 role_level = int(role_level)
+                                role_id = int(role_id)
                                 if role_level == 0:
                                     continue
                                 if role_id in member_role:
