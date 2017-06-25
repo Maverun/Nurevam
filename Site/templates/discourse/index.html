@@ -13,6 +13,7 @@
                 {{template.text_box("api_key","API Key","<strong>Enter API Key</strong>",config['api_key'])}}
                 {{template.text_box("username","Username","<strong>Enter the username</strong>",config['username'])}}
                 {{template.channel_list("channel","Channel for posting info",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",discourse_channel)}}
+                {{template.text_box("msg","Message Template","Allow to set custom message, how you want it look like! Note:......", msg_template.replace("'","")[1:])}}
 
                 <div class="well well-sm">
                     <strong>For people who want to have each category for different each channel can click <a href="{{url_for('discourse.category', server_id=server['id'])}}" target="_blank">this</a>

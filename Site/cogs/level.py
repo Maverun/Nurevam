@@ -123,10 +123,10 @@ def update_levels(server_id):
     log.info("Clear")
     return dashboard(server_id = server_id)
 
-def next_Level(xp,lvl=0):
-    f = 2*(lvl**2)+20*(lvl)+100
+def next_Level(xp,lvl=0,x=2):
+    f = 2*(lvl**x)+20*(lvl)+100
     if xp >= f:
-        return next_Level(xp-f,lvl+1)
+        return next_Level(xp-f,lvl+1,x)
     return lvl,xp,f
 
 @blueprint.route('/<int:server_id>')
@@ -143,7 +143,7 @@ def levels(server_id):
     is_private=False
     if db.get("{}:Level:Private".format(server_id)) == "on":
         is_private=True
-    #Check if server and plugins_html are in
+    #Check if server and plugins are in
     server_check = db.hget("Info:Server",server_id)
     if server_check is None:
         return redirect(url_for('index'))
@@ -224,17 +224,13 @@ def server_levels():
                     try:
                         player_total.append(int(db.hget("{}:Level:Player:{}".format(server_id,player_id),"Total_XP")))
                     except:
-
                         continue
+
                 total = sum(player_total)
-                print("{}-{} total xp is {}".format(server_id,server_list[server_id],total))
-                try:
-                    level = int(math.log(total/100,3))
-                except:
-                    level = 0
-                next_xp = int(100*3**(level+1))
-                enable_level.append([server_list[server_id],server_icon.get(server_id),server_id,
-                                     total,next_xp,(100*(float(total)/float(next_xp))),level])
+                level,remain,next_xp = next_Level(total,x = 5)
+                print("{}-{} total xp is {},xp: {} remain is {}".format(server_id,server_list[server_id],total,next_xp,remain))
+                enable_level.append([server_list[server_id],server_icon.get(server_id),server_id,remain,next_xp,(100*(float(remain)/float(next_xp))),level])
+    log.info(enable_level)
     enable_level=sorted(enable_level,key=lambda enable_level:enable_level[4],reverse=True)
     return render_template('level/server_level.html',title="Server Leaderboard",server_list=enable_level)
 

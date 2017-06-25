@@ -55,6 +55,10 @@ class Discourse(): #Discourse, a forums types.
         #Two replace, one with https and one with http...
         # utils.prCyan("Under get_data, {}".format(link))
         try:
+            if await self.redis.get("{}:Discourse:Temp_off".format(guild)) is True:
+                log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
+                return False,410 #410 so it can return counter back by one.
+
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
             with aiohttp.ClientSession() as discourse:
@@ -64,6 +68,7 @@ class Discourse(): #Discourse, a forums types.
                         return True,await resp.json()
                     else:
                         return False,resp.status
+
         except asyncio.CancelledError: #Just in case here for some reason
             utils.prRed("Under get_data function")
             utils.prRed("Asyncio Cancelled Error")
@@ -71,7 +76,9 @@ class Discourse(): #Discourse, a forums types.
         except:
             utils.prRed("Under get_data function, server: {}".format(guild))
             utils.prRed(traceback.format_exc())
-            return False,None
+            await self.redis.set("{}:Discourse:Temp_off".format(guild),domain,expire = 1800 )
+            #30 min ignore this, in case site is down for a while or under maintenance (sorry for those who might have to wait for 30 min),
+            return False,410 #410 cuz it failed to take data, so we should return counter back by one
 
     async def new_post(self,guild_id):
         log.debug(guild_id)
@@ -85,8 +92,8 @@ class Discourse(): #Discourse, a forums types.
         id_post = await self.redis.get("{}:Discourse:ID".format(guild_id))
         log.debug(id_post)
         if not(id_post):
-            log.debug("ID post is missing")
-            return
+            return log.debug("ID post is missing")
+
         id_post = int(id_post)
         counter = 0
         error_404 = 0
@@ -133,6 +140,7 @@ class Discourse(): #Discourse, a forums types.
                 await channel_send.send("\n".join(values))
                 utils.prLightPurple("\n".join(values))
             await self.redis.set("{}:Discourse:ID".format(guild_id),id_post+counter)
+        log.debug("Finish checking {}".format(guild_id))
 
     async def timer(self):
         self.bot.id_discourse += 1

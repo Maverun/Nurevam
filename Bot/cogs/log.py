@@ -140,18 +140,16 @@ class Log():
                             x = "{} hours ago".format(int(age.seconds/3600)) #hours
                         else:
                             x = "{} mins ago".format(int(age.seconds/60)) #min
-                        embed.set_footer(text = "Account created {}".format(x))
+                        embed.set_footer(text = "Account created {} | {} members".format(x,member.guild.member_count))
                 await self.send(member.guild.id,embed)
                 # await self.send(member.guild.id,msg)
 
     async def on_member_remove(self,member):
         if self.config.get(member.guild.id):
             if self.config[member.guild.id].get("left"):
-                # msg = self.format_msg(member)
-                # msg += "has left the guild "
                 embed = self.format_embed(member,"Left")
                 age = datetime.datetime.utcnow() - member.joined_at
-                embed.set_footer(text = "Was here since {}".format(age))
+                embed.set_footer(text = "Was here since {} | {} member".format(age,member.guild.member_count))
                 await self.send(member.guild.id,embed)
 
     async def send(self,guild_id,msg):

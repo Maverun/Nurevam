@@ -178,6 +178,9 @@ class Events:
                 log = logging.getLogger("cogs.{}".format(cog))
                 if check == True:
                     log.setLevel(logging.INFO)
+                    with open("bot_log.txt","r+") as f:
+                        msg = await utils.send_hastebin(f.read())
+                        await ctx.send(content = msg)
                 else:
                     log.setLevel(logging.DEBUG)
                 self.debug_cog[cog] = not(check)
@@ -188,7 +191,10 @@ class Events:
                 format_log = logging.Formatter('%(asctime)s:\t%(levelname)s:\t%(name)s:\tFunction:%(funcName)s ||| MSG: %(message)s')
                 console = logging.StreamHandler()
                 console.setFormatter(format_log)
+                handler = logging.FileHandler(filename='bot_log.txt', encoding='utf-8', mode='w')
+                handler.setFormatter(format_log)
                 log.addHandler(console)
+                log.addHandler(handler)
                 self.debug_cog[cog] = True
                 await ctx.send("Set to True")
         else:
@@ -198,5 +204,3 @@ class Events:
 
 def setup(bot):
     bot.add_cog(Events(bot))
-
-

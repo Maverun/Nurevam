@@ -337,7 +337,7 @@ class Level:
         player = ctx.message.author
 
         theme_setting = None
-        #cache it there early, so we dont have to repeat it called when user want to go to next current_page
+        #cache it there early, so we don't have to repeat it called when user want to go to next current_page
         #if there is guild, then it is not global
         if guild:
             log.debug("Guild requests")

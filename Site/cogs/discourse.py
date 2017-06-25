@@ -2,6 +2,7 @@ from flask import Blueprint, render_template,request, flash,redirect,url_for
 import requests
 import logging
 import utils
+import sys
 
 log = logging.getLogger("Nurevam.site")
 
@@ -33,9 +34,16 @@ def dashboard(server_id):
         discourse_channel = server_id
     else:
         discourse_channel = config['channel']
+
+    if config.get("msg",False) is False:
+        msg = "{title}\t\tAuthor: {author}\n{link}"
+    else:
+        msg = config["msg"]
+
     return {
         'guild_channel': channel,
         "discourse_channel": discourse_channel,
+        "msg_template":str(msg.encode()),
         'config': config
         }
 
@@ -47,13 +55,16 @@ def update_discourse(server_id):
     api_key = request.form.get('api_key')
     username = request.form.get('username')
     channel = request.form.get('channel')
-    if len(domain) == 0 or len(api_key) == 0 or len(username) == 0:
+    msg_template = request.form.get("msg")
+
+    if len(domain) == 0 or len(api_key) == 0 or len(username) == 0 or len(msg_template) == 0:
         flash("One of them need to be filled!", 'warning')
     else:
         db.hset("{}:Discourse:Config".format(server_id), "domain", domain.strip("/"))
         db.hset("{}:Discourse:Config".format(server_id), "api_key", api_key)
         db.hset("{}:Discourse:Config".format(server_id), "username", username)
         db.hset("{}:Discourse:Config".format(server_id), "channel", channel)
+        db.hset("{}:Discourse:Config".format(server_id), "msg", msg_template)
         currently_topic = discourse(domain, api_key, username)
         if currently_topic is None:
             flash("There seem to be problem, please double check with domain,api key or username", 'warning')
@@ -80,7 +91,9 @@ def category(server_id):
         return dashboard(server_id = server_id)
 
     guild_channel = utils.get_channel(server_id)
+    log.info(guild_channel)
     default = [x["name"] for x in guild_channel if x["id"] == default][0]
+    log.info("default show {}".format(default))
     server = {
         'id':server_id,
         'name':db.hget("Info:Server",server_id),
