@@ -123,7 +123,7 @@ class Discourse(): #Discourse, a forums types.
                         data[get_post["category_id"]] = []
                     #custom msg
                     msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"], link = link,title =html_unscape(get_post["fancy_title"]))
-                    data[get_post["category_id"]].append(msg_template)
+                    data[get_post["category_id"]].append(str(msg_template))
         if data:
             log.debug("Got a data to post to channel")
             raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
