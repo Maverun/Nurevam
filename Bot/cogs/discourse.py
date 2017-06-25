@@ -121,7 +121,9 @@ class Discourse(): #Discourse, a forums types.
                     check_exist = data.get(get_post["category_id"])
                     if check_exist is None:
                         data[get_post["category_id"]] = []
-                    data[get_post["category_id"]].append("{2}\t\tAuthor: {0[details][created_by][username]}\n{1}".format(get_post,link,html_unscape(get_post["fancy_title"])))
+                    #custom msg
+                    msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"], link = link,title =html_unscape(get_post["fancy_title"]))
+                    data[get_post["category_id"]].append(msg_template)
         if data:
             log.debug("Got a data to post to channel")
             raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
