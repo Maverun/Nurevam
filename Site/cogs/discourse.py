@@ -43,7 +43,7 @@ def dashboard(server_id):
     return {
         'guild_channel': channel,
         "discourse_channel": discourse_channel,
-        "msg_template":str(msg.encode()),
+        "msg_template":str(msg.encode()).replace("\\\\","\\"),
         'config': config
         }
 
