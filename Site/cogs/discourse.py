@@ -77,8 +77,12 @@ def update_discourse(server_id):
 @utils.plugin_method
 def category(server_id):
     log.info("Category page require for discourse")
-    domain =  db.hget("{}:Discourse:Config".format(server_id), "domain")
-    default = db.hget("{}:Discourse:Config".format(server_id), "channel")
+    config = db.hgetall("{}:Discourse:Config".format(server_id))
+    domain = config["domain"]
+    default = config["channel"]
+    api_key = config["api_key"]
+    username = config["username"]
+
     channel = db.hgetall("{}:Discourse:Category".format(server_id))
     log.info("The channel is {}".format(channel))
     if domain is None:
@@ -99,7 +103,7 @@ def category(server_id):
         'name':db.hget("Info:Server",server_id),
         'icon':db.hget("Info:Server_Icon",server_id)}
 
-    r = requests.get("{}/categories.json".format(domain))
+    r = requests.get("{}/categories.json?api_key={}&api_username={}".format(domain,api_key,username))
     raw_data = r.json()["category_list"]["categories"]
     data = []
     for x in raw_data: #checking subcategory and category
