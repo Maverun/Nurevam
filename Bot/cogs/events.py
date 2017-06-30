@@ -141,7 +141,7 @@ class Events:
             for page in pages:
                 await ctx.send(page.replace("\n","fix\n",1))
 
-    async def on_command_error(self,error,ctx):
+    async def on_command_error(self,ctx,error):
         if self.bot.user.id == 181503794532581376 or self.error_log:
             print(error)
         if isinstance(error, commands.MissingRequiredArgument):
@@ -178,6 +178,7 @@ class Events:
                 log = logging.getLogger("cogs.{}".format(cog))
                 if check == True:
                     log.setLevel(logging.INFO)
+                    utils.prPurple("Getting info to paste into hastebin")
                     with open("bot_log.txt","r+") as f:
                         msg = await utils.send_hastebin(f.read())
                         await ctx.send(content = msg)

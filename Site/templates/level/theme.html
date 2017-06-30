@@ -27,9 +27,18 @@
                         </label>
                 </div>
 
-            <img src="data:image/png;base64,{{ pic_show }}" alt="Ehum something wrong..."/>
             <div class="well well-sm">
-                Please note this, This is just an example picture, size will be vary depends on name and other.
+                Custom color setting, enter RGB/RGBA format(e.g 255,255,255 )
+            </div>
+
+                {{template.text_box("col_border","Border color","",color.get("border","255,255,255,96"))}}
+                {{template.text_box("col_row","Row/Column color","",color.get("row","255,255,255,48"))}}
+                {{template.text_box("col_outlier","Text outlier color","",color.get("outlier","255,255,255"))}}
+                {{template.text_box("col_text","Text color","",color.get("text","0,0,0"))}}
+
+            <img src="data:image/png;base64,{{ pic_show }}" alt="Ehum something went wrong..."/>
+            <div class="well well-sm">
+                Please note this, This is just an example picture, size will be vary depends on name and other info. To have a best look, please active command in discord, where it will actually display name, level etc.
             </div>
 
             <button type="submit" class="btn btn-primary">Update</button>

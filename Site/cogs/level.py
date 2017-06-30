@@ -4,7 +4,6 @@ import requests
 import logging
 import base64
 import utils
-import math
 import io
 import os
 
@@ -320,6 +319,14 @@ def theme(server_id):
         'icon':db.hget("Info:Server_Icon",server_id)}
 
     setting = db.hgetall("{}:Level:pic_setting".format(server_id))
+    color_setting = db.hgetall("{}:Level:color".format(server_id))
+
+    #setting color setting
+    border = tuple((int(x) for x in color_setting.get("border",("255,255,255,96")).split(",")))
+    row = tuple((int(x) for x in color_setting.get("row",("255,255,255,48")).split(",")))
+    text = tuple((int(x) for x in color_setting.get("text",("255,255,255")).split(",")))
+    outlier = tuple((int(x) for x in color_setting.get("outlier",("0,0,0")).split(",")))
+
 
     if bool(setting)is False:
         setting = {"border":"on","row":"on","blur":None}
@@ -397,11 +404,11 @@ def theme(server_id):
                     wdth, hght = draw.textsize(txt, font=fnt)
                     w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
 
-            draw.text((w - 1, h), txt, font=font,fill="black")
-            draw.text((w + 1, h), txt, font=font,fill="black")
-            draw.text((w, h - 1), txt, font=font,fill="black")
-            draw.text((w, h + 1), txt, font=font,fill="black")
-            draw.text((w, h), txt, font=font) #White
+            draw.text((w - 1, h), txt, font=font,fill=outlier)
+            draw.text((w + 1, h), txt, font=font,fill=outlier)
+            draw.text((w, h - 1), txt, font=font,fill=outlier)
+            draw.text((w, h + 1), txt, font=font,fill=outlier)
+            draw.text((w, h), txt, font=font,fill=text) #main text
     del draw
     #making pic crop
 
@@ -412,20 +419,20 @@ def theme(server_id):
 
     if setting.get("border") == "on":
         #border area
-        draw.line((5, 5, 5, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
-        draw.line((5, 5, img.size[0] - 5, 5), fill=(255, 255, 255, 96), width=2)
-        draw.line((5, img.size[1] - 5, img.size[0] - 4, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
-        draw.line((img.size[0] - 5, 5, img.size[0] - 5, img.size[1] - 5), fill=(255, 255, 255, 96), width=2)
+        draw.line((5, 5, 5, img.size[1] - 5), fill=border, width=2)
+        draw.line((5, 5, img.size[0] - 5, 5), fill=border, width=2)
+        draw.line((5, img.size[1] - 5, img.size[0] - 4, img.size[1] - 5), fill=border, width=2)
+        draw.line((img.size[0] - 5, 5, img.size[0] - 5, img.size[1] - 5), fill=border, width=2)
     if setting.get("row") == "on":
         #row/column lines
         for i in range(1, len(m)):
-            draw.line((int(5 + sum(m[:i]) + 8 * i), 7, int(5 + sum(m[:i]) + 8 * i), img.size[1] - 5),fill=(255, 255, 255, 48), width=1)
+            draw.line((int(5 + sum(m[:i]) + 8 * i), 7, int(5 + sum(m[:i]) + 8 * i), img.size[1] - 5),fill=row, width=1)
 
         for i in range(1, len(raw_data)):
             if i == 1:
-                draw.line((7, 7 + 18 * i + 2, img.size[0] - 5, 7 + 18 * i + 2), fill=(255, 255, 255, 48), width=2)
+                draw.line((7, 7 + 18 * i + 2, img.size[0] - 5, 7 + 18 * i + 2), fill=row, width=2)
             else:
-                draw.line((7, 7 + 18 * i + 7, img.size[0] - 5, 7 + 18 * i + 7), fill=(255, 255, 255, 48), width=1)
+                draw.line((7, 7 + 18 * i + 7, img.size[0] - 5, 7 + 18 * i + 7), fill=row, width=1)
         del draw
 
 
@@ -434,7 +441,7 @@ def theme(server_id):
     fp.seek(0)
     byes_pic = base64.b64encode(fp.read()).decode() #magic trick to make it like "str"....?
 
-    return render_template("level/theme.html",pic = pic_link,pic_show = byes_pic,enable = enable, server=server,setting=setting)
+    return render_template("level/theme.html",pic = pic_link,pic_show = byes_pic,enable = enable, server=server,setting=setting,color=color_setting)
 
 @blueprint.route('/update/theme/<int:server_id>', methods=['POST'])
 @utils.plugin_method
@@ -445,6 +452,10 @@ def update_theme(server_id):
     border = request.form.get("border")
     row = request.form.get("row")
     blur = request.form.get("blur")
+    col_border = request.form.get("col_border")
+    col_row = request.form.get("col_row")
+    col_outlier = request.form.get("col_outlier")
+    col_text = request.form.get("col_text")
     print(border)
     print(row)
     if pic != "":
@@ -456,6 +467,12 @@ def update_theme(server_id):
         db.hset("{}:Level:pic_setting".format(server_id),"border",border)
         db.hset("{}:Level:pic_setting".format(server_id),"row",row)
         db.hset("{}:Level:pic_setting".format(server_id),"blur",blur)
+
+        db.hset("{}:Level:color".format(server_id),"border",col_border)
+        db.hset("{}:Level:color".format(server_id),"row",col_row)
+        db.hset("{}:Level:color".format(server_id),"outlier",col_outlier)
+        db.hset("{}:Level:color".format(server_id),"text",col_text)
+
         if enable is None:
             db.delete("{}:Level:pic".format(server_id))
         else:

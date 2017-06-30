@@ -103,14 +103,14 @@ def category(server_id):
         'name':db.hget("Info:Server",server_id),
         'icon':db.hget("Info:Server_Icon",server_id)}
 
-    r = requests.get("{}/categories.json?api_key={}&api_username={}".format(domain,api_key,username))
-    raw_data = r.json()["category_list"]["categories"]
+    r = requests.get("{}/site.json?api_key={}&api_username={}".format(domain,api_key,username))
+    raw_data = r.json()["categories"]
     data = []
     for x in raw_data: #checking subcategory and category
         category_id = str(x['id'])
-        sub_id_list = x.get("subcategory_ids")
-        if sub_id_list:
-            category_id += "," + ",".join(str(x) for x in sub_id_list)
+        # sub_id_list = x.get("subcategory_ids")
+        # if sub_id_list:
+        #     category_id += "," + ",".join(str(x) for x in sub_id_list)
         data.append({"id":category_id,"name":x["name"]})
     return render_template("category.html",default_channel = default,category = data,guild_channel = guild_channel,cate_channel=channel,server=server)
 

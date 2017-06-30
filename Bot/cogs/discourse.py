@@ -123,16 +123,18 @@ class Discourse(): #Discourse, a forums types.
                         data[get_post["category_id"]] = []
                     #custom msg
                     msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"], link = link,title =html_unscape(get_post["fancy_title"]))
-                    data[get_post["category_id"]].append(str(msg_template))
+                    msg_template = msg_template.replace("\\t","\t").replace("\\n","\n") #a bad fix...
+                    data[get_post["category_id"]].append(msg_template)
         if data:
             log.debug("Got a data to post to channel")
             raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
             for key,values in data.items():
                 log.debug("{} and {}".format(key,values))
-                channel = config["channel"]
-                for x in raw_channel:
-                    if str(key) in x.split(","): #since category ID are in this way 1,34,53 as str
-                        channel = raw_channel[x]
+                # channel = config["channel"]
+                # for x in raw_channel:
+                #     if str(key) in x.split(","): #since category ID are in this way 1,34,53 as str
+                #         channel = raw_channel[x]
+                channel = raw_channel.get(key,config["channel"])
                 if channel == "0":
                     channel = config["channel"]
                 channel_send = self.bot.get_channel(int(channel))
