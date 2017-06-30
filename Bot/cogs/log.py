@@ -62,7 +62,7 @@ class Log():
         update.save(fp,format='PNG')
         fp.seek(0)
         dest = self.bot.get_channel(int(self.config[after.guild.id]["channel"]))
-        await dest.send(file = fp,filename="Pic.png",content="{} **change avatar**".format(self.format_msg(after)))
+        await dest.send(discord.File(fp,filename="Pic.png"),content="{} **change avatar**".format(self.format_msg(after)))
 
     async def on_member_update(self,before,after):
         if self.config.get(after.guild.id):
