@@ -29,7 +29,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                         time = None
 
                     if config.get("whisper") == "on":
-                         member.send(msg,delete_after = time)
+                         await member.send(msg,delete_after = time)
                     else:
                         await self.bot.get_channel(int(config["channel"])).send(msg,delete_after = time)
 
