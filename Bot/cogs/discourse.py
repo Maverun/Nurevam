@@ -57,8 +57,8 @@ class Discourse(): #Discourse, a forums types.
         try:
             if await self.redis.get("{}:Discourse:Temp_off".format(guild)) is True:
                 log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
-                return False,410 #410 so it can return counter back by one.
-
+                utils.prRed("Site is temp ignore for while, GUILD ID: {}".format(guild))
+                return False,None #None might be best for this?
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
             with aiohttp.ClientSession() as discourse:
@@ -78,7 +78,7 @@ class Discourse(): #Discourse, a forums types.
             utils.prRed(traceback.format_exc())
             await self.redis.set("{}:Discourse:Temp_off".format(guild),domain,expire = 1800 )
             #30 min ignore this, in case site is down for a while or under maintenance (sorry for those who might have to wait for 30 min),
-            return False,410 #410 cuz it failed to take data, so we should return counter back by one
+            return False,None #None might be best for this? I hope...
 
     async def new_post(self,guild_id):
         log.debug(guild_id)
@@ -134,7 +134,7 @@ class Discourse(): #Discourse, a forums types.
                 # for x in raw_channel:
                 #     if str(key) in x.split(","): #since category ID are in this way 1,34,53 as str
                 #         channel = raw_channel[x]
-                channel = raw_channel.get(key,config["channel"])
+                channel = raw_channel.get(str(key),config["channel"])
                 if channel == "0":
                     channel = config["channel"]
                 channel_send = self.bot.get_channel(int(channel))
