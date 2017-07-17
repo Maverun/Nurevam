@@ -62,6 +62,10 @@ class Log():
         update.save(fp,format='PNG')
         fp.seek(0)
         dest = self.bot.get_channel(int(self.config[after.guild.id]["channel"]))
+
+        if dest is None:
+            return log.debug("Channel is not found")
+
         await dest.send(file = discord.File(fp,filename="Pic.png"),content="{} **change avatar**".format(self.format_msg(after)))
 
     async def on_member_update(self,before,after):

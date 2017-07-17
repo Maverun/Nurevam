@@ -329,7 +329,7 @@ def theme(server_id):
 
 
     if bool(setting)is False:
-        setting = {"border":"on","row":"on","blur":None}
+        setting = {"border":"on","row":"on","outlier":"on","blur":None}
 
 
     pic_link = db.hget("{}:Level:Config".format(server_id),"pic")
@@ -404,10 +404,12 @@ def theme(server_id):
                     wdth, hght = draw.textsize(txt, font=fnt)
                     w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
 
-            draw.text((w - 1, h), txt, font=font,fill=outlier)
-            draw.text((w + 1, h), txt, font=font,fill=outlier)
-            draw.text((w, h - 1), txt, font=font,fill=outlier)
-            draw.text((w, h + 1), txt, font=font,fill=outlier)
+            if setting.get("outlier") == "on": #outlier options
+                draw.text((w - 1, h), txt, font=font,fill=outlier)
+                draw.text((w + 1, h), txt, font=font,fill=outlier)
+                draw.text((w, h - 1), txt, font=font,fill=outlier)
+                draw.text((w, h + 1), txt, font=font,fill=outlier)
+
             draw.text((w, h), txt, font=font,fill=text) #main text
     del draw
     #making pic crop
@@ -446,38 +448,49 @@ def theme(server_id):
 @blueprint.route('/update/theme/<int:server_id>', methods=['POST'])
 @utils.plugin_method
 def update_theme(server_id):
-    print(dict(request.form))
     enable = request.form.get("enable")
     pic = request.form.get("pic_link")
+
+    #custom choices
     border = request.form.get("border")
     row = request.form.get("row")
     blur = request.form.get("blur")
+    outlier = request.form.get("outlier")
+
+    #color
     col_border = request.form.get("col_border")
     col_row = request.form.get("col_row")
     col_outlier = request.form.get("col_outlier")
     col_text = request.form.get("col_text")
-    print(border)
-    print(row)
+
+
+
     if pic != "":
         status = utils.check_link(pic)
     else:
         status = 0
     if status == 0:  # if is true
         db.hset("{}:Level:Config".format(server_id),"pic",pic)
+
         db.hset("{}:Level:pic_setting".format(server_id),"border",border)
         db.hset("{}:Level:pic_setting".format(server_id),"row",row)
+        db.hset("{}:Level:pic_setting".format(server_id),"outlier",outlier)
         db.hset("{}:Level:pic_setting".format(server_id),"blur",blur)
 
-        db.hset("{}:Level:color".format(server_id),"border",col_border)
-        db.hset("{}:Level:color".format(server_id),"row",col_row)
-        db.hset("{}:Level:color".format(server_id),"outlier",col_outlier)
-        db.hset("{}:Level:color".format(server_id),"text",col_text)
-
+        if not "" in (col_border,col_row,col_outlier,col_text):
+            db.hset("{}:Level:color".format(server_id),"border",col_border)
+            db.hset("{}:Level:color".format(server_id),"row",col_row)
+            db.hset("{}:Level:color".format(server_id),"outlier",col_outlier)
+            db.hset("{}:Level:color".format(server_id),"text",col_text)
+        else:
+            flash("You cannot have blank in color! Please click option above it for not having them","warning")
+            return redirect(url_for("level.theme",server_id = server_id))
         if enable is None:
             db.delete("{}:Level:pic".format(server_id))
         else:
             db.set("{}:Level:pic".format(server_id),enable)
         flash("Successfully add!","success")
+
     return redirect(url_for("level.theme",server_id = server_id))
 
 @blueprint.route('/css/<int:server_id>')

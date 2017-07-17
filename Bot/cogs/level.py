@@ -549,10 +549,11 @@ class Level:
                         wdth, hght = draw.textsize(txt, font=fnt)
                         w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
 
-                draw.text((w - 1, h), txt, font=font,fill=outlier)
-                draw.text((w + 1, h), txt, font=font,fill=outlier)
-                draw.text((w, h - 1), txt, font=font,fill=outlier)
-                draw.text((w, h + 1), txt, font=font,fill=outlier)
+                if setting.get("outlier") == "on": # Text Outline
+                    draw.text((w - 1, h), txt, font=font,fill=outlier)
+                    draw.text((w + 1, h), txt, font=font,fill=outlier)
+                    draw.text((w, h - 1), txt, font=font,fill=outlier)
+                    draw.text((w, h + 1), txt, font=font,fill=outlier)
                 draw.text((w, h), txt, font=font,fill = text) #The main text
         del draw
         #making pic crop
