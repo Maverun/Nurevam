@@ -106,13 +106,27 @@ def category(server_id):
     r = requests.get("{}/site.json?api_key={}&api_username={}".format(domain,api_key,username))
     raw_data = r.json()["categories"]
     data = []
+    sub_temp = {}
     for x in raw_data: #checking subcategory and category
-        category_id = str(x['id'])
-        # sub_id_list = x.get("subcategory_ids")
-        # if sub_id_list:
-        #     category_id += "," + ",".join(str(x) for x in sub_id_list)
-        data.append({"id":category_id,"name":x["name"]})
-    return render_template("category.html",default_channel = default,category = data,guild_channel = guild_channel,cate_channel=channel,server=server)
+        category_id = x['id']
+        have_sub = x.get("parent_category_id")
+        if have_sub: #if it have sub, we should append to them
+            sub = sub_temp.get(have_sub)
+            if sub:
+                sub.append({"id":category_id,"name":x["name"]})
+            else:
+                sub_temp.update({have_sub:[{"id":category_id,"name":x["name"],"sub":"true"}]})
+            continue
+        data.append({"id":category_id,"name":x["name"],"sub":"false"})
+    fresh_data = []
+    for x in data:
+        fresh_data.append(x)
+        sub = sub_temp.get(x["id"])
+        if sub:
+            for x in sub:
+                fresh_data.append(x)
+    log.debug(fresh_data)
+    return render_template("category.html",default_channel = default,category = fresh_data,guild_channel = guild_channel,cate_channel=channel,server=server)
 
 @blueprint.route('/category/update/<int:server_id>', methods=['POST'])
 @utils.plugin_method
