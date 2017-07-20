@@ -130,15 +130,9 @@ def next_Level(xp,lvl=0,x=2):
 
 @blueprint.route('/<int:server_id>')
 def levels(server_id):
-    is_admin = False
+    is_admin = utils.is_admin(server_id)
     css_theme  = "css/custom/{}.css".format(server_id) if os.path.isfile("static/css/custom/{}.css".format(server_id)) else None
     print(css_theme)
-
-    if utils.session.get('api_token'):
-        user_servers = utils.get_user_managed_servers(
-            utils.get_user(utils.session['api_token']),
-            utils.get_user_guilds(utils.session['api_token']))
-        is_admin = str(server_id) in list(map(lambda s:s['id'], user_servers))
     is_private=False
     if db.get("{}:Level:Private".format(server_id)) == "on":
         is_private=True

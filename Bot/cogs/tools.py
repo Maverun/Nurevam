@@ -191,15 +191,18 @@ class Tools():
     async def list_guild(self,ctx):
         info = [r.name for r in self.bot.guilds]
         char_name = [str(r.owner) for r in self.bot.guilds]
+        data = ""
         for guild in self.bot.guilds:
             name = str(guild)
             guild_id = str(guild.id)
             owner = str(guild.owner)
             total =  guild.member_count
-            print("Server: {0:<{first}}[{1}]\tOwner: {2:<{second}}\t Member Count: {3}".format(name,guild_id,owner,total,
+            data += "Server: {0:<{first}}[{1}]\tOwner: {2:<{second}}\t Member Count: {3}".format(name,guild_id,owner,total,
                                                                                                first=len(max(info,key=len)),
-                                                                                               second = len(max(char_name,key=len))))
-
+                                                                                               second = len(max(char_name,key=len)))
+        data = utils.send_hastebin(data)
+        await ctx.send(data)
+        
     @owner.command()
     @commands.check(utils.is_owner)
     async def upgrade(self,ctx):
@@ -209,20 +212,6 @@ class Tools():
         repo = git.cmd.Git("../")
         result = repo.pull()
         await ctx.send("```\n{}\n```".format(result))
-
-    @owner.command()
-    @commands.check(utils.is_owner)
-    async def update(self,ctx):
-        data = self.bot.background
-        now  = datetime.datetime.now()
-        info = []
-        for x in data:
-            c = now - data[x]
-            time = divmod(c.days * 86400 + c.seconds,60)
-            minutes = time[0]
-            second = time[1]
-            info.append("{}: {} min, {} second".format(x,minutes,second))
-        await self.bot.say("```xl\n{}\n```".format("\n".join(info)))
 
     @owner.group(invoke_without_command = True)
     @commands.check(utils.is_owner)

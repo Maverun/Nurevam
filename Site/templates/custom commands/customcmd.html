@@ -1,0 +1,130 @@
+{% extends 'full-page.html' %}
+{% block content %}
+<div class="jumbotron home-jumbotron">
+    <div class="container">
+        <div class="row">
+            {% set csrf = csrf_token() %}
+            <form id="add_form" method="post" action="{{url_for('customcmd.add_customcmd',cog="customcmd",server_id=server_id)}}">
+                {% include 'flash.html' %}
+                <h2>Custom Command creator</h2>
+                    <div class="well well-sm">
+                        <h6>Enter name and contents</h6></h6>
+                        <h6>Brief are for explanations in help (!help etc)</h6>
+                        <h6>Exist command that Nurevam have in will not add(meaning as that you can create command in here but won't be used in discord)</h6>
+                        <br>
+                        <h6>You can make it even more custom on discord, such as calling someone name</h6>
+                        <h6>{cmduser} is name of person who issue commands</h6>
+                        <h6>{cmdmention} is mention of person who issue commands</h6>
+                        <h6>{user} are name of person who have been mention with commands</h6>
+                        <h6>{mention} are mention of person who have been mention with commands</h6>
+                        <h6>{msg} msg after command</h6>
+                        <br>
+                        <h6>For example,content is "hey {mention}, {cmduser} would like to greet you with this msg: {msg}"</h6>
+                        <h6>maverun:!welcome @Cookie hope you will enjoy!</h6>
+                        <h6>>hey @cookie, maverun would like to greet you with this msg: hope you will enjoy! </h6>
+                        <br>
+                        <h6>Once you update, please wait for 1-2 minutes, it will take time for Nurevam update for discord</h6>
+                    </div>
+                    <div class="well well-sm">
+                        You have {{current}}/{{max_use}}, you can't create command more than {{max_use}}
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <input name=_csrf_token type=hidden value="{{ csrf }}">
+                            <label class="control-label" for="cmd_name">Name</label>
+                            <input class="form-control input-lg" name="cmd_name" value=""
+                            type="text"
+                            id="cmd_name">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <input name=_csrf_token type=hidden value="{{ csrf }}">
+                            <label class="control-label" for="cmd_content">Content</label>
+                            <input class="form-control input-lg" name="cmd_content" value=""
+                            type="text"
+                            id="cmd_content">
+                        </div>
+                    <div class="form-group">
+                        <input name=_csrf_token type=hidden value="{{ csrf }}">
+                        <label class="control-label" for="cmd_brief">Brief</label>
+                        <input class="form-control input-lg" name="cmd_brief" value="" type="text" id="cmd_brief" maxlength="63">
+                    </div>
+                        <div class="well well-sm">
+                            Max character are 63. This is to explain what is this command in (!help) command
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <a href="#" id="add" class="btn btn-success btn-lg" style = "margin-bottom: -96px;"><i class="fa fa-pencil"></i> Add</a>
+                    </div>
+            </form>
+        </div>
+        <hr>
+        {% if data_customcmd %}
+        <h2>Edit Commands</h2>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="list-group">
+                    {% for customcmd in data_customcmd %}
+                    <form id="edit_form" method="post" action="{{url_for('customcmd.edit_customcmd', server_id=server_id, name = customcmd) }}">
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                    <label class="control-label" for="cmd_name">Name</label>
+                                    <input class="form-control input-lg" name="cmd_name" value="{{customcmd}}"
+                                    type="text"
+                                    id="{{customcmd}}">
+                                </div>
+                                {% if cmd_owner != "none" %}
+                                    <h6>Creator:{{cmd_owner[customcmd]}}</h6>
+                                {%endif%}
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                    <label class="control-label" for="cmd_content">Content</label>
+                                    <input class="form-control input-lg" name="cmd_content" value="{{data_customcmd[customcmd]}}"
+                                    type="text"
+                                    id="{{data_customcmd[customcmd]}}">
+                                </div>
+                                <div class="form-group">
+                                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                                    <label class="control-label" for="cmd_brief">Brief</label>
+                                    <input class="form-control input-lg" name="cmd_brief" value="{{data_brief[customcmd]}}" type="text" id="{{data_brief[customcmd]}}" maxlength="63">
+                                </div>
+                                    <div class="well well-sm">
+                                        Max character are 63. This is to explain what is this command in (!help) command
+                                    </div>
+
+                            </div>
+
+                            <div class="col-md-2">
+                                    <a href="#" id="edit" class="btn btn-success btn"><i class="fa fa-pencil"></i> Update</a>
+                                    <a href="{{url_for('customcmd.delete_customcmd', server_id=server_id, name = customcmd)}}"
+                                       class="btn btn-danger btn" style="margin-top: 10px;padding-right: 20px;" ><i class="fa fa-trash"></i> Delete </a>
+                            </div>
+                        </div>
+                    </div>
+                        </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<script>
+    $('#add').click(function(){
+        $('#add_form').submit();
+    })
+    $('#edit').click(function(){
+        $('#edit_form').submit();
+    })
+</script>
+
+{% endblock %}

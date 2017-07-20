@@ -70,7 +70,7 @@ def edit_memes(server_id, name):
         db.hset("{}:Memes:link".format(server_id), new_name, link)
         db.sadd("{}:Memes:name".format(server_id), new_name)
         flash("Update data!", "success")
-    return redirect(url_for("memes", server_id=server_id, cog="memes"))
+    return redirect(url_for("memes.memes", server_id=server_id, cog="memes"))
 
 
 @blueprint.route('/delete/<int:server_id>/<string:name>/', methods=['GET'])
@@ -79,5 +79,5 @@ def delete_memes(server_id, name):
     # Deleting data
     db.hdel("{}:Memes:link".format(server_id), name)
     db.srem("{}:Memes:name".format(server_id), name)
-    return redirect(url_for("memes", server_id=server_id, cog="Memes"))
+    return redirect(url_for("memes.memes", server_id=server_id, cog="Memes"))
 

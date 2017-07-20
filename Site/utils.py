@@ -239,3 +239,10 @@ def check_link(link):
             return 1  # to say it is not support yet for gif... some day?
     flash("This type of files does not support!", "warning")
     return 2  # return False
+
+def is_admin(server_id):
+    if session.get('api_token'):
+        user_servers = get_user_managed_servers(get_user(session['api_token']),
+            get_user_guilds(session['api_token']))
+        return str(server_id) in list(map(lambda s:s['id'], user_servers))
+    return False

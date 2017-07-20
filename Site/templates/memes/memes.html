@@ -42,7 +42,7 @@
             <div class="col-md-12">
                 <div class="list-group">
                     {% for memes in data_memes %}
-                    <form id="edit_form" method="post" action="{{url_for('memes.update_memes', server_id=server_id, name = memes) }}">
+                    <form id="edit_form" method="post" action="{{url_for('memes.edit_memes', server_id=server_id, name = memes) }}">
                     <div class="list-group-item">
                         <div class="row">
                             <div class="col-md-4">
