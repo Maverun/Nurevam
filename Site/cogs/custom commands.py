@@ -145,9 +145,9 @@ def add_customcmd(cog, server_id):
     return redirect(url_for("customcmd.customcmd", server_id=server_id, cog="customcmd"))
 
 
-@blueprint.route('/update/<int:server_id>/<string:name>', methods=['POST'])
+@blueprint.route('/update/<string:cog>/<int:server_id>/<string:name>', methods=['POST'])
 @utils.require_role
-def edit_customcmd(server_id, name):
+def edit_customcmd(cog,server_id, name):
     new_name = request.form.get("cmd_name")
     content = request.form.get("cmd_content")
     brief = request.form.get("cmd_brief")
@@ -169,9 +169,9 @@ def edit_customcmd(server_id, name):
     return redirect(url_for("customcmd.customcmd", server_id=server_id, cog="customcmd"))
 
 
-@blueprint.route('/delete/<int:server_id>/<string:name>/', methods=['GET'])
+@blueprint.route('/delete/<string:cog>/<int:server_id>/<string:name>/', methods=['GET'])
 @utils.require_role
-def delete_customcmd(server_id, name):
+def delete_customcmd(cog,server_id, name):
     # Deleting data
     db.hdel("{}:Customcmd:content".format(server_id), name)
     db.hdel("{}:Customcmd:brief".format(server_id), name)

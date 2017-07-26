@@ -68,7 +68,7 @@
             <div class="col-md-12">
                 <div class="list-group">
                     {% for customcmd in data_customcmd %}
-                    <form id="edit_form" method="post" action="{{url_for('customcmd.edit_customcmd', server_id=server_id, name = customcmd) }}">
+                    <form id="edit_form" method="post" action="{{url_for('customcmd.edit_customcmd',cog="customcmd", server_id=server_id, name=customcmd)}}">
                     <div class="list-group-item">
                         <div class="row">
                             <div class="col-md-4">
@@ -104,8 +104,9 @@
                             </div>
 
                             <div class="col-md-2">
+                                    <br>
                                     <a href="#" id="edit" class="btn btn-success btn"><i class="fa fa-pencil"></i> Update</a>
-                                    <a href="{{url_for('customcmd.delete_customcmd', server_id=server_id, name = customcmd)}}"
+                                    <a href="{{url_for('customcmd.delete_customcmd',cog="customcmd",server_id=server_id,name=customcmd)}}"
                                        class="btn btn-danger btn" style="margin-top: 10px;padding-right: 20px;" ><i class="fa fa-trash"></i> Delete </a>
                             </div>
                         </div>
