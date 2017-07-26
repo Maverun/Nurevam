@@ -111,7 +111,7 @@ def customcmd(cog, server_id):
                 brief[cmd] = customcmd_brief[cmd]
         owner = "none"
     return render_template("customcmd.html", data_customcmd=content,data_brief = brief,
-                           server_id=server_id,max_use = use,current =  current_use,cmd_owner = owner)
+                           server_id=server_id,max_use = use,current =  current_use,cmd_owner = owner, cog = "customcmd")
 
 
 @blueprint.route('/add/<string:cog>/<int:server_id>/', methods=['POST'])

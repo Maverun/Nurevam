@@ -202,7 +202,7 @@ class Tools():
                                                                                                second = len(max(char_name,key=len)))
         data = utils.send_hastebin(data)
         await ctx.send(data)
-        
+
     @owner.command()
     @commands.check(utils.is_owner)
     async def upgrade(self,ctx):
