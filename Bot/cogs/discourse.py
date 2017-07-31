@@ -55,7 +55,7 @@ class Discourse(): #Discourse, a forums types.
         #Two replace, one with https and one with http...
         # utils.prCyan("Under get_data, {}".format(link))
         try:
-            if await self.redis.get("{}:Discourse:Temp_off".format(guild)) is True:
+            if await self.redis.get("{}:Discourse:Temp_off".format(guild)):
                 log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
                 utils.prRed("Site is temp ignore for while, GUILD ID: {}".format(guild))
                 return False,None #None might be best for this?
