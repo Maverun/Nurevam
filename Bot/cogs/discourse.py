@@ -57,7 +57,6 @@ class Discourse(): #Discourse, a forums types.
         try:
             if await self.redis.get("{}:Discourse:Temp_off".format(guild)):
                 log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
-                utils.prRed("Site is temp ignore for while, GUILD ID: {}".format(guild))
                 return False,None #None might be best for this?
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
