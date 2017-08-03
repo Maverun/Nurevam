@@ -109,7 +109,8 @@ class Myanimelist():
             except asyncio.TimeoutError:#timeout error
                 await asking.delete()
                 return await self.bot.say(ctx,content = "You took too long, please try again!")
-
+            except:
+                pass
             await asking.delete() #bot delete it own msg.
 
             if int(answer.content) <= len(data): #checking if it below range, so don't split out error
