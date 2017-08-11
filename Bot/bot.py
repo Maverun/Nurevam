@@ -51,7 +51,7 @@ async def command_checker(msg):
             bot.pm_help = False
             return
 
-        cmd_prefix= (await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id)))
+        cmd_prefix= await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id))
         cmd_prefix= cmd_prefix.split(",")
         if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevent any spam in case, lower chance of getting kick heh.
             return

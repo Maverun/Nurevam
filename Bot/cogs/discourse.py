@@ -129,10 +129,6 @@ class Discourse(): #Discourse, a forums types.
             raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
             for key,values in data.items():
                 log.debug("{} and {}".format(key,values))
-                # channel = config["channel"]
-                # for x in raw_channel:
-                #     if str(key) in x.split(","): #since category ID are in this way 1,34,53 as str
-                #         channel = raw_channel[x]
                 channel = raw_channel.get(str(key),config["channel"])
                 if channel == "0":
                     channel = config["channel"]
@@ -140,7 +136,11 @@ class Discourse(): #Discourse, a forums types.
                 if channel_send is None:
                     log.debug("Channel is not found, {}".format(channel))
                     continue
-                await channel_send.send("\n".join(values))
+                if len("\n".join(values)) > 2000:
+                    for msg in values:
+                        await channel_send.send(msg)
+                else:
+                    await channel_send.send("\n".join(values))
                 utils.prLightPurple("\n".join(values))
             await self.redis.set("{}:Discourse:ID".format(guild_id),id_post+counter)
         log.debug("Finish checking {}".format(guild_id))
@@ -159,8 +159,9 @@ class Discourse(): #Discourse, a forums types.
                     counter_loops = 0
                 if self.bot.id_discourse != id_count:  # if it don't match, it will return
                     return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
-                self.bg_dis.current = datetime.datetime.utcnow()
                 for guild in list(self.bot.guilds):
+                    log.debug("Checking guild {}".format(repr(guild)))
+                    self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
                     await self.new_post(guild.id)
                 counter_loops += 1
                 log.debug("Sleeping...")
