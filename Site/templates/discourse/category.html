@@ -11,7 +11,7 @@
                 <input name=_csrf_token type=hidden value="{{ csrf }}">
                 <h3>Category</h3>
                 <div class="well well-sm">
-                    <strong>Note</strong> Make sure Nurevam are enable to speak on that channel, Default channel mean Nurevam will only send that category to <strong>{{default_channel}}</strong>
+                    <strong>Note</strong> Make sure Nurevam are enable to speak on that channel, Default channel mean Nurevam will only send that category to <strong>#{{default_channel}}</strong>.<br> <strong>None</strong> mean do not send any thread from this category to discord.
                 </div>
                 <table class="table table-striped table-hover">
                     <thead>
@@ -31,11 +31,13 @@
                             <td>
                                 <select name="{{cate_data.id}}" class="form-control input-xs">
                                     <option value="0">Default</option>
+                                    <option value="-1" {%if "-1" == cate_channel[cate_data.id] %} selected{%endif%}>None</option>
                                     {% for channel in guild_channel %}
                                         <option value="{{channel.id}}" {%if channel.id==cate_channel[cate_data.id] %} selected{%endif%}>
                                             #{{channel.name}}
                                         </option>
                                     {% endfor %}
+
                                 </select>
                             </td>
                         </tr>

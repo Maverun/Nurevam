@@ -132,6 +132,8 @@ class Discourse(): #Discourse, a forums types.
                 channel = raw_channel.get(str(key),config["channel"])
                 if channel == "0":
                     channel = config["channel"]
+                elif channel == "-1": #None
+                    continue
                 channel_send = self.bot.get_channel(int(channel))
                 if channel_send is None:
                     log.debug("Channel is not found, {}".format(channel))
