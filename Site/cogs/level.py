@@ -20,7 +20,7 @@ db = None  #Database
 def dashboard(server_id):
     log.info("Level dashboard")
     key_path = '{}:Level:Config'.format(server_id)
-    initial_announcement = '{player}, you just advanced to **level {level}** !\n Now go and fight more mob!'
+    initial_announcement = '{player}, you just advanced to **level {level}** !\n Now go and fight more mobs!'
     announcement = db.hget(key_path,"announce_message")
     if announcement is None:
         db.hset(key_path,"announce_message", initial_announcement)
