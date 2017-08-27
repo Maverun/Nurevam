@@ -52,7 +52,7 @@ def update_profile(): #Update a setting.
         flash(warning_msg.format(",".join(warning_list)), 'warning')
     else:
         flash('Settings updated!', 'success')
-    return redirect(url_for('profile'))
+    return redirect(url_for('profile.profile'))
 
 def status_site(site):
     r = requests.get(site)
