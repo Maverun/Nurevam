@@ -51,27 +51,28 @@ class Discourse(): #Discourse, a forums types.
         self.log_error[guild_id] = {"status":status,"link":link,"id":thread_id,"time":datetime.datetime.now()}
 
     async def get_update_id(self,guild_id):
-        if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is not None:
-            try:
-                config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
-                with aiohttp.ClientSession() as request:
-                    async with request.get(config["domain"]+"/latest.json?api_key={}&api_username={}".format(config["api_key"],config["username"])) as resp:
-                        if resp.status == 200:
-                            files = await resp.json()
-                            number =[]
-                            for x in files["topic_list"]["topics"]:
-                                number.append(x["id"])
-                            lastest_id = max(number)
-                            current_id = await self.redis.get("{}:Discourse:ID".format(guild_id))
-                            if current_id < lastest_id: #if it not really up to dated.
-                                utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
-                                await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
-                            elif current_id == lastest_id:
-                                utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
-                            else:
-                                utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
-            except:
-                pass
+        if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
+            return
+        try:
+            config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
+            with aiohttp.ClientSession() as request:
+                async with request.get(config["domain"]+"/latest.json?api_key={}&api_username={}".format(config["api_key"],config["username"])) as resp:
+                    if resp.status == 200:
+                        files = await resp.json()
+                        number =[]
+                        for x in files["topic_list"]["topics"]:
+                            number.append(x["id"])
+                        lastest_id = max(number)
+                        current_id = await self.redis.get("{}:Discourse:ID".format(guild_id))
+                        if current_id < lastest_id: #if it not really up to dated.
+                            utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
+                            await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
+                        elif current_id == lastest_id:
+                            utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
+                        else:
+                            utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
+        except:
+            pass
 
 
     async def get_data(self,link,api,username,domain,guild=None):
@@ -181,6 +182,7 @@ class Discourse(): #Discourse, a forums types.
                 log.debug("Back to start loops {}".format(counter_loops))
                 if counter_loops == 30:
                     self.counter += 1
+                    utils.prRed("updating ID for discourse")
                     for guild in list(self.bot.guilds):
                         await self.get_update_id(guild.id)
                     utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
