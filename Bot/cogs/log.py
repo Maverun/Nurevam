@@ -174,6 +174,7 @@ class Log():
             if await self.redis.hget("{}:Config:Cogs".format(x),"log") == "on":
                 config = await self.redis.hgetall("{}:Log:Config".format(x))
                 self.config.update({int(x):config})
+                self.bot.log_config = self.config
         return
 
 def setup(bot):
