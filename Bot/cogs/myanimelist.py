@@ -209,7 +209,7 @@ class Myanimelist():
         elif _type == "manga":
             await self.check_username(ctx,name,"mangalist")
         else:
-            await self.bot.say(ctx,"Please double check what you typed, it is **anime** or **manga**")
+            await self.bot.say(ctx,content = "Please double check what you typed, it is **anime** or **manga**")
 
 
 

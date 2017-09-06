@@ -15,14 +15,12 @@ class Log():
         self.bot = bot
         self.redis = bot.db.redis
         self.config = {}
-        self.bg_log = utils.Background("log",1)
-        self.bot.background.update({"log":self.bg_log})
-        loop = asyncio.get_event_loop()
-        self.loop_log_timer = loop.create_task(self.timer())
+        self.bg = utils.Background("log",80,60,self.bg_event,log)
+        self.bot.background.update({"log":self.bg})
+        self.bg.start()
 
     def __unload(self):
-        self.loop_log_timer.cancel()
-        utils.prLightPurple("Unloading Log")
+        self.bg.stop()
 
     def time(self):
         return datetime.datetime.utcnow().strftime("%H:%M:%S")
@@ -170,19 +168,13 @@ class Log():
         except:
             pass
 
-    async def timer(self):
-        while True:
-            log.debug("Refreshing log info")
-            guild_list = await self.redis.smembers("Info:Log")
-            for x in guild_list:
-                if await self.redis.hget("{}:Config:Cogs".format(x),"log") == "on":
-                    config = await self.redis.hgetall("{}:Log:Config".format(x))
-                    self.config.update({int(x):config})
-            self.bot.log_config = self.config
-            self.bg_log.current = datetime.datetime.utcnow()
-            log.debug(self.config)
-            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1 min by miracle
-
+    async def bg_event(self):
+        guild_list = await self.redis.smembers("Info:Log")
+        for x in guild_list:
+            if await self.redis.hget("{}:Config:Cogs".format(x),"log") == "on":
+                config = await self.redis.hgetall("{}:Log:Config".format(x))
+                self.config.update({int(x):config})
+        return
 
 def setup(bot):
     bot.add_cog(Log(bot))

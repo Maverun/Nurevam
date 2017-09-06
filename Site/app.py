@@ -13,8 +13,18 @@ import utils
 import json
 import os
 
+
+if platform.system() == "Windows": #due to different path for linux and window
+    path = "secret.json"
+else:
+    path = "/home/mave/Nurevam/secret.json"
+
+#read files and save it to secret
+with open (path,"r") as f:
+    secret = json.load(f)
+
 #Getting database connected
-Redis= os.environ.get('Redis')
+Redis= secret["Redis"]
 db = redis.Redis(host=Redis,decode_responses=True, db = 0)
 #Getting Flask
 app = Flask(__name__)
@@ -35,14 +45,6 @@ console.setFormatter(format_log)
 log.addHandler(handler)
 log.addHandler(console)
 
-if platform.system() == "Windows": #due to different path for linux and window
-    path = "secret.json"
-else:
-    path = "/home/mave/Nurevam/secret.json"
-
-#read files and save it to secret
-with open (path,"r") as f:
-    secret = json.load(f)
 
 class Data_info(): #dirty way.
     pass

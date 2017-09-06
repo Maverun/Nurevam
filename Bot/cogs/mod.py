@@ -8,7 +8,6 @@ import logging
 log = logging.getLogger(__name__)
 
 def check_roles(ctx):
-    print(ctx)
     if ctx.message.author.id == 105853969175212032:
         return True
     return utils.check_roles(ctx, "Mod", "admin_roles")
@@ -21,32 +20,12 @@ class Mod():
         self.bot = bot
         self.redis = bot.db.redis
         self.bot.say_edit = bot.say
-        self.config = {}
-        self.bg_mod = utils.Background("mod",1)
-        self.bot.background.update({"mod":self.bg_mod})
-
-        loop = asyncio.get_event_loop()
-        self.loop_log_timer = loop.create_task(self.timer())
-
-    def __unload(self):
-        self.loop_log_timer.cancel()
-        utils.prLightPurple("Unloading Mod")
 
     def __local_check(self,ctx):
         return utils.is_enable(ctx,"mod")
 
     def delete_mine(self,m):
         return m.author.id == self.bot.user.id
-
-    async def on_member_join(self,member): #this is only temp patch for friend of mine...
-        if member.guild.id == 241901242220150784:
-            created = member.created_at
-            current = datetime.datetime.utcnow()
-            age = current - created
-            print(age)
-            if int(age.total_seconds()) <= 600:
-                print("Yes ban this one")
-                await member.ban()
 
 #########################################
 #     _____   _                         #
@@ -65,7 +44,7 @@ class Mod():
         Does not affect any user's messages.
         """
         counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
-        await self.bot.say(ctx,content = "```py\nClean up message: {}\n```".format(len(counter)))
+        await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
 
     @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)
@@ -75,12 +54,11 @@ class Mod():
         <prefix> role <the role> <optional, number of messages, default: 100>
         Is able to clear messages of all users who have this role.
         """
-        print("over here")
         def delete_role(m):
             print(m.author)
             return roles.id in [r.id for r in m.author.roles]
         counter =await ctx.message.channel.purge(limit=limit,check=delete_role)
-        await self.bot.say(ctx, content = "```py\nClean up message: {} from {}\n```".format(len(counter),roles.name))
+        await self.bot.say(ctx, content = "```py\nI cleared {} from person who have role of {}\n```".format(len(counter),roles.name))
 
     @clean.command(brief="Is able to clear a certain user's messages",invoke_without_command=True)
     @commands.check(check_roles)
@@ -93,7 +71,7 @@ class Mod():
         def delete_player(m):
                 return m.author.id == user.id
         counter = await ctx.message.channel.purge(check=delete_player,limit=limit)
-        await self.bot.say(ctx,content = "```py\nI have clean {} message from {}```".format(len(counter),user.name))
+        await self.bot.say(ctx,content = "```py\nI cleared {} posts from {}```".format(len(counter),user.name))
 
     @clean.command(name = "all",brief="Allow to clear all message", invoke_without_command=True)
     @commands.check(check_roles)
@@ -104,7 +82,7 @@ class Mod():
         Allow to clear all message, nothing can stop it.
         """
         counter = await ctx.message.channel.purge(limit =limit)
-        await self.bot.say(ctx,content = "```py\nI have clean {}```".format(len(counter)))
+        await self.bot.say(ctx,content = "```py\nI cleared {} posts```".format(len(counter)))
 
 
 #############################################################
@@ -115,42 +93,56 @@ class Mod():
 #   | . \  | | | (__  |   <   / /    | |_) | | (_| | | | | |#
 #   |_|\_\ |_|  \___| |_|\_\ /_/     |____/   \__,_| |_| |_|#
 #############################################################
+    def format_reason(self,ctx,reason):
+        if reason is None:
+            reason = "Request by {}".format(ctx.message.author)
+        else:
+            reason += " Request by {}".format(ctx.message.author)
+        return reason
+
+
+    @commands.command()
+    async def xd(self,ctx,user:discord.Member,*,reason:str = None):
+        if reason is None:
+            reason = "Request by {}".format(ctx.message.author)
+        else:
+            reason += " Request by {}".format(ctx.message.author)
+        await self.bot.say(ctx,content = "{} and {}".format(user,reason))
 
     @commands.command(brief="Is able to kick a user")
     @commands.check(check_roles)
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self,ctx,user:discord.Member):
+    async def kick(self,ctx,user:discord.Member,*,reason:str = None):
         """
         <prefix> kick <user name>
-
         Mentioning is a faster way to get the user.
         Is able to kick a user from guild.
         """
-        await ctx.message.guild.kick(user)
+        await ctx.message.guild.kick(user,reason = self.format_reason(ctx,reason))
         await self.bot.say(ctx,content = "I have kicked {}".format(user.name))
 
     @commands.command(brief="Is able to ban a user")
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
-    async def ban(self,ctx,user:discord.Member,*,day : int = 1):
+    async def ban(self,ctx,user:discord.Member,*,reason:str = None):
         """
         <prefix> ban <user name> <optional, number of passed days, for which the user's messages are deleted, default 1>
         Mentioning is a faster way to get the user.
         Is able to ban a user from the guild, default number of passed days, for which messages are deleted, is 1.
         """
-        await ctx.message.guild.ban(user,delete_message_days=day)
-        await self.bot.say(ctx,content = "I have banned  {}".format(user.name))
+        await ctx.message.guild.ban(user,reason = self.format_reason(ctx,reason))
+        await self.bot.say(ctx,content = "I have banned {}".format(user.name))
 
     @commands.command(brief="Is able to softban a user which is equal to kicking him and deleting his messages")
     @commands.check(check_roles)
     @commands.bot_has_permissions( ban_members=True)
-    async def softban(self,ctx,user:discord.Member,*,day : int = 1):
+    async def softban(self,ctx,user:discord.Member,*,reason:str = None):
         """
         <prefix> softban <user name> <optional, number of passed days, for which the messages are deleted, default is 1>
         This is just kicking + deleting messages,
         Is able to kick a user and delete his messages.
         """
-        await ctx.message.guild.ban(user,delete_message_days = day)
+        await ctx.message.guild.ban(user,reason = self.format_reason(ctx,reason))
         await ctx.message.guild.unban(user)
         await self.bot.say(ctx,content = "I have softbanned {}".format(user.name))
 
@@ -185,7 +177,7 @@ class Mod():
         Is able to add a role to a member, this is useful for people who are on phone.
         You can also add multiple roles to a member at the same time.
         """
-        await user.add_roles(user,*role)
+        await user.add_roles(user,*role,reason = "Request by {}".format(ctx.message.author))
         await self.bot.say(ctx,content = "Added a role to {}".format(user.name))
 
     @_role.command(brief="Is able to remove a role from a user")
@@ -197,21 +189,8 @@ class Mod():
         Is able to remove a role from a member, this is useful for people who are on phone.
         You can also remove multiple roles from a member at the same time.
         """
-        await user.remove_roles(user,*role)
+        await user.remove_roles(user,*role,reason ="Request by {}".format(ctx.message.author))
         await self.bot.say(ctx,content = "Remove role from {}".format(user.name))
-
-    async def timer(self):
-        while True:
-            log.debug("Refreshing log info")
-            guild_list = await self.redis.smembers("Info:Mod")
-            for x in guild_list:
-                if await self.redis.hget("{}:Config:Cogs".format(x),"Mod") == "on":
-                    config = await self.redis.hgetall("{}:Mod:Config".format(x))
-                    self.config.update({int(x):config})
-            self.bot.mod_config = self.config
-            self.bg_mod.current = datetime.datetime.utcnow()
-            log.debug(self.config)
-            await asyncio.sleep(50) #50 instead of 60, so auto checker background don't get 1 min by miracle
 
 
 def setup(bot):

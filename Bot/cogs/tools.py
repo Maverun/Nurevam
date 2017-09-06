@@ -274,7 +274,7 @@ class Tools():
         embed.add_field(name = "Server",value = str(len(self.bot.guilds)))
         embed.add_field(name = "Member", value = "{} unique\n{} non-unique".format(len(self.bot.users),len(list(self.bot.get_all_members()))))
         embed.add_field(name = "RAM/CPU", value = "{} MiB\n{}%".format(ram,cpu))
-        embed.add_field(name = "Command use", value= "**Total**: {}\n**Current**: {}".format(num_total_use,num_temp_total_use))
+        embed.add_field(name = "Command used", value= "**Total**: {}\n**Current**: {}".format(num_total_use,num_temp_total_use))
         embed.add_field(name = "Redis last save",value=redis_last_save)
         embed.add_field(name = "Redis Info",value = redis_info_msg)
         await ctx.send(embed = embed)
@@ -317,7 +317,7 @@ class Tools():
             time = divmod(c.days * 86400 + c.seconds, 60)
             minutes = time[0]
             second = time[1]
-            if minutes >= bg.max_time:
+            if c.seconds >= bg.max_time:
                 if bg.name.title() in self.bot.cogs:
                     failed.append("-{}: {} min, {} second".format(x, minutes, second))
                     self.bot.unload_extension("cogs.{}".format(bg.name))

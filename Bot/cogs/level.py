@@ -30,15 +30,12 @@ class Level:
         self.redis = bot.db.redis
         self.bot.say_edit = bot.say
         self.column = utils.secret["column"] #U mad bro?
-        self.bg_lvl = utils.Background("level",1)
-        self.bot.background.update({"level_reward":self.bg_lvl})
-
-        loop = asyncio.get_event_loop()
-        self.loop_level_timer = loop.create_task(self.level_reward())
+        self.bg = utils.Background("level",60,30,self.level_reward,log)
+        self.bot.background.update({"level_reward":self.bg})
+        self.bg.start()
 
     def __unload(self):
-        self.loop_level_timer.cancel()
-        utils.prLightPurple("Unloading Level")
+        self.bg.stop()
 
     def __local_check(self,ctx):
         return utils.is_enable(ctx,"level")
@@ -155,58 +152,55 @@ class Level:
         return lvl,xp,f
 
     async def level_reward(self):
-        while True:
-            try:
-                for guild in list(self.bot.guilds):
-                    log.debug(guild)
-                    if await self.redis.hget("{}:Config:Cogs".format(guild.id),"level") in (None,"off"):
-                        log.debug("level reward disable")
-                        continue
+        try:
+            for guild in list(self.bot.guilds):
+                log.debug(guild)
+                if await self.redis.hget("{}:Config:Cogs".format(guild.id),"level") in (None,"off"):
+                    log.debug("level reward disable")
+                    continue
 
-                    if guild.me.top_role.permissions.manage_roles: #if got Manage roles permission, can grant roles
-                        log.debug("Got manage roles permissions")
-                        raw_data = await self.redis.hgetall("{}:Level:role_reward".format(guild.id))
-                        raw_member = [int(x) for x in await self.redis.smembers("{}:Level:Player".format(guild.id))] #Rewrite, ID Str -> Int
-                        guild_roles = guild.roles
-                        for member in guild.members:
-                            if member.id not in raw_member:
+                if guild.me.top_role.permissions.manage_roles: #if got Manage roles permission, can grant roles
+                    log.debug("Got manage roles permissions")
+                    raw_data = await self.redis.hgetall("{}:Level:role_reward".format(guild.id))
+                    raw_member = [int(x) for x in await self.redis.smembers("{}:Level:Player".format(guild.id))] #Rewrite, ID Str -> Int
+                    guild_roles = guild.roles
+                    for member in guild.members:
+                        if member.id not in raw_member:
+                            continue
+                        member_role = [x.id for x in member.roles]
+                        member_level = self.next_Level(int(await self.redis.hget("{}:Level:Player:{}".format(guild.id,member.id),"Total_XP")))[0] #return first index, which is level
+                        remove_role = []
+                        add_role = []
+                        for role_id, role_level in raw_data.items():
+                            role_level = int(role_level)
+                            role_id = int(role_id)
+                            if role_level == 0:
                                 continue
-                            member_role = [x.id for x in member.roles]
-                            member_level = self.next_Level(int(await self.redis.hget("{}:Level:Player:{}".format(guild.id,member.id),"Total_XP")))[0] #return first index, which is level
-                            remove_role = []
-                            add_role = []
-                            for role_id, role_level in raw_data.items():
-                                role_level = int(role_level)
-                                role_id = int(role_id)
-                                if role_level == 0:
-                                    continue
-                                if role_id in member_role:
-                                    if role_level > member_level:#if change role, and no more grant for that, remove it
-                                        log.debug("role_level is bigger than member_level")
-                                        remove_role.append([x for x in guild_roles if x.id == role_id][0])
-                                elif role_id not in member_role:
-                                    if member_level >= role_level:
-                                        log.debug("role_level is less than member_level, so adding it")
-                                        add_role.append([x for x in guild_roles if x.id == role_id][0])
-                            if remove_role or add_role:
-                                log.debug(member)
-                                log.debug("checking if nure can add roles to member")
-                                if guild.me.top_role > member.top_role:
-                                    if remove_role:
-                                        log.debug("removing it")
-                                        await member.remove_roles(*remove_role)
-                                        await asyncio.sleep(1)
-                                    elif add_role:
-                                        log.debug("adding it")
-                                        await member.add_roles(*add_role)
+                            if role_id in member_role:
+                                if role_level > member_level:#if change role, and no more grant for that, remove it
+                                    log.debug("role_level is bigger than member_level")
+                                    remove_role.append([x for x in guild_roles if x.id == role_id][0])
+                            elif role_id not in member_role:
+                                if member_level >= role_level:
+                                    log.debug("role_level is less than member_level, so adding it")
+                                    add_role.append([x for x in guild_roles if x.id == role_id][0])
+                        if remove_role or add_role:
+                            log.debug(member)
+                            log.debug("checking if nure can add roles to member")
+                            if guild.me.top_role > member.top_role:
+                                if remove_role:
+                                    log.debug("removing it")
+                                    await member.remove_roles(*remove_role, reason = "Unable to meet Role level condition requirement , current level:{}".format(member_level))
+                                    await asyncio.sleep(1)
+                                elif add_role:
+                                    log.debug("adding it")
+                                    await member.add_roles(*add_role,reason = "Role reward for reaching level {}".format(member_level))
 
-            except asyncio.CancelledError:
-                return utils.prRed("Asyncio Cancelled Error")
-            except Exception as e:
-                utils.prRed(e)
-                utils.prRed(traceback.format_exc())
-            self.bg_lvl.current = datetime.datetime.utcnow()
-            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            return utils.prRed("Asyncio Cancelled Error")
+        except Exception as e:
+            utils.prRed(e)
+            utils.prRed(traceback.format_exc())
 
 #########################################################################
 #     _____                                                       _     #

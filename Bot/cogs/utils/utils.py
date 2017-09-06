@@ -2,6 +2,7 @@ import redis as rdb
 import datetime
 import platform
 import aiohttp
+import asyncio
 import json
 
 #############Color for Terminal###############################
@@ -66,6 +67,29 @@ class Background:
 
     current = datetime.datetime.utcnow() #datetime obj
 
-    def __init__(self,name,max_time):
+    def __init__(self,name,max_time,sleep_time,function,log):
         self.name = name
         self.max_time = max_time
+        self.sleep_time = sleep_time
+        self.function = function #function to call
+        self.log = log
+        self.current = datetime.datetime.utcnow()
+
+    def start(self): #to start function run
+        loop = asyncio.get_event_loop()
+        self.loop_timer = loop.create_task(self.timer())
+        prLightPurple("Starting {} loop".format(self.name))
+
+    def stop(self):
+        self.loop_timer.cancel()
+        prLightPurple("Stopping {} loop".format(self.name))
+
+
+    async def timer(self):
+        while True:
+            self.current = datetime.datetime.utcnow()
+            self.log.debug(self.current)
+            self.log.debug("Calling event")
+            await self.function()
+            self.log.debug("Enter sleep mode")
+            await asyncio.sleep(self.sleep_time)

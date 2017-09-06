@@ -78,7 +78,10 @@ class CustomCmd(commands.Command):
             log.debug("checking conditions, {} , {}".format(ctx.command.name,server.id))
             get_entry = self._entries.get(server.id)
             if get_entry: #to make brief for that server, totally hacky way?
-                ctx.bot.get_command(get_entry.name).brief = get_entry.brief
+                try:
+                    ctx.bot.get_command(get_entry.name).brief = get_entry.brief or ""
+                except: #if user didn't enter brief in.
+                    pass
             return bool(get_entry)
 
 
@@ -90,55 +93,48 @@ class Custom_Commands():
         self.bot = bot
         self.redis = bot.db.redis
         self.object = None
-        self.bg_cmd = utils.Background("customcmd",1)
-        self.bot.background.update({"customcmd":self.bg_cmd})
-        loop = asyncio.get_event_loop()
-        self.loop_log_timer = loop.create_task(self.timer())
+        self.starter = True
+        self.bg = utils.Background("customcmd",60,50,self.timer,log)
+        self.bot.background.update({"customcmd":self.bg})
+        self.bg.start()
 
     def __unload(self):
-        self.loop_log_timer.cancel()
-        utils.prLightPurple("Unloading Custom Command")
+        self.bg.stop()
 
     def __local_check(self,ctx):
         return utils.is_enable(ctx,"custom commands")
 
     async def timer(self):
-        starter = True
-        while True:
-            log.debug("Starting timer")
-            try:
-                for guild in list(self.bot.guilds):
-                    log.debug(guild)
-                    if await self.redis.hget("{}:Config:Cogs".format(guild.id),"custom commands") == "on":
-                        list_name = await self.redis.smembers("{}:Customcmd:update_delete".format(guild.id))
-                        log.debug(list_name)
-                        if list_name:
-                            for name in list_name: #if it edit or delete, either way remove them, we will do fresh update
-                                cmd = self.bot.get_command(name)
-                                print(cmd)
-                                if cmd:
-                                    cmd._entries.pop(guild.id)
-                            await self.redis.delete("{}:Customcmd:update_delete".format(guild.id))
-                        if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or starter: #Which mean there is update
-                            log.debug("adding commands")
-                            starter = False
-                            cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
-                            cmd_brief = await self.redis.hgetall("{}:Customcmd:brief".format(guild.id))
-                            for name,content in cmd_content.items():
-                                log.debug("name {} : content: {}".format(name,content))
-                                brief = cmd_brief[name]
-                                entry = CreateCustom(name=name.lower(), content=content, brief = brief,guild_id=guild.id)
-                                self.create_command(entry)
-                            await self.redis.delete("{}:Customcmd:update".format(guild.id))
+        try:
+            for guild in list(self.bot.guilds):
+                log.debug(guild)
+                if await self.redis.hget("{}:Config:Cogs".format(guild.id),"custom commands") == "on":
+                    list_name = await self.redis.smembers("{}:Customcmd:update_delete".format(guild.id))
+                    log.debug(list_name)
+                    if list_name:
+                        for name in list_name: #if it edit or delete, either way remove them, we will do fresh update
+                            cmd = self.bot.get_command(name)
+                            print(cmd)
+                            if cmd:
+                                cmd._entries.pop(guild.id)
+                        await self.redis.delete("{}:Customcmd:update_delete".format(guild.id))
+                    if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or self.starter: #Which mean there is update
+                        log.debug("adding commands")
+                        self.starter = False
+                        cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
+                        cmd_brief = await self.redis.hgetall("{}:Customcmd:brief".format(guild.id))
+                        for name,content in cmd_content.items():
+                            log.debug("name {} : content: {}".format(name,content))
+                            brief = cmd_brief[name]
+                            entry = CreateCustom(name=name.lower(), content=content, brief = brief,guild_id=guild.id)
+                            self.create_command(entry)
+                        await self.redis.delete("{}:Customcmd:update".format(guild.id))
 
-            except asyncio.CancelledError:
-                return utils.prRed("Asyncio Cancelled Error")
-            except Exception as e:
-                utils.prRed(e)
-                utils.prRed(traceback.format_exc())
-            self.bg_cmd.current = datetime.datetime.utcnow()
-            log.debug("Sleeping ")
-            await asyncio.sleep(50)
+        except asyncio.CancelledError:
+            return utils.prRed("Asyncio Cancelled Error")
+        except Exception as e:
+            utils.prRed(e)
+            utils.prRed(traceback.format_exc())
 
     def create_command(self,cmd):
         cmd_exit = self.bot.get_command(cmd.name)
