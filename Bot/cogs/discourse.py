@@ -72,7 +72,7 @@ class Discourse(): #Discourse, a forums types.
                         else:
                             utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
         except:
-            pass
+            utils.prRed(traceback.format_exc())
 
 
     async def get_data(self,link,api,username,domain,guild=None):
