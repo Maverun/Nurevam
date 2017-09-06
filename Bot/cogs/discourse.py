@@ -55,6 +55,8 @@ class Discourse(): #Discourse, a forums types.
             return
         try:
             config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
+            if not (config):
+                return
             with aiohttp.ClientSession() as request:
                 async with request.get(config["domain"]+"/latest.json?api_key={}&api_username={}".format(config["api_key"],config["username"])) as resp:
                     if resp.status == 200:
@@ -63,7 +65,7 @@ class Discourse(): #Discourse, a forums types.
                         for x in files["topic_list"]["topics"]:
                             number.append(x["id"])
                         lastest_id = max(number)
-                        current_id = await self.redis.get("{}:Discourse:ID".format(guild_id))
+                        current_id = int(await self.redis.get("{}:Discourse:ID".format(guild_id)))
                         if current_id < lastest_id: #if it not really up to dated.
                             utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
                             await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
