@@ -57,7 +57,7 @@ class Discourse(): #Discourse, a forums types.
             config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
             if not (config):
                 return
-            with aiohttp.ClientSession() as request:
+            with aiohttp.ClientSession(read_timeout = 15) as request:
                 async with request.get(config["domain"]+"/latest.json?api_key={}&api_username={}".format(config["api_key"],config["username"])) as resp:
                     if resp.status == 200:
                         files = await resp.json()
@@ -87,7 +87,7 @@ class Discourse(): #Discourse, a forums types.
                 return False,None #None might be best for this?
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
-            with aiohttp.ClientSession() as discourse:
+            with aiohttp.ClientSession(read_timeout = 15) as discourse:
                 async with discourse.get(link,headers=headers) as resp:
                     log.debug(resp.status)
                     if resp.status == 200:
