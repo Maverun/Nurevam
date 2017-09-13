@@ -113,7 +113,7 @@ def category(server_id):
         if have_sub: #if it have sub, we should append to them
             sub = sub_temp.get(have_sub)
             if sub:
-                sub.append({"id":str(category_id),"name":x["name"]})
+                sub.append({"id":str(category_id),"name":x["name"],"sub":"true"})
             else:
                 sub_temp.update({have_sub:[{"id":category_id,"name":x["name"],"sub":"true"}]})
             continue
@@ -121,7 +121,7 @@ def category(server_id):
     fresh_data = []
     for x in data:
         fresh_data.append(x)
-        sub = sub_temp.get(x["id"])
+        sub = sub_temp.get(int(x["id"]))
         if sub:
             for x in sub:
                 fresh_data.append(x)
