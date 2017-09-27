@@ -100,15 +100,6 @@ class Mod():
             reason += " Request by {}".format(ctx.message.author)
         return reason
 
-
-    @commands.command()
-    async def xd(self,ctx,user:discord.Member,*,reason:str = None):
-        if reason is None:
-            reason = "Request by {}".format(ctx.message.author)
-        else:
-            reason += " Request by {}".format(ctx.message.author)
-        await self.bot.say(ctx,content = "{} and {}".format(user,reason))
-
     @commands.command(brief="Is able to kick a user")
     @commands.check(check_roles)
     @commands.bot_has_permissions(kick_members=True)
