@@ -4,6 +4,7 @@ from PIL import Image,ImageFont,ImageDraw
 import io
 import textwrap
 import aiohttp
+import discord
 
 class Memes:
     def __init__(self,bot):
@@ -69,7 +70,7 @@ class Memes:
         data = im
         data.save(fp,format="PNG")
         fp.seek(0)
-        await self.bot.say(ctx,file = fp,filename="pic.png")
+        await self.bot.say(ctx,file = discord.File(fp,filename="pic.png"))
 
     @meme.command(name =  "list")
     async def _list(self,ctx):
