@@ -284,7 +284,10 @@ class Level:
         #it get all thing, then put them in order(which is reversed) then get player's rank positions
         data = await  self.redis.sort("{}:Level:Player".format(guild),by="{}:Level:Player:*->Total_XP".format(guild),offset = 0,count = -1)
         data = list(reversed(data))
-        player_rank = data.index(str(player.id))+1
+        try:
+            player_rank = data.index(str(player.id))+1
+        except:
+            return self.bot.say(ctx,"There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
         player_data = await self.redis.hgetall("{}:Level:Player:{}".format(ctx.message.guild.id, player.id))
         level,remain_xp,next_xp = self.next_Level(int(player_data["Total_XP"]))
 
@@ -319,7 +322,11 @@ class Level:
 
         level,remain_xp,next_xp = self.next_Level(int(total_exp))
         rank_data = sorted(data.values(),key = int,reverse = True) #getting values of dict instead then sort it and make it from highest to lowest
-        rank = rank_data.index(total_exp) + 1
+        try:
+            rank = rank_data.index(total_exp) + 1
+        
+        except:
+            return self.bot.say(ctx,"There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
         embed = self.rank_embed(player,level,remain_xp,next_xp,total_exp,rank,len(rank_data),description="Global Rank")
         await self.bot.say(ctx,embed=embed)
 
