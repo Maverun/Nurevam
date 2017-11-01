@@ -279,6 +279,8 @@ class Tools():
         embed.add_field(name = "Command used", value= "**Total**: {}\n**Current**: {}".format(num_total_use,num_temp_total_use))
         embed.add_field(name = "Redis last save",value=redis_last_save)
         embed.add_field(name = "Redis Info",value = redis_info_msg)
+        if BG_checker is not None:
+            embed.add_field(name = "Background Task", value = "\n".join(BG_checker))
         await ctx.send(embed = embed)
 
     async def update_all(self):
