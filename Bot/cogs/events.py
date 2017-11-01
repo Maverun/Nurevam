@@ -45,7 +45,7 @@ class Events:
         print("\033[91m<EVENT LEFT>:\033[94m[ {} : \033[96m({})\033[92m -- {}\033[00m".format(self.Time(), guild.id, guild.name))
         utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.guilds), len(self.bot.users)))
         await self.redis.hdel("Info:Server",guild.id)
-        age = datetime.datetime.utcnow() - guild.me.joined_at
+        age = datetime.datetime.utcnow() - guild.me.joined_at if guild.me is not None else None #return None instead of giving error chuck not update?
         #Set all database to expire, will expire in 30 days, so This way, it can save some space,it would unto when it is back to that guild and setting changed.
         count = 0
         async for key in self.redis.iscan(match="{}*".format(guild.id)):
