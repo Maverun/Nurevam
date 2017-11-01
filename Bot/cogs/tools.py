@@ -256,6 +256,8 @@ class Tools():
         cpu = process.cpu_percent() / psutil.cpu_count()
         total_use = await self.redis.hgetall("command_count")
         total_temp_use = await self.redis.hgetall("temp_command_count")
+        BG_checker = await self.redis.hgetall("BG_Checker")
+        await self.redis.delete("BG_Checker") #reset background for next time.
         num_total_use = sum(int(x) for x in total_use.values())
         num_temp_total_use = sum(int(x) for x in total_temp_use.values())
         time = self.get_bot_uptime()
@@ -310,6 +312,7 @@ class Tools():
         now = datetime.datetime.utcnow()
         info = []
         failed = []
+        fail_name = []
         failed_boolean = False
         for x in data:
             bg = data[x]
@@ -320,6 +323,7 @@ class Tools():
             if c.seconds >= bg.max_time:
                 if bg.name.title() in self.bot.cogs:
                     failed.append("-{}: {} min, {} second".format(x, minutes, second))
+                    fail_name.append(x)
                     self.bot.unload_extension("cogs.{}".format(bg.name))
                     await asyncio.sleep(2)
                     self.bot.load_extension("cogs.{}".format(bg.name))
@@ -329,7 +333,10 @@ class Tools():
         if failed_boolean:
             msg = "Background task of cogs have failed!\n"
             msg += "```diff\n{}\n\n{}\n```".format("\n".join(failed), "\n".join(info))
-            await self.bot.owner.send(msg)
+            #await self.bot.owner.send(msg)
+            for x in fail_name:
+                await self.redis.hincrby("BG_Checker",x,increment = 1)
+            utils.prRed(msg)
         else:
             self.update_info = "\n".join(info)
 
