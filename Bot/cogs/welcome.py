@@ -38,7 +38,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                     role_list = await self.redis.smembers('{}:Welcome:Assign_Roles'.format(member.guild.id))
                     role_obj=[]
                     for x in role_list:
-                        if x == '': #if it return eempty string
+                        if x == '': #if it return empty string
                             continue
                         role_obj.append(discord.utils.get(member.guild.roles,id=int(x)))
                     await member.add_roles(*role_obj)
