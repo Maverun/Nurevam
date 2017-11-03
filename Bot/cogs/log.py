@@ -30,7 +30,7 @@ class Log():
 
     def format_embed(self,author,title = None):
         embed = discord.Embed(title = title)
-        embed.set_author(name = author,icon_url=author.avatar_url or author.default_avatar_url)
+        embed.set_author(name ="{} - [{}]".format(author,author.id),icon_url=author.avatar_url or author.default_avatar_url)
         embed.timestamp = datetime.datetime.utcnow()
         return embed
 
