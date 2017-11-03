@@ -51,7 +51,8 @@ class Events:
         async for key in self.redis.iscan(match="{}*".format(guild.id)):
             await self.redis.expire(key,1209600)
             count += 1
-        utils.prGreen("{0.days} day, {0.seconds} seconds".format(age))
+        if age is not None:
+            utils.prGreen("{0.days} day, {0.seconds} seconds".format(age))
         utils.prGreen("Set {} expire".format(count))
 
     async def on_guild_update(self,before,after): #If guild update name and w/e, just in case, Update those
