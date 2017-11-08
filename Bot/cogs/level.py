@@ -274,6 +274,7 @@ class Level:
 
         #getting data while checking if it exists or not.
         player_data = await self.redis.hgetall("{}:Level:Player:{}".format(ctx.message.guild.id, player.id))
+        utils.prGreen("Player_data show {}".format(player_data))
         if player_data is False: #checking if user are in database
             if player.id != ctx.message.author.id: #if it mention
                 return await self.bot.say(ctx,content = "{} doesn't seem to be ranked yet. Tell that person to talk more!".format(player.display_name))
@@ -287,7 +288,7 @@ class Level:
         try:
             player_rank = data.index(str(player.id))+1
         except:
-            return self.bot.say(ctx,"There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
+            return self.bot.say(ctx,content = "There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
         player_data = await self.redis.hgetall("{}:Level:Player:{}".format(ctx.message.guild.id, player.id))
         level,remain_xp,next_xp = self.next_Level(int(player_data["Total_XP"]))
 
