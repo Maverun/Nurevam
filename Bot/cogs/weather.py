@@ -32,7 +32,7 @@ class Weather(): #Allow to welcome new members who join guild. If it enable, wil
                 data = await resp.json()
                 print(data)
                 if data.get("cod") == '404':
-                    return await self.bot.say(ctx,context = "{}, did you type command correctly? such as `city,country`, note, it need comma for saying which country it is. You can just enter the city only.")
+                    return await self.bot.say(ctx,content = "{}, did you type command correctly? such as `city,country`, note, it need comma for saying which country it is. You can just enter the city only.")
                 icon = "https://openweathermap.org/img/w/{}.png".format(data["weather"][0]["icon"])
                 sunrise= datetime.datetime.fromtimestamp(data["sys"]["sunrise"]).strftime("%H:%M:%S")
                 sunset= datetime.datetime.fromtimestamp(data["sys"]["sunset"]).strftime("%H:%M:%S")
