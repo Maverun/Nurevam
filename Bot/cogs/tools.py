@@ -280,7 +280,7 @@ class Tools():
         embed.add_field(name = "Redis last save",value=redis_last_save)
         embed.add_field(name = "Redis Info",value = redis_info_msg)
         if BG_checker is not None:
-            embed.add_field(name = "Background Task", value = "\n".join(BG_checker))
+            embed.add_field(name = "Background Task", value = "\n".join(BG_checker) or "None")
         await ctx.send(embed = embed)
 
     async def update_all(self):
