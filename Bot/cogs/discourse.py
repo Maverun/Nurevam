@@ -121,26 +121,21 @@ class Discourse(): #Discourse, a forums types.
             return log.debug("ID post is missing")
 
         id_post = int(id_post)
-        counter = 0
         error_404 = 0
         data = {}
         status,link,get_post = "???"
         while True:
+            counter = await self.redis.incr("{}:Discourse:ID".format(guild_id))
+            print("counter is " + counter)
             log.debug("Counter is {}".format(counter))
-            self.logging_info(get_post, link, id_post + counter, guild_id)
+            self.logging_info(get_post, link, counter, guild_id)
             counter += 1
-            link = "{}/t/{}".format(config['domain'],id_post+counter)
+            link = "{}/t/{}".format(config['domain'],counter)
             status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'],guild_id)
+            print(get_post)
             if status is False:
-                if get_post in (404,410):
-                    counter -= 1
-                elif get_post == 403:
-                    error_404 += 1
-                    if error_404 >= 10:
-                        await self.redis.set("{}:Discourse:ID".format(guild_id), id_post + counter)
-                        break
-                    continue
-                break
+                if get_post == 404:
+                    break # it reached not found page.
             elif status is True:
                 log.debug("It have post")
                 if get_post["archetype"] == "regular":
@@ -171,7 +166,7 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     await channel_send.send("\n".join(values))
                 utils.prLightPurple("\n".join(values))
-            await self.redis.set("{}:Discourse:ID".format(guild_id),id_post+counter)
+            # await self.redis.set("{}:Discourse:ID".format(guild_id),id_post+counter)
         log.debug("Finish checking {}".format(guild_id))
 
     async def timer(self):
