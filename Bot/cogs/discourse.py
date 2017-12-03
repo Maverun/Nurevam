@@ -126,7 +126,7 @@ class Discourse(): #Discourse, a forums types.
         status,link,get_post = "???"
         while True:
             counter = await self.redis.incr("{}:Discourse:ID".format(guild_id))
-            print("counter is " + counter)
+            print("counter is ",counter)
             log.debug("Counter is {}".format(counter))
             self.logging_info(get_post, link, counter, guild_id)
             counter += 1
