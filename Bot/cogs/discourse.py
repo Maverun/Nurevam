@@ -136,6 +136,7 @@ class Discourse(): #Discourse, a forums types.
             if status is False:
                 if get_post in (403,410): #private or delete, continue
                     continue
+                await self.redis.decr("{}:Discourse:ID".format(guild_id))
                 break # it reached not found page. or any other error
             elif status is True:
                 log.debug("It have post")
