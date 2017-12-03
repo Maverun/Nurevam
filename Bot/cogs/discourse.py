@@ -134,8 +134,9 @@ class Discourse(): #Discourse, a forums types.
             status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'],guild_id)
             print(status,get_post)
             if status is False:
-                if get_post == 404 or get_post is None:
-                    break # it reached not found page.
+                if get_post in (403,410): #private or delete, continue
+                    continue
+                break # it reached not found page. or any other error
             elif status is True:
                 log.debug("It have post")
                 if get_post["archetype"] == "regular":
