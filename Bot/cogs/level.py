@@ -333,7 +333,7 @@ class Level:
 
     async def table(self,ctx,current_page,guild=None,description = ""):
         def check(reaction, user):
-            if reaction.message.id == msg.id and user == player:
+            if reaction.message.id == embed_page.message.id and user == player:
                 if str(reaction.emoji) in [u"\u2B05", u"\u27A1"]:
                     return True
             return False
@@ -363,7 +363,6 @@ class Level:
         if current_page >= max_page: #if it too high, it will just go to last page
             current_page = max_page
 
-        msg = None
         embed_list = []
 
         for page in range(1,max_page+1):
@@ -407,23 +406,22 @@ class Level:
                 exp_list.append(exp)
                 total_list.append(total_exp)
 
-                if rank == page * 10 or (len(player_data) < 30):
+                if rank == page * 10:
                     break
 
-            if guild:
-                if theme_setting:
-                    log.debug("Going to make picture.")
-                    data = [["Rank", "User", "Level", "EXP","Total EXP"]]
-                    for x in range(len(rank_list)):
-                        temp = []
-                        temp.append(rank_list.pop(0))
-                        temp.append(unidecode(name_list.pop(0)))
-                        temp.append(level_list.pop(0))
-                        temp.append(exp_list.pop(0))
-                        temp.append(total_list.pop(0))
-                        data.append(temp)
+            if guild and theme_setting:
+                log.debug("Going to make picture.")
+                data = [["Rank", "User", "Level", "EXP","Total EXP"]]
+                for x in range(len(rank_list)):
+                    temp = []
+                    temp.append(rank_list.pop(0))
+                    temp.append(unidecode(name_list.pop(0)))
+                    temp.append(level_list.pop(0))
+                    temp.append(exp_list.pop(0))
+                    temp.append(total_list.pop(0))
+                    data.append(temp)
 
-                    return await self.theme_table(ctx,data)
+                return await self.theme_table(ctx,data)
 
             #Make embed.
             embed = self.table_embed(rank_list, name_list, level_list, exp_list,total_list,description,"{}/{}".format(page,mpage))
@@ -432,39 +430,8 @@ class Level:
                 if guild.me.colour.value:
                     embed.colour = guild.me.colour
             embed_list.append(embed)
-
-        first_start = True
-        while True:
-            if first_start:
-                first_start = False
-                msg = await ctx.send(embed=embed_list[current_page-1])
-                await msg.add_reaction(u"\u2B05")
-                await msg.add_reaction(u"\u27A1")
-
-            else:
-                print(current_page)
-                await msg.edit(embed=embed_list[current_page-1])
-
-            try:
-                react = await self.bot.wait_for("reaction_add", timeout=60, check=check)
-                await msg.remove_reaction(react[0].emoji,react[1])
-                await self.redis.incrby("Info:Level:Reaction_count", 1) #counting to see infos
-            except asyncio.TimeoutError:
-                await msg.clear_reactions()
-                return
-
-            if react[0].emoji == "⬅":
-                #go back by one
-                if current_page - 1 == 0: #if it on first page, don't do any
-                    continue
-                else:
-                    current_page -= 1
-            elif react[0].emoji == "➡":
-                #go next page by one
-                if current_page + 1 >= max_page: #if it on last page, don't do any
-                    continue
-                else:
-                    current_page += 1
+        embed_page = utils.Embed_page(self.bot,embed_list,page = current_page)
+        await embed_page.start(ctx,check = check)
 
 
     @commands.group(name = "table",brief = "Prints the top 10 of the leaderbord",pass_context = True,invoke_without_command = True)

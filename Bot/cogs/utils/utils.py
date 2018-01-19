@@ -93,3 +93,82 @@ class Background:
             await self.function()
             self.log.debug("Enter sleep mode")
             await asyncio.sleep(self.sleep_time)
+
+class Embed_page:
+    """
+    Embed page, with reaction to go next or now (or other reaction for certain feature)
+    """
+
+    def __init__(self,bot,embed_list,**kwargs):
+        self.bot = bot
+        self.embed_page = embed_list #expecting list of embed
+        self.max_page = kwargs.get("max_page",len(embed_list))
+        self.page = kwargs.get("page",0) #current page, default is 0
+        #this is array with emotion:function, so we can have each reaction for certain function. Reason for array is order
+        self.reaction = kwargs.get("reaction", [[u"\u2B05",self.back_page],[u"\u27A1",self.continue_page]])
+
+
+    def back_page(self):
+        print(self.page)
+        if self.page -1 <= 0:
+           self.page = 1 #dont change it
+        else:
+            self.page -= 1
+        return self.page
+
+    def continue_page(self):
+        if self.page >= self.max_page:
+            self.page = self.max_page
+        else:
+            self.page += 1
+        return self.page
+
+    def get_page(self):
+        return self.embed_page[self.page - 1]
+
+    async def wait_for_react(self,check,timeout):
+        try:
+            reaction, user = await self.bot.wait_for("reaction_add", timeout = timeout, check = check)
+        except asyncio.TimeoutError:
+            return None,None
+        else:
+            return reaction,user
+
+    async def start(self,channel,check,timeout = 60):
+        """
+        
+        Args:
+            channel: discord.channel. A destination to send message.
+            check : checking permission for this.
+            timeout: timeout for message to run if no one rect. Default 60 second
+        
+        It will send message
+        Run iterate of self.reaction fro adding rect into it
+        Then finally run endless loops waiting for message etc
+        """
+
+        self.message = await channel.send(embed = self.get_page())
+        for rect in self.reaction:
+            await self.message.add_reaction(rect[0])
+        while True:
+            react,user = await self.wait_for_react(check,timeout)
+            #If react is none, it mean that it had reach timeout and user didn't react.
+            if react is None:
+                return await self.message.clear_reactions()
+            #remove user's message
+            try:
+                await self.message.remove_reaction(react.emoji,user)
+            except: #if bot does not have permission for it. Oh well. Hard time for user.
+                pass
+
+            #now we will find reaction it used and then run function of that.
+            #once we do that, we will delete that reaction.
+
+            for item in self.reaction:
+                if item[0] == react.emoji: #if it equal then we can call function
+                    item[1]()
+                    break
+
+            #now we will update message again
+            await self.message.edit(embed = self.get_page())
+

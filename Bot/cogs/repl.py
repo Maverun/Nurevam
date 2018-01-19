@@ -40,7 +40,7 @@ class REPL:
         }
 
         if msg.channel.id in self.sessions:
-            await self.bot.say('Already running a REPL session in this channel. Exit it with `quit`.')
+            await ctx.send('Already running a REPL session in this channel. Exit it with `quit`.')
             return
 
         self.sessions.add(msg.channel.id)
