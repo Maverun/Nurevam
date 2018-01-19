@@ -1,5 +1,6 @@
 from discord.ext import commands
 from .utils import utils
+import lxml.html
 import traceback
 import datetime
 import asyncio
@@ -12,6 +13,9 @@ log = logging.getLogger(__name__)
 
 def html_unscape(term):
     return html.unescape(term)
+
+def html_tag(term):
+    return lxml.html.fromstring(term).text_content() #good grief righto?
 
 class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
@@ -141,8 +145,12 @@ class Discourse(): #Discourse, a forums types.
                     if check_exist is None:
                         data[get_post["category_id"]] = []
                     #custom msg
-                    msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"], link = link,title =html_unscape(get_post["fancy_title"]))
+                    msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"],
+                                                                                                  link = link,title =html_unscape(get_post["fancy_title"]),
+                                                                                                  summary = html_tag(html_unscape(get_post["post_stream"]["posts"][0]["cooked"])))
                     msg_template = msg_template.replace("\\t","\t").replace("\\n","\n") #a bad fix...
+                    if len(msg_template) > 1000:
+                        msg_template = msg_template[:1000] + "..." #just in case someone use summary.
                     data[get_post["category_id"]].append(msg_template)
         if data:
             log.debug("Got a data to post to channel")
@@ -154,6 +162,7 @@ class Discourse(): #Discourse, a forums types.
                     channel = config["channel"]
                 elif channel == "-1": #None
                     continue
+                #Sending message here
                 channel_send = self.bot.get_channel(int(channel))
                 if channel_send is None:
                     log.debug("Channel is not found, {}".format(channel))
@@ -164,7 +173,6 @@ class Discourse(): #Discourse, a forums types.
                 else:
                     await channel_send.send("\n".join(values))
                 utils.prLightPurple("\n".join(values))
-            # await self.redis.set("{}:Discourse:ID".format(guild_id),id_post+counter)
         log.debug("Finish checking {}".format(guild_id))
 
     async def timer(self):

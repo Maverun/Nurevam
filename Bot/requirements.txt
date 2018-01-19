@@ -5,3 +5,5 @@ redis
 PTable
 pillow
 osuapi
+unidecode
+GitPython
