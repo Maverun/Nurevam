@@ -77,8 +77,8 @@ def update_levels(server_id):
     banned_roles = data.pop('banned_roles')[0].split(',')
     banned_channels = data.pop('banned_channels')[0].split(',')
     announcement = data.pop('announcement')[0]
-    enable = data.pop('enable',None)
-    whisp = data.pop('whisp',None)
+    enable = data.pop('enable',[None])[0]
+    whisp = data.pop('whisp',[None])[0]
     cooldown = data.pop('cooldown',[0])[0]
     data.pop("_csrf_token") #removing it so we can focus on role reward easily
     try:
