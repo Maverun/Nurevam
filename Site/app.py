@@ -63,6 +63,7 @@ data_info.DOMAIN = secret.get('VIRTUAL_HOST', 'localhost:5000')
 data_info.TOKEN_URL = data_info.API_BASE_URL + '/oauth2/token'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 data_info.headers = {"Authorization": "Bot " + secret["nurevam_token"]}
+data_info.last_path = None  #getting last path so we can redirect it easily after login.
 utils.data_info = data_info
 osu_api = OsuApi(secret["osu"], connector=ReqConnector())
 
@@ -171,6 +172,8 @@ def confirm_login():
     session.permanent = True
     session['api_token'] = api_token
     log.info("Clear, redirect...")
+    if data_info.last_path:
+        return redirect(data_info.last_path)
     return redirect(url_for('after_login'))
 
 @app.route('/login_confirm')

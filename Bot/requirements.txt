@@ -7,3 +7,4 @@ pillow
 osuapi
 unidecode
 GitPython
+psutil

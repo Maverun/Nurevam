@@ -20,6 +20,7 @@ def plugin_method(f):
 def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
+        data_info.last_path = request.url #adding path of it so that we can redirect user to if they are given link.
         # Does the user have an api_token?
         api_token = session.get('api_token')
         if api_token is None:
@@ -198,7 +199,7 @@ def get_user_managed_servers(user, guilds):
 
 def get_channel(server_id): #Shortcut to get channel,so i dont have to remember how to do this again...
     get_channel = resource_get("/guilds/{}/channels".format(server_id))
-    return list(filter(lambda c: c['type']!='voice',get_channel))
+    return list(filter(lambda c: c['type'] == 0,get_channel)) #type 0 is text channel
 
 
 """
