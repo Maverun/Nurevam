@@ -146,7 +146,6 @@ class Custom_Commands():
                     if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or self.starter is True: #Which mean there is update
                         utils.prCyan("Under custom command")
                         log.debug("adding commands")
-                        self.starter = False
                         cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
                         cmd_brief = await self.redis.hgetall("{}:Customcmd:brief".format(guild.id))
                         utils.prPurple("commands contents: {}".format(cmd_content))
@@ -157,6 +156,7 @@ class Custom_Commands():
                             entry = CreateCustom(name=name.lower(), content=content, brief = brief,guild_id=guild.id)
                             self.create_command(entry)
                         await self.redis.delete("{}:Customcmd:update".format(guild.id))
+            self.starter = False
 
         except asyncio.CancelledError:
             return utils.prRed("Asyncio Cancelled Error")
