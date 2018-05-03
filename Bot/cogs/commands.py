@@ -149,6 +149,7 @@ class Custom_Commands():
                         self.starter = False
                         cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
                         cmd_brief = await self.redis.hgetall("{}:Customcmd:brief".format(guild.id))
+                        utils.prPurple("commands contents: {}".format(cmd_content))
                         log.debug("commands contents: {}".format(cmd_content))
                         for name,content in cmd_content.items():
                             log.debug("name {} : content: {}".format(name,content))
@@ -165,6 +166,7 @@ class Custom_Commands():
 
     def create_command(self,cmd):
         cmd_exit = self.bot.get_command(cmd.name)
+        utils.prPurple("Right here creating commands")
         log.debug(cmd_exit)
         if cmd_exit is None: #checking if we have exist command
             command = self.bot.command(name = cmd.name, brief = cmd.brief,cls = CustomCmd, pass_context=True)(run_command) #Decorator
