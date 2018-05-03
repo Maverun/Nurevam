@@ -149,6 +149,7 @@ class Custom_Commands():
                         self.starter = False
                         cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
                         cmd_brief = await self.redis.hgetall("{}:Customcmd:brief".format(guild.id))
+                        log.debug("commands contents: {}".format(cmd_content))
                         for name,content in cmd_content.items():
                             log.debug("name {} : content: {}".format(name,content))
                             brief = cmd_brief[name]
