@@ -37,7 +37,7 @@ async def on_ready():
         bot.background = {}
         bot.id_discourse = 0
         load_cogs()
-    await bot.change_presence(game = discord.Game(name="http://nurevam.site/"))
+    await bot.change_presence(activity = discord.Game(name="http://nurevam.site/"))
 
 async def command_checker(msg):
     try:

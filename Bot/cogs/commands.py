@@ -1,7 +1,9 @@
+from urllib.parse import urlparse
 from discord.ext import commands
 from .utils import utils
 import traceback
 import functools
+import discord
 import inspect
 import logging
 import asyncio
@@ -25,8 +27,32 @@ class CreateCustom:
 
 
 async def run_command(cmd,obj,ctx,*args:str):
+    """
+
+    Args:
+        cmd: CreateCustom Obj
+        obj:
+        ctx: ctx
+        *args: any remain message from user
+    """
     args = list(args)
     #ignore obj
+
+    if(bool(urlparse(cmd.content).netloc)):
+        temp = cmd.content.find(".", int(len(cmd.content)/2))
+        utils.prGreen(temp)
+        temp = cmd.content[temp:]
+        utils.prCyan(temp)
+        picture = False
+        for x in ["png","gif","jpg","bmp","jpeg"]:
+            if x in temp.lower():
+                picture = True
+                break
+        if picture:
+            embed = discord.Embed()
+            embed.set_image(url = cmd.content)
+            return await ctx.send(embed = embed)
+
     msg = ctx.message
     name = ""
     mention = ""
@@ -47,7 +73,6 @@ async def run_command(cmd,obj,ctx,*args:str):
                 except Exception as e:
                     log.debug(e)
                     pass
-
     content = cmd.content.format(cmduser = msg.author.name,cmdmention = msg.author.mention,
                                  user = name, mention = mention,msg = " ".join(args))
     await ctx.send(content[:2000]) #sorry folk, you wont make it past 2k!
@@ -118,7 +143,8 @@ class Custom_Commands():
                             if cmd:
                                 cmd._entries.pop(guild.id)
                         await self.redis.delete("{}:Customcmd:update_delete".format(guild.id))
-                    if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or self.starter: #Which mean there is update
+                    if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or self.starter is True: #Which mean there is update
+                        utils.prCyan("Under custom command")
                         log.debug("adding commands")
                         self.starter = False
                         cmd_content = await self.redis.hgetall("{}:Customcmd:content".format(guild.id))
