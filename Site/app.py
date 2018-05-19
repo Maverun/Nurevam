@@ -28,7 +28,7 @@ Redis= secret["Redis"]
 db = redis.Redis(host=Redis,decode_responses=True, db = 0)
 #Getting Flask
 app = Flask(__name__)
-app.permanent_session_lifetime = timedelta(hours = 6)
+app.permanent_session_lifetime = timedelta(days = 14)
 app.db = db
 utils.db = db
 utils.session = session

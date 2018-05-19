@@ -179,11 +179,15 @@ class Level:
                             if role_id in member_role:
                                 if role_level > member_level:#if change role, and no more grant for that, remove it
                                     log.debug("role_level is bigger than member_level")
-                                    remove_role.append([x for x in guild_roles if x.id == role_id][0])
+                                    temp = [x for x in guild_roles if x.id == role_id]
+                                    if temp:
+                                        remove_role.append(temp[0])
                             elif role_id not in member_role:
                                 if member_level >= role_level:
                                     log.debug("role_level is less than member_level, so adding it")
-                                    add_role.append([x for x in guild_roles if x.id == role_id][0])
+                                    temp = [x for x in guild_roles if x.id == role_id]
+                                    if temp:
+                                        add_role.append(temp[0])
                         if remove_role or add_role:
                             log.debug(member)
                             log.debug("checking if nure can add roles to member")
@@ -220,37 +224,14 @@ class Level:
     async def guild_level_link(self,ctx):
         await self.bot.say(ctx, content = "Check this out!\nhttp://nurevam.site/level/guild".format(ctx.message.guild.id))
 
-    def rank_embed(self,player,level,remain_xp,next_xp,total_exp,rank,total_rank,description=""):
+    def rank_embed(self,player,level,remain_xp,next_xp,rank,total_rank,description=""):
         embed = discord.Embed(description=description)
         embed.set_author(name=str(player),icon_url=player.avatar_url)
         embed.add_field(name = "Level",value=str(level))
         embed.add_field(name = "EXP",value="{}/{}".format(remain_xp,next_xp))
         embed.add_field(name = "Rank",value="{}/{}".format(rank,total_rank))
-        embed.add_field(name = "Total EXP",value="{}".format(total_exp))
-        embed.set_footer(text=self.column[:50]) #A Cheat trick to make it one line of all field.
         if player.colour.value:
             embed.colour = player.color
-        return embed
-
-    def table_embed(self,rank_list,name_list,level_list,exp_list,total_exp,description="",page = "",guild=None):
-        embed = discord.Embed(description=description)
-
-        # adding them to field
-        # Rank | Name | Level | EXP | TOTAL EXP
-        new_list = []
-        for x in name_list:
-            new_list.append(re.sub(r"([\U00010000-\U0002FA1F])", r"\\\1",x))
-
-        embed.add_field(name="Rank", value="**{}**".format("\n".join(rank_list)))
-        embed.add_field(name="User", value="{}".format("\n".join(new_list).replace("`","")))
-        embed.add_field(name="Level", value="{}".format("\n".join(level_list)))
-        embed.add_field(name="EXP", value="{}".format("\n".join(exp_list)))
-        embed.add_field(name="Total EXP", value="{}".format("\n".join(total_exp)))
-        embed.set_footer(text=page+self.column)  # A Cheat trick to make it one line of all field.
-
-        if guild:
-            if guild.me.colour.value:
-                embed.colour = guild.me.colour
         return embed
 
     @commands.group(brief="Prints your rank",pass_context=True,invoke_without_command=True)
@@ -293,7 +274,7 @@ class Level:
         level,remain_xp,next_xp = self.next_Level(int(player_data["Total_XP"]))
 
         #then make embed of it.
-        embed = self.rank_embed(player,level,remain_xp,next_xp,player_data["Total_XP"],player_rank,len(data))
+        embed = self.rank_embed(player,level,remain_xp,next_xp,player_rank,len(data))
 
         await self.bot.say(ctx,embed=embed)
 
@@ -328,17 +309,10 @@ class Level:
         
         except:
             return self.bot.say(ctx,"There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
-        embed = self.rank_embed(player,level,remain_xp,next_xp,total_exp,rank,len(rank_data),description="Global Rank")
+        embed = self.rank_embed(player,level,remain_xp,next_xp,rank,len(rank_data),description="Global Rank")
         await self.bot.say(ctx,embed=embed)
 
     async def table(self,ctx,current_page,guild=None,description = ""):
-        def check(reaction, user):
-            if reaction.message.id == embed_page.message.id and user == player:
-                if str(reaction.emoji) in [u"\u2B05", u"\u27A1"]:
-                    return True
-            return False
-        player = ctx.message.author
-
         theme_setting = None
         #cache it there early, so we don't have to repeat it called when user want to go to next current_page
         #if there is guild, then it is not global
@@ -358,81 +332,52 @@ class Level:
             full_data = [str(main) for x in data for main in x]
             log.debug(full_data)
 
-        max_page = int(len(full_data)/30 + 1)
-        log.debug("Max page is {}".format(max_page))
-        if current_page >= max_page: #if it too high, it will just go to last page
-            current_page = max_page
+        #making 2D from 1D, full data contain total_xp,id pattern. so [ [total_xp1,id1][total_xp2,id2]...]
+        full_data = [full_data[x:x+2] for x in range(0,len(full_data),2)]
 
-        embed_list = []
+        def proper_page(datax,n):
+            #We are setting rank where user want to see 10 range. 1-10, 11-20 etc
+            temp = datax[1*(10*(n-1)):10*n]
+            temp  = [x for x in temp if None not in x] #making sure there is no None.
+            if not(temp):
+                return proper_page(datax,n-1)
+            return temp,n
 
-        for page in range(1,max_page+1):
-            mpage = 1 if max_page == 1 else max_page
-
-            rank = page * 10 - 10
-            player_data = full_data[30 * (page - 1):]
-
-            # run a loops for each of 2, in order, Total XP, ID
-            rank_list = []
-            name_list = []
-            level_list = []
-            exp_list = []
-            total_list = []
-            for x in range(0, len(player_data), 2):
-                rank += 1
-                total_exp = player_data.pop(0)
-                level,remain_xp,next_exp = self.next_Level(int(total_exp))
-                exp = "{} / {}".format(remain_xp, next_exp)
-
-                if guild:
-                    the_id = player_data.pop(0)
-                    if the_id is None: continue
-                    name = guild.get_member(int(the_id))
-                    log.debug("under guild and member name is {} ||| {}".format(name,the_id))
-                    if name is None: #assuming player left server and Nure didn't knew he/she have left
-                        log.debug("Removing member's ID from data")
-                        await self.redis.srem("{}:Level:Player".format(guild.id),the_id)
-                        continue
-
-                    else:
-                        name = name.display_name
-                else:
-                    # the_id = player_data.pop(0)
-                    name = self.bot.get_user(int(player_data.pop(0)))
-                    name = name.name if name is not None else "???"
-
-                rank_list.append(str(rank))
-                name_list.append(name[:19] if theme_setting is None else name)
-                level_list.append(str(level))
-                exp_list.append(exp)
-                total_list.append(total_exp)
-
-                if rank == page * 10:
-                    break
-
-            if guild and theme_setting:
-                log.debug("Going to make picture.")
-                data = [["Rank", "User", "Level", "EXP","Total EXP"]]
-                for x in range(len(rank_list)):
-                    temp = []
-                    temp.append(rank_list.pop(0))
-                    temp.append(unidecode(name_list.pop(0)))
-                    temp.append(level_list.pop(0))
-                    temp.append(exp_list.pop(0))
-                    temp.append(total_list.pop(0))
-                    data.append(temp)
-
-                return await self.theme_table(ctx,data)
-
-            #Make embed.
-            embed = self.table_embed(rank_list, name_list, level_list, exp_list,total_list,description,"{}/{}".format(page,mpage))
-
+        full_data,page = proper_page(full_data,current_page)
+        #setting up picture data
+        log.debug("Going to make picture.")
+        pic_data = [["Rank", "User", "Level", "EXP","Total EXP"]]
+        for index,(total_exp,user_id) in enumerate(full_data,start = 1*(10*(page-1)) + 1):
+            temp = []
             if guild:
-                if guild.me.colour.value:
-                    embed.colour = guild.me.colour
-            embed_list.append(embed)
-        embed_page = utils.Embed_page(self.bot,embed_list,page = current_page)
-        await embed_page.start(ctx,check = check)
+                name = guild.get_member(int(user_id))
+                log.debug("under guild and member name is {} ||| {}".format(name, user_id))
+                if name is None:  # assuming player left server and Nure didn't knew he/she have left
+                    log.debug("Removing member's ID from data")
+                    await self.redis.srem("{}:Level:Player".format(guild.id), user_id)
+                    continue
 
+                else:
+                    name = name.display_name
+            else:
+                name = self.bot.get_user(int(user_id))
+                name = name.name if name is not None else "???"
+
+            level, remain_xp, next_exp = self.next_Level(int(total_exp))
+            exp = "{} / {}".format(remain_xp, next_exp)
+
+            #now we will store into pic_data in order - Rank, User, Level, EXP, Total EXP
+            temp.append(str(index))
+            temp.append(unidecode(name[:19]))
+            temp.append(str(level))
+            temp.append(exp)
+            temp.append(total_exp)
+            pic_data.append(temp)
+        if theme_setting is None and guild: #I know I know, Shame on me for doing this way.
+            await ctx.send("I just want to info you that embed are replaced with pictures. "
+                           "To remove this message, please go to <https://nurevam.site/level/theme/{}> (admin only) or access from Level plugin dashboard "
+                           "once you visit there, select \"Enable picture theme\", change some setting if desire, then update it.".format(ctx.message.guild.id))
+        return await self.theme_table(ctx,pic_data,is_global = not(guild))
 
     @commands.group(name = "table",brief = "Prints the top 10 of the leaderbord",pass_context = True,invoke_without_command = True)
     async def rank_table(self, ctx,page = 1 ):
@@ -442,7 +387,7 @@ class Level:
     async def global_table(self,ctx,page = 1):
         return await self.table(ctx,page,description="Global Rank Leaderboard")
 
-    async def theme_table(self,ctx,raw_data):
+    async def theme_table(self,ctx,raw_data,is_global = False):
         """
         Most of this code are credit to XCang, for done most math.
         """
@@ -461,7 +406,6 @@ class Level:
         text = tuple((int(x) for x in color_setting.get("text",("255,255,255")).split(",")))
         outlier = tuple((int(x) for x in color_setting.get("outlier",("0,0,0")).split(",")))
 
-
         m = [0] * len(raw_data[0])
         for i, el in enumerate(raw_data):
             for j, e in enumerate(el):
@@ -476,7 +420,10 @@ class Level:
 
         setting = await self.redis.hgetall("{}:Level:pic_setting".format(ctx.message.guild.id))
 
-        pic_data = await self.redis.hget("{}:Level:Config".format(ctx.message.guild.id), "pic")
+        if is_global:
+            pic_data = "http://www.solidbackgrounds.com/images/2560x1440/2560x1440-black-solid-color-background.jpg"
+        else:
+            pic_data = await self.redis.hget("{}:Level:Config".format(ctx.message.guild.id), "pic")
         if pic_data:
             with aiohttp.ClientSession() as session:
                 async with session.get(pic_data) as resp:
