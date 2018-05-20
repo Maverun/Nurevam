@@ -251,7 +251,7 @@ def private_server(server_id,bool):
         db.set("{}:Level:Private".format(server_id),"on")
     else:
         db.delete("{}:Level:Private".format(server_id))
-    return redirect(url_for('levels', server_id=server_id))
+    return redirect(url_for('level.levels', server_id=server_id))
 
 @blueprint.route('/profile/private_set/<int:player_id>/<int:server_id>/<int:bool>')
 @utils.plugin_method
@@ -260,7 +260,7 @@ def private_profile(server_id,player_id,bool):
         db.sadd("{}:Level:Player:Private".format(server_id),player_id)
     else:
         db.srem("{}:Level:Player:Private".format(server_id),player_id)
-    return redirect(url_for('profile', server_id=server_id,player_id=player_id))
+    return redirect(url_for('level.profile_level', server_id=server_id,player_id=player_id))
 
 @blueprint.route('/profile/<string:player_id>/<int:server_id>')
 def profile_level(player_id,server_id):

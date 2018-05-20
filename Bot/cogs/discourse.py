@@ -131,6 +131,7 @@ class Discourse(): #Discourse, a forums types.
 
         data = {}
         status,link,get_post = "???"
+        error_count = 0
         while True:
             counter = await self.redis.incr("{}:Discourse:ID".format(guild_id))
             log.debug("Counter is {}".format(counter))
@@ -140,6 +141,9 @@ class Discourse(): #Discourse, a forums types.
             status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'],guild_id)
             if status is False:
                 if get_post in (403,410): #private or delete, continue
+                    error_count += 1
+                    if error_count == 10:
+                        break
                     continue
                 await self.redis.decr("{}:Discourse:ID".format(guild_id))
                 break # it reached not found page. or any other error
