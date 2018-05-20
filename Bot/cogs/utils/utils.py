@@ -108,7 +108,7 @@ class Embed_page:
         self.reaction = kwargs.get("reaction", [[u"\u2B05",self.back_page],[u"\u27A1",self.continue_page]])
 
 
-    def back_page(self):
+    def back_page(self,*args):
         print(self.page)
         if self.page -1 <= 0:
            self.page = 1 #dont change it
@@ -116,7 +116,7 @@ class Embed_page:
             self.page -= 1
         return self.page
 
-    def continue_page(self):
+    def continue_page(self,*args):
         if self.page >= self.max_page:
             self.page = self.max_page
         else:
@@ -134,7 +134,7 @@ class Embed_page:
         else:
             return reaction,user
 
-    async def start(self,channel,check,timeout = 60):
+    async def start(self,channel,check,timeout = 60,is_async = False,extra = []):
         """
         
         Args:
@@ -157,6 +157,7 @@ class Embed_page:
                 return await self.message.clear_reactions()
             #remove user's message
             try:
+
                 await self.message.remove_reaction(react.emoji,user)
             except: #if bot does not have permission for it. Oh well. Hard time for user.
                 pass
@@ -166,7 +167,10 @@ class Embed_page:
 
             for item in self.reaction:
                 if item[0] == react.emoji: #if it equal then we can call function
-                    item[1]()
+                    if is_async:
+                        await item[1](react,user,*extra)
+                    else:
+                        item[1](react,user,*extra)
                     break
 
             #now we will update message again

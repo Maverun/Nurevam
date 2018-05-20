@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash,session
+from pyanimu import Mal,UserStatus, connectors
 import requests
 import logging
 import utils
@@ -35,12 +36,25 @@ def update_profile(): #Update a setting.
         if request.form.get(x) == "":
             db.hdel(path,x)
             continue
-        if x == "myanimelist":
-            status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
-            if status is False:
-                warning = True
-                warning_list.append(x)
-                continue
+        if x == "myanimelist" or x == "myanimelist_password":
+            if x == "myanimelist_password":
+                mal = Mal(request.form.get("myanimelist"),request.form.get(x),connectors.ReqAnimu())
+                if db.get("Myanimelist:Abuse:{}".format(session['user']['id'])) >= 6:
+                    warning = True
+                    warning_list.append("myanimelist password, but you will have to wait for next day...")
+                    continue
+                if not mal.verify():
+                    db.incr("Myanimelist:Abuse:{}".format(session['user']['id']))
+                    db.expire("Myanimelist:Abuse:{}".format(session['user']['id']),86400)
+                    warning = True
+                    warning_list.append(x.replace("_"," "))
+                    continue
+            else:
+                status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
+                if status is False:
+                    warning = True
+                    warning_list.append(x)
+                    continue
         elif x == "osu":
             results = osu_api.get_user(request.form.get(x))
             if results == []:

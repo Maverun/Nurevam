@@ -29,6 +29,15 @@
                     <input class="form-control input-lg" name="myanimelist" value="{{setting["myanimelist"]}}" type="text"
                            id="myanimelist">
                 </div>
+                <form id="profile" method="POST" action="{{url_for('profile.update_profile')}}">
+                <div class="form-group">
+                    <input name=_csrf_token type=hidden value="{{ csrf }}">
+                    <label class="control-label" for="myanimelist_password">Myanimelist password *Optional,<b>This is at your own risk.
+                        I held no responsibility over this. This is only for when you want to add/update anime/manga to your list from discord</b>,
+                        without it, you can still search anime/manga and getting profile of your</label>
+                    <input class="form-control input-lg" name="myanimelist_password" value="{{setting["myanimelist_password"]}}" type="password"
+                           id="myanimelist_password">
+                </div>
             </div>
         </div>
     <div class ="row">

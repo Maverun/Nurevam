@@ -1,5 +1,6 @@
 # Latest discord.py
-https://github.com/Rapptz/discord.py@rewrite
+git+https://github.com/Rapptz/discord.py@rewrite
+git+https://github.com/Maverun/Pyanimu
 aioredis
 redis
 PTable
@@ -8,3 +9,5 @@ osuapi
 unidecode
 GitPython
 psutil
+lxml
+BeautifulSoup4
