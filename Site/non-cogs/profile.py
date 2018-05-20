@@ -39,7 +39,8 @@ def update_profile(): #Update a setting.
         if x == "myanimelist" or x == "myanimelist_password":
             if x == "myanimelist_password":
                 mal = Mal(request.form.get("myanimelist"),request.form.get(x),connectors.ReqAnimu())
-                if db.get("Myanimelist:Abuse:{}".format(session['user']['id'])) >= 6:
+                count = db.get("Myanimelist:Abuse:{}".format(session['user']['id'])) or 0
+                if count >= 6:
                     warning = True
                     warning_list.append("myanimelist password, but you will have to wait for next day...")
                     continue
