@@ -168,7 +168,6 @@ class Myanimelist():
         status = await self.add_to_list(account,obj)
         utils.prCyan(status)
         if status:
-            print("Sending")
             await ctx.send("{}, I have added {} to your watching/reading list".format(member.mention, obj.title),delete_after = 10)
 
     async def planning(self,*args):
@@ -309,7 +308,6 @@ class Myanimelist():
             # data = await self.check_status(ctx,name)
             async with ctx.message.channel.typing():
                 def cacluate(obj,category):
-                    print(obj,category)
                     mean_count = 0
                     mean = 0
                     total = 0
@@ -328,7 +326,7 @@ class Myanimelist():
                 total, mean = cacluate(data.manga,1)
                 manga_stats = "Reading:{0.manga_reading} \nCompleted:{0.manga_completed} \nOn Hold:{0.manga_onhold} \n" \
                               "Dropped:{0.manga_dropped} \nPlan To Watch:{0.manga_plan_to_read} \nTotal Days Watched:{0.manga_days} \n" \
-                              "Total Episode Watched:{1} \nMean Score:{2} ".format(data, total, mean)
+                              "Total Chapters Read:{1} \nMean Score:{2} ".format(data, total, mean)
 
                 embed = discord.Embed(title = "{} profile".format(user.display_name),url = "https://myanimelist.net/{}/{}".format(site,name))
                 embed.set_author(name=str(user),icon_url=user.avatar_url)

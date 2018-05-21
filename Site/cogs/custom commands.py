@@ -4,7 +4,7 @@ import utils
 
 log = logging.getLogger("Nurevam.site")
 
-limit = 10
+limit = 25 #original was 10.
 
 
 blueprint = Blueprint('customcmd', __name__, template_folder='../templates/custom commands')
