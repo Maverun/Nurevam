@@ -89,7 +89,7 @@ class Myanimelist():
         text = ""
         if category == 0: #anime
             text +="**Episode:** {0.episodes}\n"
-            embed.set_footer(text="[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove |")
+            embed.set_footer(text="[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?")
             reaction_list = [["\U0001f1fc", self.watching]]  #for Remove, will think about it
         else: #manga
             text +="**Chapter:** {0.chapters}\n**Volumes:**: {0.volumes}\n"

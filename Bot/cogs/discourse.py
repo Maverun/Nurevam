@@ -108,7 +108,7 @@ class Discourse(): #Discourse, a forums types.
             utils.prRed(traceback.format_exc())
             await self.redis.set("{}:Discourse:Temp_off".format(guild),domain,expire = 1800 )
             count = await self.redis.incr("{}:Discourse:Counting".format(guild))
-            await self.redis.expire("{}:Discourse:Counting".format(guild),1800)
+            await self.redis.expire("{}:Discourse:Counting".format(guild),3600)
             if count == 10: #5 hours later and it is still down, it will auto turn off setting, sorry folks
                 utils.prRed("Discourse: Turning off for {}".format(guild))
                 await self.redis.hdel('{}:Config:Cogs'.format(guild),"discourse")
@@ -238,7 +238,7 @@ class Discourse(): #Discourse, a forums types.
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
         link ="{}/users/{}/summary".format(config["domain"],name)
-        data = await self.get_data(link,config["api_key"],config['username'],config["domain"])  #Get info of that users
+        data = await self.get_data(link,config["api_key"],config['username'],config["domain"],ctx.message.guild.id)  #Get info of that users
         data = data[1]
         if data == 404: #If there is error  which can be wrong user
             await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
@@ -297,7 +297,7 @@ class Discourse(): #Discourse, a forums types.
             await self.bot.say(ctx,content = "There is space in! There is no such name that have space in! Please Try again!")
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
-        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"])
+        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"],ctx.message.guild.id)
         if read[1] == 404: #If there is error  which can be wrong user
             await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
             return
