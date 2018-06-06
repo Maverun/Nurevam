@@ -465,7 +465,7 @@ class Level:
                         wdth, hght = draw.textsize(txt, font=fnt)
                         w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
 
-                if setting.get("outlier") == "on": # Text Outline
+                if setting.get("outlier") == "on" or is_global: # Text Outline
                     draw.text((w - 1, h), txt, font=font,fill=outlier)
                     draw.text((w + 1, h), txt, font=font,fill=outlier)
                     draw.text((w, h - 1), txt, font=font,fill=outlier)
