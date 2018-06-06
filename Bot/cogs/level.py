@@ -403,8 +403,12 @@ class Level:
         #setting color setting
         border = tuple((int(x) for x in color_setting.get("border",("255,255,255,96")).split(",")))
         row = tuple((int(x) for x in color_setting.get("row",("255,255,255,48")).split(",")))
-        text = tuple((int(x) for x in color_setting.get("text",("255,255,255")).split(",")))
-        outlier = tuple((int(x) for x in color_setting.get("outlier",("0,0,0")).split(",")))
+        if is_global:
+            text = (255,255,255)
+            outlier = (0,0,0)
+        else:
+            text = tuple((int(x) for x in color_setting.get("text",("255,255,255")).split(",")))
+            outlier = tuple((int(x) for x in color_setting.get("outlier",("0,0,0")).split(",")))
 
         m = [0] * len(raw_data[0])
         for i, el in enumerate(raw_data):
@@ -465,7 +469,7 @@ class Level:
                         wdth, hght = draw.textsize(txt, font=fnt)
                         w,h= (int(10 + sum(m[:j]) + (m[j] - wdth) / 2 + 8 * j), 10 + 18 * i + 5)
 
-                if setting.get("outlier") == "on" or is_global: # Text Outline
+                if setting.get("outlier") == "on": # Text Outline
                     draw.text((w - 1, h), txt, font=font,fill=outlier)
                     draw.text((w + 1, h), txt, font=font,fill=outlier)
                     draw.text((w, h - 1), txt, font=font,fill=outlier)
