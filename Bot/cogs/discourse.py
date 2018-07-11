@@ -54,8 +54,19 @@ class Discourse(): #Discourse, a forums types.
             status = "???"
         self.log_error[guild_id] = {"status":status,"link":link,"id":thread_id,"time":datetime.datetime.now()}
 
+    async def repeat_error(self,guild,domain):
+        await self.redis.set("{}:Discourse:Temp_off".format(guild), domain, expire=1800)
+        count = await self.redis.incr("{}:Discourse:Counting".format(guild))
+        await self.redis.expire("{}:Discourse:Counting".format(guild), 3600)
+        if count == 10:  # 5 hours later and it is still down, it will auto turn off setting, sorry folks
+            utils.prRed("Discourse: Turning off for {}".format(guild))
+            await self.redis.hdel('{}:Config:Cogs'.format(guild), "discourse")
+
     async def get_update_id(self,guild_id):
         if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
+            return
+        if await self.redis.get("{}:Discourse:Temp_off".format(guild_id)):
+            log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild_id))
             return
         try:
             config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
@@ -79,7 +90,7 @@ class Discourse(): #Discourse, a forums types.
                             utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
         except:
             utils.prRed(traceback.format_exc())
-
+            await self.repeat_error(guild_id,config["domain"])
 
     async def get_data(self,link,api,username,domain,guild=None):
         #Using headers so it can support both http/1 and http/2
@@ -106,13 +117,7 @@ class Discourse(): #Discourse, a forums types.
         except:
             utils.prRed("Under get_data function, server: {}".format(guild))
             utils.prRed(traceback.format_exc())
-            await self.redis.set("{}:Discourse:Temp_off".format(guild),domain,expire = 1800 )
-            count = await self.redis.incr("{}:Discourse:Counting".format(guild))
-            await self.redis.expire("{}:Discourse:Counting".format(guild),3600)
-            if count == 10: #5 hours later and it is still down, it will auto turn off setting, sorry folks
-                utils.prRed("Discourse: Turning off for {}".format(guild))
-                await self.redis.hdel('{}:Config:Cogs'.format(guild),"discourse")
-            #30 min ignore this, in case site is down for a while or under maintenance (sorry for those who might have to wait for 30 min),
+            await self.repeat_error(guild,domain)
             return False,None #None might be best for this? I hope...-
 
     async def new_post(self,guild_id):
