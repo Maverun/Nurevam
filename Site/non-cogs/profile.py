@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash,session
-from pyanimu import Mal,UserStatus, connectors
+# from pyanimu import Anilist,UserStatus_Anilist, connectors
+from requests_oauthlib import OAuth2Session
 import requests
 import logging
 import utils
@@ -12,18 +13,20 @@ db = None  #Database
 
 osu_api = None
 
-@blueprint.route('/profile')
+@blueprint.route('/')
 @utils.require_auth
 def profile():
+    print(request.url)
+    print(request.args)
     """
     A user profile.
     It's purpose is for globals setting across server.
     """
     user = session['user']
     setting = db.hgetall("Profile:{}".format(user["id"]))
-    return render_template('profile.html',user=user,setting=setting)
+    return render_template('profile.html',user=user,setting=setting,anilist_redirect = url_for('profile.anilist_request',_external=True))
 
-@blueprint.route('/profile/update', methods=['POST'])
+@blueprint.route('/update', methods=['POST'])
 @utils.require_auth
 def update_profile(): #Update a setting.
     list_point = dict(request.form)
@@ -33,29 +36,30 @@ def update_profile(): #Update a setting.
     warning_msg = "One of those have failed, Please double check {} "
     warning_list =[]
     for  x in list_point:
+        print(x)
         if request.form.get(x) == "":
             db.hdel(path,x)
             continue
-        if x == "myanimelist" or x == "myanimelist_password":
-            if x == "myanimelist_password":
-                mal = Mal(request.form.get("myanimelist"),request.form.get(x),connectors.ReqAnimu())
-                count = db.get("Myanimelist:Abuse:{}".format(session['user']['id'])) or 0
-                if count >= 6:
-                    warning = True
-                    warning_list.append("myanimelist password, but you will have to wait for next day...")
-                    continue
-                if not mal.verify():
-                    db.incr("Myanimelist:Abuse:{}".format(session['user']['id']))
-                    db.expire("Myanimelist:Abuse:{}".format(session['user']['id']),86400)
-                    warning = True
-                    warning_list.append(x.replace("_"," "))
-                    continue
-            else:
-                status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
-                if status is False:
-                    warning = True
-                    warning_list.append(x)
-                    continue
+        # if x == "myanimelist" or x == "myanimelist_password":
+        #     if x == "myanimelist_password":
+        #         mal = Mal(request.form.get("myanimelist"),request.form.get(x),connectors.ReqAnimu())
+        #         count = db.get("Myanimelist:Abuse:{}".format(session['user']['id'])) or 0
+        #         if count >= 6:
+        #             warning = True
+        #             warning_list.append("myanimelist password, but you will have to wait for next day...")
+        #             continue
+        #         if not mal.verify():
+        #             db.incr("Myanimelist:Abuse:{}".format(session['user']['id']))
+        #             db.expire("Myanimelist:Abuse:{}".format(session['user']['id']),86400)
+        #             warning = True
+        #             warning_list.append(x.replace("_"," "))
+        #             continue
+        #     else:
+        #         status = status_site("http://myanimelist.net/profile/{}".format(request.form.get(x)))
+        #         if status is False:
+        #             warning = True
+        #             warning_list.append(x)
+        #             continue
         elif x == "osu":
             results = osu_api.get_user(request.form.get(x))
             if results == []:
@@ -75,4 +79,33 @@ def status_site(site):
         return True
     else:
         return False
+
+@blueprint.route('/anilist/')
+@utils.require_auth
+def anilist_request():
+    code = request.args.get("code")
+    header = {'Content-Type': 'application/json','Accept': 'application/json'}
+    r = requests.post("https://anilist.co/api/v2/oauth/token",json = {
+        'client_id':str(utils.data_info.anilist_id),
+        'client_secret':utils.data_info.anilist_token,
+        'redirect_uri':url_for('profile.anilist_request',_external=True),
+        'grant_type': 'authorization_code',
+        'code':code},headers=header)
+    print(r.json())
+    data =r.json()
+    user = session['user']
+    # setting = db.hgetall("Profile:{}".format(user["id"]))
+
+    db.hmset("Profile:{}:Anilist".format(user["id"]),data)
+
+    flash("success","Anilist update!")
+    return redirect(url_for('profile.profile'))
+
+@blueprint.route("/anilist/token")
+def token_get():
+    print("right here")
+    print(request.args)
+    print(request.json)
+    # path = "Profile:{}".format(session['user']['id'])
+    # db.hset(path,"anilist_token",token)
 

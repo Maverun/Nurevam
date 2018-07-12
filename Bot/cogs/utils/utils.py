@@ -60,6 +60,29 @@ async def send_hastebin(info):
             if resp.status is 200:
                 return "https://hastebin.com/{}.py".format((await resp.json())["key"])
 
+async def input(bot,ctx,msg,check):
+    """
+
+    Args:
+        ctx: discord Context
+        msg: Message to send to users
+        check: conditions accept from user.
+
+    Returns: return message object from user's
+
+    """
+    asking = await ctx.send(msg) #sending message to ask user something
+    try:
+        answer = await bot.wait_for("message", timeout=15, check=check)
+        await answer.delete()
+    except asyncio.TimeoutError:  # timeout error
+        await asking.delete()
+        return await ctx.send(content="You took too long, please try again!",delete_after = 15)
+    except:
+        pass
+    await asking.delete()  # bot delete it own msg.
+    return answer
+
 class Background:
     """
     Background, allow to run auto background task easily without worry.

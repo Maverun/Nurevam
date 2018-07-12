@@ -31,6 +31,7 @@ app = Flask(__name__)
 app.permanent_session_lifetime = timedelta(days = 14)
 app.db = db
 utils.db = db
+utils.secret_file = secret
 utils.session = session
 md = Markdown(app) #for a markdown work, e.g FAQ
 
@@ -64,6 +65,8 @@ data_info.TOKEN_URL = data_info.API_BASE_URL + '/oauth2/token'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 data_info.headers = {"Authorization": "Bot " + secret["nurevam_token"]}
 data_info.last_path = None  #getting last path so we can redirect it easily after login.
+data_info.anilist_token = secret["anilist_token"]
+data_info.anilist_id = secret["anilist_id"]
 utils.data_info = data_info
 osu_api = OsuApi(secret["osu"], connector=ReqConnector())
 

@@ -22,23 +22,8 @@
         </div>
     <div class ="row">
         <div class="col-md-8">
-            <form id="profile" method="POST" action="{{url_for('profile.update_profile')}}">
-                <div class="form-group">
-                    <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="myanimelist">Myanimelist username</label>
-                    <input class="form-control input-lg" name="myanimelist" value="{{setting["myanimelist"]}}" type="text"
-                           id="myanimelist">
-                </div>
-                <form id="profile" method="POST" action="{{url_for('profile.update_profile')}}">
-                <div class="form-group">
-                    <input name=_csrf_token type=hidden value="{{ csrf }}">
-                    <label class="control-label" for="myanimelist_password">Myanimelist password *Optional,<b>This is at your own risk.
-                        I held no responsibility over this. This is only for when you want to add/update anime/manga to your list from discord</b>,
-                        without it, you can still search anime/manga and getting profile of your</label>
-                    <input class="form-control input-lg" name="myanimelist_password" value="{{setting["myanimelist_password"]}}" type="password"
-                           id="myanimelist_password">
-                </div>
-            </div>
+            <a href='https://anilist.co/api/v2/oauth/authorize?client_id=703&redirect_uri={{anilist_redirect}}&response_type=code'>Login with AniList</a>
+        </div>
         </div>
     <div class ="row">
         <div class="col-md-8">
@@ -52,7 +37,6 @@
             </div>
         </div>
     <button type="submit" class="btn btn-primary">Update</button>
-
     </div>
 </div>
 
