@@ -94,6 +94,6 @@ def anilist_request():
 
     db.hmset("Profile:{}:Anilist".format(user["id"]),data)
     print("Successfully create token for ",user["id"]," - ",user["username"])
-    flash("success","Anilist update!")
+    flash("Anilist update!","success")
     return redirect(url_for('profile.profile'))
 
