@@ -16,8 +16,6 @@ osu_api = None
 @blueprint.route('/')
 @utils.require_auth
 def profile():
-    print(request.url)
-    print(request.args)
     """
     A user profile.
     It's purpose is for globals setting across server.
@@ -91,21 +89,11 @@ def anilist_request():
         'redirect_uri':url_for('profile.anilist_request',_external=True),
         'grant_type': 'authorization_code',
         'code':code},headers=header)
-    print(r.json())
     data =r.json()
     user = session['user']
-    # setting = db.hgetall("Profile:{}".format(user["id"]))
 
     db.hmset("Profile:{}:Anilist".format(user["id"]),data)
-
+    print("Successfully create token for ",user["id"]," - ",user["username"])
     flash("success","Anilist update!")
     return redirect(url_for('profile.profile'))
-
-@blueprint.route("/anilist/token")
-def token_get():
-    print("right here")
-    print(request.args)
-    print(request.json)
-    # path = "Profile:{}".format(session['user']['id'])
-    # db.hset(path,"anilist_token",token)
 
