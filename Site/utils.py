@@ -63,17 +63,6 @@ def server_check(f):
         return f(*args, **kwargs)
     return wrapper
 
-def require_vip(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        user = session.get('user')
-        if user is None:
-            return redirect(url_for('index'))
-        if user['id'] not in ['105853969175212032','102184838999588864']:
-            return redirect(url_for('index'))
-        return f(*args,**kwargs)
-    return wrapper
-
 def require_role(f):
     @require_auth
     @wraps(f)

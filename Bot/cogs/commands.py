@@ -56,6 +56,7 @@ async def run_command(cmd,obj,ctx,*args:str):
     msg = ctx.message
     name = ""
     mention = ""
+    cmd.content = cmd.content.replace("\\t","\t").replace("\\n","\n") #a bad way to fix it, way i know, sorry.
     if msg.mentions:
         ment = msg.mentions
         for i in range(len(ment)):

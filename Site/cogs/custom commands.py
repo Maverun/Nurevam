@@ -95,6 +95,10 @@ def customcmd(cog, server_id):
     use = max_use(server_id)
     content = {}
     brief = {}
+
+    if customcmd_content:
+        customcmd_content = dict([x,str(y.encode()).replace("\\\\","\\")] for x,y in customcmd_content.items()) #a way to fix escape term. terrible yeh
+
     if is_admin: #if someone is admin, they can view all
         log.info("It is admin person")
         member = db.hgetall("Info:Name")
