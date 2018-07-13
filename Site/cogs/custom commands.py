@@ -149,10 +149,9 @@ def add_customcmd(cog, server_id):
     return redirect(url_for("customcmd.customcmd", server_id=server_id, cog="customcmd"))
 
 
-@blueprint.route('/update/<string:cog>/<int:server_id>/<string:name>')
+@blueprint.route('/update/<string:cog>/<int:server_id>/<string:name>', methods=['POST'])
 @utils.require_role
 def edit_customcmd(cog,server_id, name):
-    print(request.form)
     new_name = request.form.get("cmd_name")
     content = request.form.get("cmd_content")
     brief = request.form.get("cmd_brief")
