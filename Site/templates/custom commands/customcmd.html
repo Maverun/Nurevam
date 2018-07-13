@@ -88,7 +88,7 @@
                                 <div class="form-group">
                                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                                     <label class="control-label" for="cmd_content">Content</label>
-                                    <input class="form-control input-lg" name="cmd_content" value="{{data_customcmd[customcmd]}}"
+                                    <input class="form-control input-lg" name="cmd_content" value="{{data_customcmd[customcmd].replace("'","")[1:]}}"
                                     type="text"
                                     id="{{data_customcmd[customcmd]}}">
                                 </div>
