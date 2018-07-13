@@ -147,7 +147,6 @@ class Myanimelist():
                 return bool(str(reaction.emoji) in ["\U0001f1fc","\U0001f1f5","\U0001f1e8","\U0001f1f7","\U0001f5d1","\U00002753"])
             return False
         #Start making embed system,and have user click reaction for function.
-        print(embed.description)
         data_embed = utils.Embed_page(self.bot,[embed],reaction = reaction_list)
         await data_embed.start(ctx.message.channel,check = check,timeout = 40,is_async = True,extra = [data,ctx])
         #concern about memory leak due to object references, so hope this will help.
@@ -201,7 +200,6 @@ class Myanimelist():
             utils.prRed(e)
         return False
 
-    #Add/update to list, args are in order Reaction,Member,Pyanime anime/manga object
     async def watching_mal(self, *args):
         react,member,obj,ctx = args
         account = await self.verify_account(ctx,member)
@@ -285,7 +283,7 @@ class Myanimelist():
         if token:
             account = Anilist(connectors.AioAnimu(),token)
             return account
-        await ctx.send("I can't do any for you unless you have token, please visit <https://nurevam.site/profile> to get one.",delete_after = 10)
+        await ctx.send("{},I can't do any for you unless you have token, please visit <https://nurevam.site/profile> to get one.".format(member.mention),delete_after = 10)
 
     async def watching_anilist(self, *args):
         react,member,data,ctx = args
@@ -344,8 +342,9 @@ class Myanimelist():
                 get = await account.search_anime(data["id"])
             else:
                 get = await account.search_manga(data["id"])
-
             user = get["media"][0]["mediaListEntry"]
+            if user is None:
+                return await self.bot.say(ctx,content = "{},You haven't seen this one before".format(member.mention))
             if data["type"] == "ANIME":
                 text = "**Episodes:** {0[progress]}/{1[episodes]}\n"
             else:

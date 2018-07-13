@@ -22,7 +22,7 @@ def profile():
     """
     user = session['user']
     setting = db.hgetall("Profile:{}".format(user["id"]))
-    return render_template('profile.html',user=user,setting=setting,anilist_redirect = url_for('profile.anilist_request',_external=True))
+    return render_template('profile.html',user=user,setting=setting,anilist_cleint_id = utils.data_info.anilist_id,anilist_redirect = url_for('profile.anilist_request',_external=True))
 
 @blueprint.route('/update', methods=['POST'])
 @utils.require_auth
