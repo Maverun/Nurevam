@@ -1,16 +1,16 @@
 # from pyanimu import Mal,UserStatus, connectors,error
 from pyanimu import connectors,error,Anilist,UserStatus_Anilist
 from discord.ext import commands
-from xml.etree import ElementTree
 from .utils import utils
 import asyncio
 import aiohttp
 import discord
-import html
+import base64
 
+import html
 def synopis(term):
     term = html.unescape(term.replace("<br />", ""))
-    term = term.replace("[/","[").replace("[b]","**").replace("[i]","_")
+    term = term.replace("[/","[").replace("[b]","**").replace("[i]","_").replace("<br>","\n")
     if len(term) >= 1500:
         return term[:1500]+"..."
     return term
@@ -104,7 +104,7 @@ class Myanimelist():
         del data
         del obj
 
-    async def show_anime_anilist(self, ctx, data, category):
+    async def show_anime_anilist(self, ctx, data, category,extra = None):
         """
         This is for showing anime info and can update/add anime for you.
         Args:
@@ -115,40 +115,47 @@ class Myanimelist():
         It will create format for embeds and have team pick reaction they want.to add to list.
 
         """
-        # obj.category = category https://anilist.co/anime/1/Cowboy-Bebop/
         url =  data["siteUrl"]
         mal_url = "https://myanimelist.net/{}/{}".format("anime" if category == 0 else "manga", data["idMal"])
         embed = discord.Embed(title = data["title"]["romaji"],url = url)
         embed.set_image(url = data["coverImage"]["large"])
         text = "[AniList]({}) [MAL]({})\n".format(data["siteUrl"],mal_url)
-        utils.prGreen(text)
         date = "{0[startDate][year]}-{0[startDate][month]}-{0[startDate][day]} to {0[endDate][year]}-{0[endDate][month]}-{0[endDate][day]}".format(data)
+        footer = ""
         #i am making most of values to lower case instead of FINISHED, should be finished etc, doing this way is due to season. lazy sorry i know.
         if category == 0: #anime
             value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date, data["season"]]]
             text += "**Episode:** {0[episodes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**Season:** {6}\n**ID:** {0[id]}\n**Synopsis:** {1}"
 
-            embed.set_footer(text="[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?")
+            footer = "[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?"
             reaction_list = [["\U0001f1fc", self.watching_anilist]]
         else: #manga
             value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date]]
             text += "**Chapter:** {0[chapters]}\n**Volumes:**: {0[volumes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**ID:** {0[id]}\n**Synopsis:** {1}"
 
-            embed.set_footer(text="[R]eading | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?")
+            footer = "[R]eading | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?"
             reaction_list = [["\U0001f1f7", self.watching_anilist]]
-
         #rest of reaction list to add
         reaction_list += [["\U0001f1f5", self.planning_anilist], ["\U0001f1e8", self.complete_anilist], ["\U0001f5d1", self.remove_anilist], ["\U00002753", self.seen_this_anilist]]
+        if extra:
+            reaction_list += [[extra["react"],extra["method"]]]
+            footer += extra["footer"]
+            msg = extra["msg"]
+            extra = extra["args"]
+        else:
+            msg = None
+            extra = []
 
         embed.description = text.format(data,synopis(data["description"]),*value)
-
+        embed.set_footer(text=footer)
         def check(reaction,user):#checking conditions
             if reaction.message.id == data_embed.message.id and user.bot is False:
-                return bool(str(reaction.emoji) in ["\U0001f1fc","\U0001f1f5","\U0001f1e8","\U0001f1f7","\U0001f5d1","\U00002753"])
+                return bool(str(reaction.emoji) in [x[0] for x in reaction_list])
             return False
+
         #Start making embed system,and have user click reaction for function.
-        data_embed = utils.Embed_page(self.bot,[embed],reaction = reaction_list)
-        await data_embed.start(ctx.message.channel,check = check,timeout = 40,is_async = True,extra = [data,ctx])
+        data_embed = utils.Embed_page(self.bot,[embed],reaction = reaction_list,alt_edit = bool(extra),original_msg=msg)
+        await data_embed.start(ctx.message.channel,check = check,timeout = 40,is_async = True,extra = [data,ctx]+extra)
         #concern about memory leak due to object references, so hope this will help.
         del data_embed
         del data
@@ -359,6 +366,15 @@ class Myanimelist():
                 embed.colour = member.color
             await self.bot.say(ctx,embed=embed)
 
+#########################################################################
+#     _____                                                       _     #
+#    / ____|                                                     | |    #
+#   | |        ___    _ __ ___    _ __ ___     __ _   _ __     __| |    #
+#   | |       / _ \  | '_ ` _ \  | '_ ` _ \   / _` | | '_ \   / _` |    #
+#   | |____  | (_) | | | | | | | | | | | | | | (_| | | | | | | (_| |    #
+#    \_____|  \___/  |_| |_| |_| |_| |_| |_|  \__,_| |_| |_|  \__,_|    #
+#                                                                       #
+#########################################################################
 
     @commands.command(brief="Is able to acquire anime info from the Myanimelist/Anilist database",pass_context=True)
     async def anime(self, ctx, *, name: str):
@@ -530,6 +546,61 @@ class Myanimelist():
             show += "ID: {} - Title: {}\n".format(data["id"],data["title"]["romaji"])
         embed.description = show +"\n\n"+ synopis(char["description"])
         await self.bot.say(ctx,embed=embed)
+
+    async def whatanime_find(self,*args):
+        react,member,msg,anime_data,ctx,data,index = args
+        length = len(data)
+        anime = await self.main_anilist.search_anime(data[index])
+
+        is_extra = True if length > 1 else False #later on
+        if length > index + 1:
+            index += 1
+        else:
+            index = 0 #shrug
+
+        extra ={"react":"\U00002b07","method": self.whatanime_find,"footer":"|⬇ Wrong Anime","msg":msg,"args":[data,index]} if is_extra else None
+
+        return await self.show_anime_anilist(ctx, anime["media"][0],0,extra=extra)
+
+    @commands.command(brief = "What anime is this from.")
+    @commands.cooldown(9,60,commands.BucketType.guild)
+    async def whatanime(self,ctx,link = None):
+        """
+        This will help you to find anime that you link sources. This may not be accurate or not.
+        It will take a moment. Files has to be less than 1MB sadly.
+        """
+
+        headers = {"User-Agent": "https://nurevam.site/", "host": "whatanime.ga",
+                   "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        if link is None:
+            check = ctx.message.attachments
+            if check:
+                link = check[0].url
+            else:
+                return self.bot.say(ctx, content="Please enter a link or attachments")
+        async with ctx.message.channel.typing():
+            async with aiohttp.ClientSession() as session:
+                    async with session.get(link) as resp:
+                        picture = base64.b64encode(await resp.read())
+
+                    async with session.post("https://whatanime.ga/api/search", params={"token": utils.secret["whatanime"]},headers=headers, data={"image": {picture}}) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            #Since there can be multi of same anime with different time frame.
+                            unique_anime = []
+                            for x in data["docs"]:
+                                id_ = x["anilist_id"]
+                                if id_ not in unique_anime:
+                                    unique_anime.append(id_)
+
+                            return await self.whatanime_find(None,None,None,None,ctx,unique_anime,0)
+
+                        elif resp.status == 413:
+                            await self.bot.say(ctx, content="I am sorry, but files is too big.")
+
+
+
+
 
 def setup(bot):
     bot.add_cog(Myanimelist(bot))

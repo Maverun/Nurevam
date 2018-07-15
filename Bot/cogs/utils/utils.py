@@ -127,6 +127,8 @@ class Embed_page:
         self.embed_page = embed_list #expecting list of embed
         self.max_page = kwargs.get("max_page",len(embed_list))
         self.page = kwargs.get("page",0) #current page, default is 0
+        self.alt_edit = kwargs.get("alt_edit") #if wish to edit message AFTER return function that is not belong here
+        self.original_msg = kwargs.get("original_msg") #^
         #this is array with emotion:function, so we can have each reaction for certain function. Reason for array is order
         self.reaction = kwargs.get("reaction", [[u"\u2B05",self.back_page],[u"\u27A1",self.continue_page]])
 
@@ -165,14 +167,19 @@ class Embed_page:
             check : checking permission for this.
             timeout: timeout for message to run if no one rect. Default 60 second
         
-        It will send message
-        Run iterate of self.reaction fro adding rect into it
+        It will send message or edit message if original_msg exist. To get that, you will need to pass self.alt_edit True and rerun this template.
+        Run iterate of self.reaction for adding rect into it
         Then finally run endless loops waiting for message etc
         """
+        if self.original_msg:
+            await self.original_msg.edit(embed = self.get_page())
+            self.message = self.original_msg
+        else:
+            self.message = await channel.send(embed = self.get_page())
 
-        self.message = await channel.send(embed = self.get_page())
         for rect in self.reaction:
             await self.message.add_reaction(rect[0])
+
         while True:
             react,user = await self.wait_for_react(check,timeout)
             #If react is none, it mean that it had reach timeout and user didn't react.
@@ -191,9 +198,15 @@ class Embed_page:
             for item in self.reaction:
                 if item[0] == react.emoji: #if it equal then we can call function
                     if is_async:
-                        await item[1](react,user,*extra)
+                        if self.alt_edit:
+                            await item[1](react,user,self.message,*extra)
+                        else:
+                            await item[1](react,user,*extra)
                     else:
-                        item[1](react,user,*extra)
+                        if self.alt_edit:
+                            item[1](react,user,self.message,*extra)
+                        else:
+                            item[1](react,user,self.message,*extra)
                     break
 
             #now we will update message again
