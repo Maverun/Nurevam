@@ -1,4 +1,4 @@
-This is currenly the Alpha version.
+This is currenly the Beta version.
 I will update the public version of the bot regularly on this site.
 This is the version, that can be run on any server.
 
