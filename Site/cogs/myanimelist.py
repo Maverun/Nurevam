@@ -9,7 +9,7 @@ anime_picture=[["http://31.media.tumblr.com/tumblr_m3z4xrHVZi1rw2jaio1_500.gif",
 blueprint = Blueprint('myanimelist',__name__,template_folder='../templates/myanimelist')
 
 name = "Anime and Manga"
-description = "Search the web for your favorite anime and manga."
+description = "Search the web for your favorite anime and manga. Allow to add anime/manga to your Anilist list. Not to mention, able to check out what source of this certain anime came from!"
 
 db = None #Database
 

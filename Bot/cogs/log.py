@@ -63,8 +63,10 @@ class Log():
 
         if dest is None:
             return log.debug("Channel is not found")
-
-        await dest.send(file = discord.File(fp,filename="Pic.png"),content="{} **change avatar**".format(self.format_msg(after)))
+        try:
+            await dest.send(file = discord.File(fp,filename="Pic.png"),content="{} **change avatar**".format(self.format_msg(after)))
+        except:
+            pass #if bot cannot attach picture, that mean it does not have perma and there nothing we can do about it.
 
     async def on_member_update(self,before,after):
         if self.config.get(after.guild.id):
