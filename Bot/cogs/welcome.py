@@ -43,7 +43,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                         role_obj.append(discord.utils.get(member.guild.roles,id=int(x)))
                     try:
                         await member.add_roles(*role_obj)
-                    except discord.error.Forbidden:
+                    except discord.Forbidden:
                         pass #if unable to add user
 
             except Exception as e:

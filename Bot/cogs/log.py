@@ -65,7 +65,7 @@ class Log():
             return log.debug("Channel is not found")
         try:
             await dest.send(file = discord.File(fp,filename="Pic.png"),content="{} **change avatar**".format(self.format_msg(after)))
-        except discord.error.Forbidden:
+        except discord.Forbidden:
             pass #if bot cannot attach picture, that mean it does not have perma and there nothing we can do about it.
 
     async def on_member_update(self,before,after):
