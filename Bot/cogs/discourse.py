@@ -102,7 +102,7 @@ class Discourse(): #Discourse, a forums types.
                 return False,None #None might be best for this?
             headers = {"Host": domain.replace("http://","").replace("https://","")}
             link = "{}.json?api_key={}&api_username={}".format(link,api,username)
-            with aiohttp.ClientSession(read_timeout = 15) as discourse:
+            async with aiohttp.ClientSession(read_timeout = 15) as discourse:
                 async with discourse.get(link,headers=headers) as resp:
                     log.debug(resp.status)
                     if resp.status == 200:
