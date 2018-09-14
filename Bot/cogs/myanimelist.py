@@ -572,9 +572,13 @@ class Myanimelist():
     @commands.command(brief = "Link out Anilist user's profile. ID also work")
     async def anilist(self,ctx,name = None):
 
-
         if name is None:
             account = await self.anilist_token(ctx, ctx.message.author)
+            if account is None: return
+            user = await account.user()
+            user = user["data"]["Viewer"]
+        elif bool(ctx.message.mentions):
+            account = await self.anilist_token(ctx,ctx.message.mentions[0])
             if account is None: return
             user = await account.user()
             user = user["data"]["Viewer"]
@@ -582,12 +586,6 @@ class Myanimelist():
             if name.isdigit():
                 name = int(name)
             user = await self.get_user(ctx,name)
-        elif bool(ctx.message.mentions):
-            account = await self.anilist_token(ctx,ctx.message.mentions[0])
-            if account is None: return
-            user = await account.user()
-            user = user["data"]["Viewer"]
-
 
         embed = discord.Embed(title = user["name"],url = user["siteUrl"])
         embed.set_thumbnail(url = user["avatar"]["large"])
@@ -601,8 +599,10 @@ class Myanimelist():
         for data in manga_stat:
             manga_text += "{0[status]}:{0[amount]}\n".format(data)
 
-        anime_text += "mean:{0[stats][animeListScores][meanScore]}\nSD:{0[stats][animeListScores][standardDeviation]}".format(user)
-        manga_text += "mean:{0[stats][mangaListScores][meanScore]}\nSD:{0[stats][mangaListScores][standardDeviation]}".format(user)
+        if user["stats"]["animeListScores"] is not None:
+            anime_text += "mean:{0[stats][animeListScores][meanScore]}\nSD:{0[stats][animeListScores][standardDeviation]}".format(user)
+            manga_text += "mean:{0[stats][mangaListScores][meanScore]}\nSD:{0[stats][mangaListScores][standardDeviation]}".format(user)
+
         embed.add_field(name = "Anime Stats",value=anime_text.lower().title())
         embed.add_field(name = "Manga Stats",value=manga_text.lower().title())
         await self.bot.say(ctx,embed = embed)
