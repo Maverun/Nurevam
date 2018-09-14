@@ -55,7 +55,7 @@ def check_roles(ctx,cog,get_role): #Server ID  then which plugin, and Roles with
         return False
 
 async def send_hastebin(info):
-    with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session:
         async with session.post("https://hastebin.com/documents",data = str(info)) as resp:
             if resp.status is 200:
                 return "https://hastebin.com/{}.py".format((await resp.json())["key"])
@@ -77,7 +77,8 @@ async def input(bot,ctx,msg,check):
         await answer.delete()
     except asyncio.TimeoutError:  # timeout error
         await asking.delete()
-        return await ctx.send(content="You took too long, please try again!",delete_after = 15)
+        await ctx.send(content="You took too long, please try again!",delete_after = 15)
+        return None
     except:
         pass
     await asking.delete()  # bot delete it own msg.
@@ -134,22 +135,19 @@ class Embed_page:
 
 
     def back_page(self,*args):
-        print(self.page)
+        self.page -= 1
         if self.page -1 <= 0:
-           self.page = 1 #dont change it
-        else:
-            self.page -= 1
+           self.page = 0 #dont change it
         return self.page
 
     def continue_page(self,*args):
-        if self.page >= self.max_page:
-            self.page = self.max_page
-        else:
-            self.page += 1
+        self.page += 1
+        if self.page > self.max_page - 1:
+            self.page = self.max_page - 1
         return self.page
 
     def get_page(self):
-        return self.embed_page[self.page - 1]
+        return self.embed_page[self.page]
 
     async def wait_for_react(self,check,timeout):
         try:
@@ -206,7 +204,7 @@ class Embed_page:
                         if self.alt_edit:
                             item[1](react,user,self.message,*extra)
                         else:
-                            item[1](react,user,self.message,*extra)
+                            item[1](react,user,*extra)
                     break
 
             #now we will update message again

@@ -6,6 +6,7 @@ import asyncio
 import aiohttp
 import discord
 import base64
+import time
 
 import html
 def synopis(term):
@@ -14,6 +15,9 @@ def synopis(term):
     if len(term) >= 1500:
         return term[:1500]+"..."
     return term
+
+
+ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n / 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])  # credit to Gareth from codegof. I like this so.
 
 
 class Myanimelist():
@@ -48,6 +52,7 @@ class Myanimelist():
             elif bool(obj_data) is True:
                 data = ["{}. {}".format(index,name) for index,name in enumerate([x["title"]["romaji"] for x in obj_data],start = 1)]#wew lad
                 answer = await utils.input(self.bot,ctx,"```{}```\nWhich number?".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user
+                if answer is None: return None
                 if int(answer.content) <= len(data): #checking if it below range, so don't split out error
                     return obj_data[int(answer.content) - 1 ]
                 else:
@@ -114,6 +119,11 @@ class Myanimelist():
 
         It will create format for embeds and have team pick reaction they want.to add to list.
 
+
+        Extra is somethng for "recursion" function or want to edit its own message.
+        self.whatanime_find is currently doing it.
+        Since there can be more than 2 result, so purpose of it was to have show other result instead of write whole thing. DRY yo
+
         """
         url =  data["siteUrl"]
         mal_url = "https://myanimelist.net/{}/{}".format("anime" if category == 0 else "manga", data["idMal"])
@@ -125,8 +135,22 @@ class Myanimelist():
         #i am making most of values to lower case instead of FINISHED, should be finished etc, doing this way is due to season. lazy sorry i know.
         if category == 0: #anime
             value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date, data["season"]]]
-            text += "**Episode:** {0[episodes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**Season:** {6}\n**ID:** {0[id]}\n**Synopsis:** {1}"
-
+            text += "**Episode:** {0[episodes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**Season:** {6}\n**ID:** {0[id]}"
+            if data["nextAiringEpisode"]:
+                print("Airing confirm")
+                airing = data["nextAiringEpisode"]
+                time = airing["timeUntilAiring"]
+                ep = ordinal(airing["episode"])
+                if time > 3600:
+                    hour = time/3600 #getting hour
+                    min = (time%3600)/60 #getting min
+                    air_msg = "{} hour(s) and {} min(s) left for {} episode".format(int(hour),round(min),ep)
+                else:
+                    time /= 60
+                    air_msg = "{} min(s) left for {} episode".format(round(time,2),ep)
+                text += "\n**Next Airing**: {}".format(air_msg)
+                print(text)
+            text += "\n**Synopsis:** {1}"
             footer = "[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?"
             reaction_list = [["\U0001f1fc", self.watching_anilist]]
         else: #manga
@@ -290,10 +314,13 @@ class Myanimelist():
         if token:
             account = Anilist(connectors.AioAnimu(),token)
             return account
-        await ctx.send("{},I can't do any for you unless you have token, please visit <https://nurevam.site/profile> to get one.".format(member.mention),delete_after = 10)
+        await ctx.send("{},I can't do anything unless it has linked account, please visit <https://nurevam.site/profile> to link it.".format(member.mention),delete_after = 10)
 
     async def watching_anilist(self, *args):
-        react,member,data,ctx = args
+        if len(args) == 7:
+            react,member,msg,data,ctx,list_data,index = args
+        else:
+            react, member, data, ctx = args
         account = await self.anilist_token(ctx,member)
         if account is None: return
         status = await account.add(data["id"],UserStatus_Anilist.current)
@@ -302,7 +329,10 @@ class Myanimelist():
             await ctx.send("{}, I have added {} to your watching/reading list".format(member.mention, data["title"]["romaji"]),delete_after = 10)
 
     async def planning_anilist(self, *args):
-        react,member,data,ctx = args
+        if len(args) == 7:
+            react,member,msg,data,ctx,list_data,index = args
+        else:
+            react, member, data, ctx = args
         account = await self.anilist_token(ctx,member)
         if account is None: return
         status = await account.add(data["id"],UserStatus_Anilist.planning)
@@ -311,11 +341,15 @@ class Myanimelist():
             await ctx.send("{}, I have added {} to your plan to list".format(member.mention, data["title"]["romaji"]),delete_after = 10)
 
     async def complete_anilist(self, *args):
-        react, member, data, ctx = args
-        account = await self.anilist_token(ctx, member)
+        if len(args) == 7:
+            react,member,msg,data,ctx,list_data,index = args
+        else:
+            react, member, data, ctx = args
 
+        account = await self.anilist_token(ctx, member)
         # now we will ask user to rate it.
         answer = await utils.input(self.bot,ctx, "Rate it from 1-100, 0 for no rate.",lambda msg: msg.content.isdigit() and ctx.message.author == msg.author and int(msg.content) >= 0 and int(msg.content) <= 100)
+        if answer is None: return
         rate = int(answer.content)
         extra = {}
         if rate != 0:
@@ -326,7 +360,10 @@ class Myanimelist():
             await ctx.send("{}, I have added {} to your finished list".format(member.mention, data["title"]["romaji"]),delete_after = 10)
 
     async def remove_anilist(self, *args):
-        react, member, data, ctx = args
+        if len(args) == 7:
+            react,member,msg,data,ctx,list_data,index = args
+        else:
+            react, member, data, ctx = args
         account = await self.anilist_token(ctx, member)
         if account is None: return
         account.toggle_setting(media_list=True)
@@ -340,7 +377,11 @@ class Myanimelist():
         await ctx.send("{}, I have removed {} from your list".format(member.mention, data["title"]["romaji"]),delete_after = 10)
 
     async def seen_this_anilist(self, *args):#checking if user have seen this anime or not
-        react, member, data, ctx = args
+        print(args)
+        if len(args) == 7:
+            react,member,msg,data,ctx,list_data,index = args
+        else:
+            react, member, data, ctx = args
         async with ctx.message.channel.typing():#as this expensive work, so user will know bot is working on it
             account = await self.anilist_token(ctx, member)
             if account is None: return
@@ -351,7 +392,7 @@ class Myanimelist():
                 get = await account.search_manga(data["id"])
             user = get["media"][0]["mediaListEntry"]
             if user is None:
-                return await self.bot.say(ctx,content = "{},You haven't seen this one before".format(member.mention))
+                return await ctx.send(content = "{},You haven't seen this one before".format(member.mention),delete_after = 10 )
             if data["type"] == "ANIME":
                 text = "**Episodes:** {0[progress]}/{1[episodes]}\n"
             else:
@@ -365,6 +406,46 @@ class Myanimelist():
             if member.colour.value:
                 embed.colour = member.color
             await self.bot.say(ctx,embed=embed)
+
+    async def get_user(self,ctx,name): #this is for anilist command, if name is string. If there is multi result, we get right one and recall it.
+        user = await self.main_anilist.search_user(name)
+        user = user["users"]
+        if len(user) > 1:
+            data = ["{}. {}".format(index, name) for index, name in enumerate([x["name"] for x in user], start=1)]  # wew lad
+            answer = await utils.input(self.bot, ctx, "```{}```\nWhich number?".format("\n".join(data)), lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)  # getting input from user
+            if answer is None: return
+            if int(answer.content) <= len(data):  # checking if it below range, so don't split out error
+                user  = user[int(answer.content) - 1]
+                user = await self.main_anilist.search_user(user["id"])
+                user = user["users"][0]
+            else:
+                return await self.bot.say(ctx, content="You entered a number that is out of range!")
+        else:
+            user = user[0]
+        return user
+
+    async def whatanime_find(self,*args):
+        react,member,msg,anime_data,ctx,data,index = args
+        length = len(data)
+        anime = await self.main_anilist.search_anime(data) #accepts list, it will do magic.
+        print(anime)
+        if length > 1:
+            return await self.whatanime_multi(None,None,None,None,ctx,anime,-1)
+
+        print("Over there. sending it")
+        return await self.show_anime_anilist(ctx, anime["media"][0],0)
+
+    async def whatanime_multi(self,*args):
+        #if there is more than one anime, this will run since we did search_anime early with list, so meaning we got all anime info we can show.
+        react,member,msg,anime_data,ctx,anime,index = args
+
+        if anime["pageInfo"]["total"] == index + 1:
+            index = 0
+        else:
+            index += 1
+
+        extra ={"react":"\U00002b07","method": self.whatanime_multi,"footer":"|⬇ Wrong Anime","msg":msg,"args":[anime,index]}
+        return await self.show_anime_anilist(ctx, anime["media"][index],0,extra = extra)
 
 #########################################################################
 #     _____                                                       _     #
@@ -394,7 +475,6 @@ class Myanimelist():
         data = await self.search_query(ctx,await self.main_anilist.search_anime(name),anilist=True)
         if data is None:return
         await self.show_anime_anilist(ctx, data, 0)
-
 
     @commands.command(brief="Is able to acquire manga info from the Myanimelist/Anilist database",pass_context=True)
     async def manga(self, ctx, *, name: str):
@@ -490,20 +570,24 @@ class Myanimelist():
         await self.check_username(ctx,name,"profile")
 
     @commands.command(brief = "Link out Anilist user's profile. ID also work")
-    async def anilist(self,ctx,name):
-        if name.isdigit():
-            name = int(name)
-        user = await self.main_anilist.search_user(name)
-        user = user["users"]
-        if len(user) > 1:
-            data = ["{}. {}".format(index, name) for index, name in enumerate([x["name"] for x in user], start=1)]  # wew lad
-            answer = await utils.input(self.bot, ctx, "```{}```\nWhich number?".format("\n".join(data)), lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)  # getting input from user
-            if int(answer.content) <= len(data):  # checking if it below range, so don't split out error
-                user  = user[int(answer.content) - 1]
-            else:
-                return await self.bot.say(ctx, content="You entered a number that is out of range!")
-        else:
-            user = user[0]
+    async def anilist(self,ctx,name = None):
+
+
+        if name is None:
+            account = await self.anilist_token(ctx, ctx.message.author)
+            if account is None: return
+            user = await account.user()
+            user = user["data"]["Viewer"]
+        elif name:
+            if name.isdigit():
+                name = int(name)
+            user = await self.get_user(ctx,name)
+        elif bool(ctx.message.mentions):
+            account = await self.anilist_token(ctx,ctx.message.mentions[0])
+            if account is None: return
+            user = await account.user()
+            user = user["data"]["Viewer"]
+
 
         embed = discord.Embed(title = user["name"],url = user["siteUrl"])
         embed.set_thumbnail(url = user["avatar"]["large"])
@@ -524,7 +608,7 @@ class Myanimelist():
         await self.bot.say(ctx,embed = embed)
 
     @commands.command(brief = "Search character from anime/manga. Database is Anilist")
-    async def char(self,ctx,name):
+    async def char(self,ctx,*,name):
         if name.isdigit():
             name = int(name)
         char = await self.main_anilist.search_character(name)
@@ -547,21 +631,6 @@ class Myanimelist():
         embed.description = show +"\n\n"+ synopis(char["description"])
         await self.bot.say(ctx,embed=embed)
 
-    async def whatanime_find(self,*args):
-        react,member,msg,anime_data,ctx,data,index = args
-        length = len(data)
-        anime = await self.main_anilist.search_anime(data[index])
-
-        is_extra = True if length > 1 else False #later on
-        if length > index + 1:
-            index += 1
-        else:
-            index = 0 #shrug
-
-        extra ={"react":"\U00002b07","method": self.whatanime_find,"footer":"|⬇ Wrong Anime","msg":msg,"args":[data,index]} if is_extra else None
-
-        return await self.show_anime_anilist(ctx, anime["media"][0],0,extra=extra)
-
     @commands.command(brief = "What anime is this from.")
     @commands.cooldown(9,60,commands.BucketType.guild)
     async def whatanime(self,ctx,link = None):
@@ -569,7 +638,6 @@ class Myanimelist():
         This will help you to find anime that you link sources. This may not be accurate or not.
         It will take a moment. Files has to be less than 1MB sadly.
         """
-
         headers = {"User-Agent": "https://nurevam.site/", "host": "whatanime.ga",
                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         if link is None:
@@ -580,26 +648,95 @@ class Myanimelist():
                 return self.bot.say(ctx, content="Please enter a link or attachments")
         async with ctx.message.channel.typing():
             async with aiohttp.ClientSession() as session:
-                    async with session.get(link) as resp:
-                        picture = base64.b64encode(await resp.read())
+                async with session.get(link) as resp:
+                    picture = base64.b64encode(await resp.read())
 
-                    async with session.post("https://whatanime.ga/api/search", params={"token": utils.secret["whatanime"]},headers=headers, data={"image": {picture}}) as resp:
-                        if resp.status == 200:
-                            data = await resp.json()
-                            #Since there can be multi of same anime with different time frame.
-                            unique_anime = []
-                            for x in data["docs"]:
-                                id_ = x["anilist_id"]
-                                if id_ not in unique_anime:
-                                    unique_anime.append(id_)
+                async with session.post("https://whatanime.ga/api/search", params={"token": utils.secret["whatanime"]},headers=headers, data={"image": {picture}}) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        #Since there can be multi of same anime with different time frame.
+                        unique_anime = []
+                        for x in data["docs"]:
+                            id_ = x["anilist_id"]
+                            if id_ not in unique_anime:
+                                unique_anime.append(id_)
+                        await ctx.send("Checking...",delete_after = 2)
+                        return await self.whatanime_find(None,None,None,None,ctx,unique_anime,0)
 
-                            return await self.whatanime_find(None,None,None,None,ctx,unique_anime,0)
+                    elif resp.status == 413:
+                        await self.bot.say(ctx, content="I am sorry, but files is too big.")
 
-                        elif resp.status == 413:
-                            await self.bot.say(ctx, content="I am sorry, but files is too big.")
+    @commands.command(brief = "Show info about upcoming Airing")
+    async def airing(self,ctx,name = None):
+        """
+        Data can be name or ID, it will get data from that anime upcoming ep.
+        """
 
+        if name is None:
+            data = await self.main_anilist.airingSchedules({"airAtG": int(time.time()),"sort":"TIME"})
+        else:
+            if name.isdigit():
+                name = int(name)  # ID work as well.
+            data = await self.search_query(ctx, await self.main_anilist.search_anime(name), anilist=True)
+            if data is None: return
+            data = await self.main_anilist.airingSchedules({"mid":data["id"],"airAtG": int(time.time()),"sort":"TIME"})
 
+        airing = data["airingSchedules"]
+        if bool(airing) is False:
+            return await self.bot.say(ctx,content = "I am sorry, there is no upcoming airing for this.")
 
+        #now we will make a list of upcoming airing
+        #[Name](url)(ID) episode: n at date
+        air_array = []
+        current_date = time.localtime().tm_mday
+        counter = 0
+        #we will mark page so user know what page they are on.
+        page = 1
+        max = int(len(airing) / 10 + (1 if len(airing) % 10 != 0 else 0))
+        text = ""
+        for air in airing: #iterate each airing list
+            future = time.gmtime(air["airingAt"]) #time it will aired at
+            if future.tm_mday == current_date:  #we are checking if it today, if so we will put up how many hours instead of date
+                time_air = air["timeUntilAiring"]
+                if time_air> 3600:
+                    hour = time_air / 3600  # getting hour
+                    min = (time_air % 3600) / 60  # getting min
+                    air_msg = "{} hour(s) and {} min(s) left".format(int(hour), round(min))
+                else:
+                    time_air /= 60
+                    air_msg = "{} min(s) left".format(round(time_air, 2))
+            else:
+                air_msg = time.strftime("on %a %Y %b %d %H:%M:%S gmt",future)
+
+            #set up message
+            get_id = "({})".format(air["media"]["id"])
+
+            text += "[{0[media][title][romaji]}]({0[media][siteUrl]}) {1} " \
+                   "episode: {2} {3}\n\n".format(air,get_id,ordinal(air["episode"]),air_msg)
+
+            counter += 1
+            if counter == 10: #every 10, we will add to list but with embed.
+                embed = discord.Embed(description = text)
+                embed.set_footer(text = "Page: {}/{}".format(page,max))
+                air_array.append(embed)
+                counter = 0
+                page += 1
+                text = ""
+        if text:
+            embed = discord.Embed(description=text)
+            air_array.append(embed) #putting leftover in
+
+        #now we will put air_array into it
+        if len(air_array) == 1:
+            return await ctx.send(embed = air_array[0])
+
+        embed_system = utils.Embed_page(self.bot,air_array)
+
+        def check(reaction,user):#checking conditions
+            if reaction.message.id == embed_system.message.id and user.bot is False:
+                return bool(str(reaction.emoji) in [x[0] for x in embed_system.reaction])
+            return False
+        await embed_system.start(ctx.message.channel,check = check)
 
 
 def setup(bot):
