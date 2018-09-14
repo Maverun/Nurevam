@@ -26,7 +26,7 @@ class Weather(): #Allow to welcome new members who join guild. If it enable, wil
         sunrise: 00:00:00 utc / sunset: 00:00:00 utc
         """
         locate = locations.replace(" ","_")
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric".format(locate,self.api)
             async with session.get(link) as resp:
                 data = await resp.json()

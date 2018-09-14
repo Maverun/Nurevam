@@ -429,7 +429,7 @@ class Level:
         else:
             pic_data = await self.redis.hget("{}:Level:Config".format(ctx.message.guild.id), "pic")
         if pic_data:
-            with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession() as session:
                 async with session.get(pic_data) as resp:
                     pic = Image.open(io.BytesIO(await resp.read())) #read pic and save it to memory then declare new object called im (Image)
                     aspectratio =  pic.width / pic.height

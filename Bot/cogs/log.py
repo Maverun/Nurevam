@@ -35,7 +35,7 @@ class Log():
         return embed
 
     async def avatar(self,before,after):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(before.avatar_url) as resp:
                         old = Image.open(io.BytesIO(await resp.read()))

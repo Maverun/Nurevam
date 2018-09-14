@@ -27,7 +27,7 @@ class Memes:
             return await self.bot.say(ctx,content = "That meme does not exist!")
         #if it true, get link name from database and then start work on it
         link = await self.redis.hget("{}:Memes:link".format(ctx.message.guild.id),name)
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(link) as resp:
                 if resp.status == 404:
                     return await self.bot.say(ctx,content = "I can't find a picture for this, It might have got delete long ago")

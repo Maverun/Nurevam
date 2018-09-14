@@ -57,7 +57,7 @@ class Core():
         await self.bot.say(ctx,content = "```xl\n{}\n```\n{}".format(msg,link))
 
     async def check_status(self,link):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(link) as resp:
                 log.debug(resp.status)
                 if resp.status == 200:
