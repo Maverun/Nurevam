@@ -98,6 +98,7 @@ class Events:
                     except:
                         pass
                 if isinstance(msg.channel,discord.TextChannel) is False:
+                    if msg.author.id == self.bot.user.id and (msg.channel,discord.DMChannel) and msg.channel.recipient.id == 105853969175212032: return #no need to pm me. cuz it is likely an error.
                     utils.prCyan("PRIVATE")
                     utils.prGreen("<Event Send> {} : {} |||{}".format(self.Time(), msg.author.name, msg.clean_content))
                 else:

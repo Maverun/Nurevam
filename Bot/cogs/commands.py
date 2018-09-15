@@ -81,16 +81,20 @@ async def run_command(cmd,obj,ctx,*args:str):
 class CustomCmd(commands.Command):
     def __init__(self,**kwargs):
         self._entries = {}
+        self.module = None
         super().__init__(**kwargs)
+
+    async def callback(self):
+        pass #ignore any problem and JUST CARRY ON.
 
     async def invoke(self, ctx):
         server = ctx.message.guild
         if server is not None:
-            log.debug("Invoke command: {} , guild ID ".format(ctx.command.name,server.id))
+            log.debug("Invoke command: {} , guild ID {}".format(ctx.command.name,server.id))
             entry = self._entries.get(server.id)
             if entry is None:
                 return
-
+            
             # update the callback called
             self.callback = functools.partial(run_command, entry)
             self.params = inspect.signature(self.callback).parameters
