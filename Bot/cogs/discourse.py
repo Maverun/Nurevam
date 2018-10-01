@@ -88,6 +88,8 @@ class Discourse(): #Discourse, a forums types.
                             utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
                         else:
                             utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
+                            await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
+
         except:
             utils.prRed(traceback.format_exc())
             await self.repeat_error(guild_id,config["domain"])
@@ -206,7 +208,8 @@ class Discourse(): #Discourse, a forums types.
                     counter_loops = 0
                 if self.bot.id_discourse != id_count:  # if it don't match, it will return
                     return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
-                for guild in list(self.bot.guilds):
+
+                for guild in list(self.bot.guilds): #start checking new thread and post.
                     log.debug("Checking guild {}".format(repr(guild)))
                     self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
                     await self.new_post(guild.id)

@@ -46,7 +46,6 @@ class Myanimelist():
         """
         if anilist:
             obj_data = obj["media"]
-            print(obj_data)
             if len(obj_data) == 1:
                 return obj_data[0]
             elif bool(obj_data) is True:
@@ -137,7 +136,6 @@ class Myanimelist():
             value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date, data["season"]]]
             text += "**Episode:** {0[episodes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**Season:** {6}\n**ID:** {0[id]}"
             if data["nextAiringEpisode"]:
-                print("Airing confirm")
                 airing = data["nextAiringEpisode"]
                 time = airing["timeUntilAiring"]
                 ep = ordinal(airing["episode"])
@@ -149,7 +147,6 @@ class Myanimelist():
                     time /= 60
                     air_msg = "{} min(s) left for {} episode".format(round(time,2),ep)
                 text += "\n**Next Airing**: {}".format(air_msg)
-                print(text)
             text += "\n**Synopsis:** {1}"
             footer = "[W]atching | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?"
             reaction_list = [["\U0001f1fc", self.watching_anilist]]
@@ -377,7 +374,6 @@ class Myanimelist():
         await ctx.send("{}, I have removed {} from your list".format(member.mention, data["title"]["romaji"]),delete_after = 10)
 
     async def seen_this_anilist(self, *args):#checking if user have seen this anime or not
-        print(args)
         if len(args) == 7:
             react,member,msg,data,ctx,list_data,index = args
         else:
@@ -428,11 +424,9 @@ class Myanimelist():
         react,member,msg,anime_data,ctx,data,index = args
         length = len(data)
         anime = await self.main_anilist.search_anime(data) #accepts list, it will do magic.
-        print(anime)
         if length > 1:
             return await self.whatanime_multi(None,None,None,None,ctx,anime,-1)
 
-        print("Over there. sending it")
         return await self.show_anime_anilist(ctx, anime["media"][0],0)
 
     async def whatanime_multi(self,*args):
@@ -613,7 +607,6 @@ class Myanimelist():
             name = int(name)
         char = await self.main_anilist.search_character(name)
         char = char["characters"]
-        print(char)
         if len(char) > 1:
             data = ["{}. {}".format(index, name) for index, name in enumerate(["{} {}".format(x["name"]["first"],x["name"]["last"]) for x in char], start=1)]  # wew lad
             answer = await utils.input(self.bot, ctx, "```{}```\nWhich number?".format("\n".join(data)), lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)  # getting input from user

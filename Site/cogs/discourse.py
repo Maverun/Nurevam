@@ -95,6 +95,7 @@ def category(server_id):
         return dashboard(server_id = server_id)
 
     guild_channel = utils.get_channel(server_id)
+    guild_channel = sorted(guild_channel,key = lambda k:k["name"])
     log.info(guild_channel)
     default = [x["name"] for x in guild_channel if x["id"] == default][0]
     log.info("default show {}".format(default))
