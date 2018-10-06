@@ -12,6 +12,19 @@ def check_roles(ctx):
         return True
     return utils.check_roles(ctx, "Mod", "admin_roles")
 
+
+
+class get_person(commands.clean_content):
+    def __init__(self,*,lower = False):
+        self.lower = lower
+        super().__init__()
+
+    async def covert(self,ctx,arg):
+        print("under covert")
+        print(arg)
+
+
+
 class Mod():
     """
     A mod tool for Mods.
@@ -38,13 +51,16 @@ class Mod():
 
     @commands.group(brief="Allow to clean bot itself, have subcommand",invoke_without_command=True)
     @commands.check(check_roles)
-    async def clean(self, ctx, *, limit:int=100):
+    # async def clean(self, ctx, *, limit:int=100):
+    async def clean(self, ctx, test:get_person(lower = False)):
         """
         Is able to clear up it's own messages.
         Does not affect any user's messages.
         """
-        counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
-        await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
+        #counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
+        #await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
+        print("wew lad")
+        print(test)
 
     @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)

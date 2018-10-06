@@ -1,0 +1,17 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+    <div class="container">
+        <div class="row">
+            {% include 'sidebar.html' %}
+
+            <div class="col-md-8">
+                <h3>Anti Raid <a href="?disable=1" class="btn btn-warning btn-xs">Disable</a></h3>
+                {% include 'flash.html' %}
+
+
+
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

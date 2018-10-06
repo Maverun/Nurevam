@@ -88,7 +88,7 @@ class Discourse(): #Discourse, a forums types.
                             utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
                         else:
                             utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
-                            await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
+                            #await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
 
         except:
             utils.prRed(traceback.format_exc())
