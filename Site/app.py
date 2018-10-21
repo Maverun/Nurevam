@@ -1,17 +1,19 @@
-from flask import Flask,session,redirect,url_for,request,render_template,abort,jsonify,flash
+import binascii
+from datetime import timedelta
+import importlib
+import json
+import logging
+import os
+import platform
+import traceback
+
+from flask import Flask, session, redirect, url_for ,request ,render_template ,abort ,jsonify ,flash
+from flaskext.markdown import Markdown
 from itsdangerous import JSONWebSignatureSerializer
 from osuapi import OsuApi, ReqConnector
-from flaskext.markdown import Markdown
-from datetime import timedelta
-import traceback
-import importlib
-import platform
-import binascii
-import logging
 import redis
+
 import utils
-import json
-import os
 
 
 if platform.system() == "Windows": #due to different path for linux and window
