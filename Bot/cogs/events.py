@@ -58,7 +58,7 @@ class Events:
     async def on_guild_update(self,before,after): #If guild update name and w/e, just in case, Update those
         print("\033[95m<EVENT Update>:\033[94m {} :\033[96m {} \033[93m | \033[92m({}) -- {}\033[00m".format(self.Time(),after.name,after.id, after))
         if after.icon:
-            await self.redis.set("{}:Icon".format(after.id),after.icon)
+            await self.redis.hset("Info:Server_Icon",after.id,after.icon)
         await self.redis.hset("Info:Server",after.id,after.name)
 
     async def on_member_join(self,member):
@@ -110,7 +110,8 @@ class Events:
                                 for x in data:
                                     table.add_column(x.name,x.value.split("\n"))
                             content = str(msg.embeds[0].description) +"\n"
-                            content +="\n" + str(table)
+                            if bool(table.field_names): #if there is actually contents inside, then we will add it to list.
+                                content +="\n" + table.get_string()
                         else:
                             content = msg.clean_content
                         utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.guild.name,msg.guild.id, content))

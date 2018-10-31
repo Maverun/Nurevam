@@ -115,13 +115,16 @@ app.jinja_env.globals['csrf_token'] = generate_csrf_token
 @utils.server_check
 def dashboard(server_id):
     log.info("Dashboard currently")
-    guilds = utils.get_user_guilds(session['api_token'])
-    server = list(filter(lambda g: g['id']==str(server_id), guilds))[0]
+
+    #getting server icon and name
+    icon = db.hget("Info:Server_Icon",server_id)
+    name = db.hget("Info:Server",server_id)
+
     get_enable_list = db.hgetall("{}:Config:Cogs".format(server_id))
     info = [[key,values.name.title(),values.description] for key,values in blueprint_lib.items()]
     enable_plugin = [x for x in blueprint_lib if x in get_enable_list]
     info.sort(key=lambda x: x[1])
-    return render_template("dashboard.html",server = server,info=info,enable_plugin = enable_plugin)
+    return render_template("dashboard.html", server={"id": server_id, "icon": icon, "name": name}, info=info,enable_plugin=enable_plugin)
 
 @app.route('/dashboard/<int:server_id>/<string:cog>')
 def dashboard_cog(server_id,cog):

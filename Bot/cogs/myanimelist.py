@@ -757,10 +757,8 @@ class Myanimelist():
         airing = data["airingSchedules"]
         if bool(airing) is False:
             return await self.bot.say(ctx,content = "I am sorry, you have no upcoming airing in your own watching list..")
-        
+
         await self.display_airing(ctx,airing)
-
-
 
 def setup(bot):
     bot.add_cog(Myanimelist(bot))
