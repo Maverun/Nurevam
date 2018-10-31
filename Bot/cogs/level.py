@@ -140,10 +140,13 @@ class Level:
                 announce = await self.redis.hgetall("{}:Level:Config".format(guild))
 
                 if announce.get("announce") == "on":
-                    if announce.get("whisper") == "on":
-                        await msg.author.send(announce["announce_message"].format(player = msg.author.display_name,level = level))
-                    else:
-                        await msg.channel.send(announce["announce_message"].format(player = msg.author.display_name,level = level))
+                    try:
+                        if announce.get("whisper") == "on":
+                            await msg.author.send(announce["announce_message"].format(player = msg.author.display_name,level = level))
+                        else:
+                            await msg.channel.send(announce["announce_message"].format(player = msg.author.display_name,level = level))
+                    except discord.Forbidden:
+                        pass #unable to send message be it perm or user block bot.
 
     def next_Level(self,xp,lvl=0):
         f = 2*(lvl**2)+20*(lvl)+100

@@ -631,7 +631,7 @@ class Myanimelist():
         This will help you to find anime that you link sources. This may not be accurate or not.
         It will take a moment. Files has to be less than 1MB sadly.
         """
-        headers = {"User-Agent": "https://nurevam.site/", "host": "whatanime.ga",
+        headers = {"User-Agent": "https://nurevam.site/", "host": "trace.moe",
                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         if link is None:
             check = ctx.message.attachments
@@ -644,7 +644,8 @@ class Myanimelist():
                 async with session.get(link) as resp:
                     picture = base64.b64encode(await resp.read())
 
-                async with session.post("https://whatanime.ga/api/search", params={"token": utils.secret["whatanime"]},headers=headers, data={"image": {picture}}) as resp:
+                # async with session.post("https://trace.moe/api/search", params={"token": utils.secret["whatanime"]},headers=headers, data={"image": {picture}}) as resp:
+                async with session.post("https://trace.moe/api/search",headers=headers, data={"image": {picture}}) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         #Since there can be multi of same anime with different time frame.
@@ -659,25 +660,7 @@ class Myanimelist():
                     elif resp.status == 413:
                         await self.bot.say(ctx, content="I am sorry, but files is too big.")
 
-    @commands.command(brief = "Show info about upcoming Airing")
-    async def airing(self,ctx,name = None):
-        """
-        Data can be name or ID, it will get data from that anime upcoming ep.
-        """
-
-        if name is None:
-            data = await self.main_anilist.airingSchedules({"airAtG": int(time.time()),"sort":"TIME"})
-        else:
-            if name.isdigit():
-                name = int(name)  # ID work as well.
-            data = await self.search_query(ctx, await self.main_anilist.search_anime(name), anilist=True)
-            if data is None: return
-            data = await self.main_anilist.airingSchedules({"mid":data["id"],"airAtG": int(time.time()),"sort":"TIME"})
-
-        airing = data["airingSchedules"]
-        if bool(airing) is False:
-            return await self.bot.say(ctx,content = "I am sorry, there is no upcoming airing for this.")
-
+    async def display_airing(self,ctx,airing):
         #now we will make a list of upcoming airing
         #[Name](url)(ID) episode: n at date
         air_array = []
@@ -691,7 +674,7 @@ class Myanimelist():
             future = time.gmtime(air["airingAt"]) #time it will aired at
             if future.tm_mday == current_date:  #we are checking if it today, if so we will put up how many hours instead of date
                 time_air = air["timeUntilAiring"]
-                if time_air> 3600:
+                if time_air > 3600:
                     hour = time_air / 3600  # getting hour
                     min = (time_air % 3600) / 60  # getting min
                     air_msg = "{} hour(s) and {} min(s) left".format(int(hour), round(min))
@@ -730,6 +713,53 @@ class Myanimelist():
                 return bool(str(reaction.emoji) in [x[0] for x in embed_system.reaction])
             return False
         await embed_system.start(ctx.message.channel,check = check)
+
+    @commands.group(brief = "Show info about upcoming Airing")
+    async def airing(self,ctx,name = None):
+        """
+        Data can be name or ID, it will get data from that anime upcoming ep. If name is blank, it will show all anime upcoming airing.
+        airing mylist - will show anime airing dated from your list.
+        """
+
+        if name is None:
+            data = await self.main_anilist.airingSchedules({"airAtG": int(time.time()),"sort":"TIME"})
+        elif name == "mylist": #if it "sub command" then we know user want to see airing related to his anime.
+            return await self.airing_mylist(ctx)
+        else:
+            if name.isdigit():
+                name = int(name)  # ID work as well.
+            data = await self.search_query(ctx, await self.main_anilist.search_anime(name), anilist=True)
+            if data is None: return
+            data = await self.main_anilist.airingSchedules({"mid":data["id"],"airAtG": int(time.time()),"sort":"TIME"})
+
+        airing = data["airingSchedules"]
+        if bool(airing) is False:
+            return await self.bot.say(ctx,content = "I am sorry, there is no upcoming airing for this.")
+
+        await self.display_airing(ctx,airing)
+
+    async def airing_mylist(self,ctx):
+        #checking if account is verify.
+        account = await self.anilist_token(ctx, ctx.message.author)
+        if account is None: return
+
+        #Now we get info about user itself
+        user = await account.user()
+        user = user["data"]["Viewer"]
+
+        #once we get ID from user itself, we can start getting user list and get its current watching list ID
+        user = await self.main_anilist.get_user_list({"id":user["id"],"type":"ANIME","status":UserStatus_Anilist.current})
+        user = user["data"]["MediaListCollection"]["lists"][0]["entries"]
+        get_all_id = [x.get("mediaId") for x in user]
+
+        #geting airing schedules then print out result
+        data = await self.main_anilist.airingSchedules({"mid_in":get_all_id,"airAtG":int(time.time()),"sort":"TIME"})
+        airing = data["airingSchedules"]
+        if bool(airing) is False:
+            return await self.bot.say(ctx,content = "I am sorry, you have no upcoming airing in your own watching list..")
+        
+        await self.display_airing(ctx,airing)
+
 
 
 def setup(bot):

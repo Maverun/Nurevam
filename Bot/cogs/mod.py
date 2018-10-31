@@ -12,6 +12,17 @@ def check_roles(ctx):
         return True
     return utils.check_roles(ctx, "Mod", "admin_roles")
 
+
+
+class get_person(commands.MemberConverter):
+    def __init__(self, *, lower=False):
+        self.lower = lower
+        super().__init__()
+
+
+
+
+
 class Mod():
     """
     A mod tool for Mods.
@@ -22,7 +33,7 @@ class Mod():
         self.bot.say_edit = bot.say
 
     def __local_check(self,ctx):
-        return utils.is_enable(ctx,"mod")
+        return utils.is_enable(ctx,"mod") or ctx.message.author.id == self.bot.owner.id
 
     def delete_mine(self,m):
         return m.author.id == self.bot.user.id
@@ -38,13 +49,21 @@ class Mod():
 
     @commands.group(brief="Allow to clean bot itself, have subcommand",invoke_without_command=True)
     @commands.check(check_roles)
-    async def clean(self, ctx, *, limit:int=100):
+    # async def clean(self, ctx, *, limit:int=100):
+    async def clean(self, ctx,limit:int = 100,user:commands.MemberConverter or bool = False,):
         """
         Is able to clear up it's own messages.
-        Does not affect any user's messages.
+        can affect any user's messages by mention it.
         """
-        counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
-        await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
+        if limit > 2000:
+            return await self.bot.say(ctx,content = "Won't able to delete due to {limit}/2000 message to delete.".format(limit = limit))
+        if user:
+            counter = await ctx.message.channel.purge(check=lambda m:m.author.id == user.id,limit=limit)
+            await self.bot.say(ctx,content = "```py\nI cleared {} posts from {}```".format(len(counter),user.name))
+        else:
+            counter = await ctx.message.channel.purge(limit = limit,check=self.delete_mine)
+            await self.bot.say(ctx,content = "```py\nI cleared {} posts of mine\n```".format(len(counter)))
+
 
     @clean.command(brief= "Is able to clear a certain role's messages",pass_context=True, invoke_without_command=True)
     @commands.check(check_roles)

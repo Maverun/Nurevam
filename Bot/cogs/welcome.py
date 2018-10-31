@@ -45,6 +45,8 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                         await member.add_roles(*role_obj)
                     except discord.Forbidden:
                         pass #if unable to add user
+                    except discord.NotFound:
+                        pass #if it cant find that user. Assume it left server.
 
             except Exception as e:
                 await self.error(member.guild.owner, e)
