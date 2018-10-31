@@ -100,15 +100,15 @@ def plugin_page(plugin_name):
             db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
             db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
 
-            servers = get_user_guilds(session['api_token'])
-            server = list(filter(lambda g: g['id']==str(server_id), servers))[0]
+            icon = db.hget("Info:Server_Icon", server_id)
+            name = db.hget("Info:Server", server_id)
 
             get_enable_list = db.hgetall("{}:Config:Cogs".format(server_id))
             info = [[key, values.name.title(), values.description] for key, values in current_app.blueprint_lib.items()]
             enable_plugin = [x for x in current_app.blueprint_lib if x in get_enable_list]
             info.sort(key=lambda x:x[1])
             return render_template("/{}/index.html".format(plugin_name),
-                server=server,
+                server={"id": server_id, "icon": icon, "name": name},
                 info = info,
                 enable_plugin=enable_plugin,
                 **f(server_id))
