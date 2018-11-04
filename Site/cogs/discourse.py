@@ -94,16 +94,20 @@ def category(server_id):
         flash("There is something wrong with channel, please try set it again")
         return dashboard(server_id = server_id)
 
+    #Getting guild channel list
     guild_channel = utils.get_channel(server_id)
     guild_channel = sorted(guild_channel,key = lambda k:k["name"])
     log.info(guild_channel)
     default = [x["name"] for x in guild_channel if x["id"] == default][0]
     log.info("default show {}".format(default))
+
+    #Getting info about server, id, name and icon of it to display it.
     server = {
         'id':server_id,
         'name':db.hget("Info:Server",server_id),
         'icon':db.hget("Info:Server_Icon",server_id)}
 
+    #making requests to discourse site within API to get category info so we can send topics to certain channel chosen by user.
     r = requests.get("{}/site.json?api_key={}&api_username={}".format(domain,api_key,username))
     raw_data = r.json()["categories"]
     data = []
@@ -116,9 +120,10 @@ def category(server_id):
             if sub:
                 sub.append({"id":str(category_id),"name":x["name"],"sub":"true"})
             else:
-                sub_temp.update({have_sub:[{"id":category_id,"name":x["name"],"sub":"true"}]})
+                sub_temp.update({have_sub:[{"id":str(category_id),"name":x["name"],"sub":"true"}]})
             continue
         data.append({"id":str(category_id),"name":x["name"],"sub":"false"})
+    #getting proper fresh data after getting all sub categorys, it is doing in order.
     fresh_data = []
     for x in data:
         fresh_data.append(x)

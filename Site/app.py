@@ -280,7 +280,8 @@ def update_core(server_id):
 @app.before_first_request
 def setup_logging():
     try:
-        log.info("\033[92mName: {}|||ID: {}\033[00m".format(session["user"]["username"],session["user"]["id"]))
+        #log.info("\033[92mName: {}|||ID: {}\033[00m".format(session["user"]["username"],session["user"]["id"]))
+        log.info("Name: {}|||ID: {}".format(session["user"]["username"],session["user"]["id"]))
     except:
         pass
 

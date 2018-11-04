@@ -24,7 +24,7 @@
                         {% for cate_data in category %}
                         <tr>
                             {%if cate_data.sub == "true"%}
-                                <td><h5>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{cate_data.name}}</h5></td>
+                                <td><h5>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└{{cate_data.name}}</h5></td>
                             {%else%}
                                 <td><h5>{{cate_data.name}}</h5></td>
                             {%endif%}
