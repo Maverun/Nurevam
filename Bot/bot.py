@@ -21,6 +21,7 @@ def check_post(check):
         return 30
 
 async def say(ctx,**kwargs):
+    print("at say function",ctx,kwargs)
     check = await bot.db.redis.hget("{}:Config:Delete_MSG".format(ctx.message.guild.id),ctx.command.cog_name.lower())
     return await ctx.send(**kwargs,delete_after=check_post(check))
 
@@ -51,8 +52,8 @@ async def command_checker(msg):
             bot.pm_help = False
             return
 
-        cmd_prefix= await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id))
-        cmd_prefix= cmd_prefix.split(",")
+        cmd_prefix = await bot.db.redis.get("{}:Config:CMD_Prefix".format(msg.guild.id)) or "!"
+        cmd_prefix = cmd_prefix.split(",")
         if '' in cmd_prefix: #check if "none-space" as a command, if true, return, in order to prevent any spam in case, lower chance of getting kick heh.
             return
         bot.command_prefix = commands.when_mentioned_or(*cmd_prefix)
@@ -66,6 +67,7 @@ async def command_checker(msg):
 
 @bot.event
 async def on_message(msg): #For help commands and custom prefix.
+    print(msg)
     await command_checker(msg)
     await bot.process_commands(msg)
 
