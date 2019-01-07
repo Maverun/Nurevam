@@ -67,7 +67,6 @@ async def command_checker(msg):
 
 @bot.event
 async def on_message(msg): #For help commands and custom prefix.
-    print(msg)
     await command_checker(msg)
     await bot.process_commands(msg)
 
