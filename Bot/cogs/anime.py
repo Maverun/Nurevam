@@ -20,7 +20,7 @@ def synopis(term):
 ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n / 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])  # credit to Gareth from codegof. I like this so.
 
 
-class Myanimelist():
+class Anime():
     """
     Is able to search the database of Myanimelist.com to get info about a certain anime/manga
     """
@@ -761,4 +761,4 @@ class Myanimelist():
         await self.display_airing(ctx,airing)
 
 def setup(bot):
-    bot.add_cog(Myanimelist(bot))
+    bot.add_cog(Anime(bot))
