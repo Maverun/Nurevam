@@ -74,3 +74,27 @@
 {%endif%}
 
 {% endmacro %}
+
+{% macro select_list(html_name,title,data_list,description = "",data = "") %}
+
+{% if description != ""%}
+<div>
+    <label class="control-label" for="{{html_name}}">{{title|safe}}</label>
+    <select class="input-lg form-control" name="{{html_name}}">
+        {% for entry in data_list %}
+        <option value="{{entry.id}}" {%if entry.id ==data%} selected{%endif%}>
+            {{entry.name}}
+        </option>
+        {% endfor %}
+    </select>
+    {% if description != ""%}
+        <div class="well well-sm">
+            {{description|safe}}
+        </div>
+    {%endif%}
+
+</div>
+
+{%endif%}
+
+{% endmacro %}

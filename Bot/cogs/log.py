@@ -101,6 +101,7 @@ class Log():
                     # msg = self.format_msg(after.author)
                     msg = "{}".format(after.channel.mention)
                     embed = self.format_embed(after.author,"Edited")
+                    embed.url = after.jump_url
                     embed.description = msg
                     embed.add_field(name = "Before",value = before.content,inline=False)
                     embed.add_field(name = "After",value = after.content,inline=False)
@@ -116,11 +117,23 @@ class Log():
             if self.config[msg.guild.id].get("delete"):
                 if msg.author.bot and self.config[msg.guild.id].get("bot"):
                         return
-                message = self.format_msg(msg.author)
+                author = msg.author
+                if msg.channel.permissions_for(msg.guild.me).view_audit_log:
+                    audit = await msg.guild.audit_logs(limit = 1 ,action = discord.AuditLogAction.message_delete).flatten()
+                    if audit:
+                        author = audit[0].user
+
+                message = self.format_msg(author)
                 if msg.attachments:
-                    message += "*has deleted attachments*"
+                    if author != msg.author:
+                        message += "*has deleted {}'s attachments".format(msg.author)
+                    else:
+                        message += "*has deleted attachments*"
                 else:
-                    message += "*has deleted the following message* in {}: ".format(msg.channel.mention)
+                    if author != msg.author:
+                        message += "*has deleted the following message belong to {} from {}: ".format(msg.author,msg.channel.mention)
+                    else:
+                        message += "*has deleted the following message* in {}: ".format(msg.channel.mention)
                     message += "{}".format(msg.clean_content)
                 await self.send(msg.guild.id,message)
 
@@ -128,6 +141,7 @@ class Log():
         if self.config.get(member.guild.id):
             if self.config[member.guild.id].get("join"):
                 # msg = self.format_msg(member)
+
                 # msg += "has joined the guild "
                 embed = self.format_embed(member,"Join")
                 age = datetime.datetime.utcnow() - member.created_at

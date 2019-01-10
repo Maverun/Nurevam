@@ -9,7 +9,7 @@
             {% include 'flash.html' %}
             <form id="discourse" method="POST" action="{{url_for('discourse.update_discourse', server_id=server['id'])}}">
                 <input name=_csrf_token type=hidden value="{{ csrf }}">
-                {{template.text_box("domain","Domain link","<strong>Enter the Domain link here</strong>: for example https://discuss.moe",config['domain'])}}
+                {{template.text_box("domain","Domain link","<strong>Enter the Domain link here</strong>: for example https://meta.discourse.org",config['domain'])}}
                 {{template.text_box("api_key","API Key","<strong>Enter API Key</strong>",config['api_key'])}}
                 {{template.text_box("username","Username","<strong>Enter the username</strong>",config['username'])}}
                 {{template.channel_list("channel","Channel for posting info",guild_channel,"Note,make sure Nurevam are able to speak on that channel!",discourse_channel)}}

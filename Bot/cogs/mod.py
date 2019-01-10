@@ -12,6 +12,8 @@ def check_roles(ctx):
         return True
     return utils.check_roles(ctx, "Mod", "admin_roles")
 
+def has_mute_role(ctx):
+    return utils.redis.smembers("{}:Mod:mute_roles".format(ctx.message.guild.id))
 
 
 class get_person(commands.MemberConverter):
@@ -202,6 +204,41 @@ class Mod():
         await user.remove_roles(user,*role,reason ="Request by {}".format(ctx.message.author))
         await self.bot.say(ctx,content = "Remove role from {}".format(user.name))
 
+
+
+##########################
+#    __  __      _       #
+#   |  \/  |_  _| |_ ___ #
+#   | |\/| | || |  _/ -_)#
+#   |_|  |_|\_,_|\__\___|#
+##########################
+
+    @commands.command(brief="Mute user")
+    @commands.check(check_roles)
+    @commands.check(has_mute_role)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def mute(self,ctx,user:discord.Member):
+        mute_role = await self.redis.smembers("{}:Mod:mute_roles".format(ctx.message.guild.id))
+        guild = ctx.message.guild
+        if guild.me.top_role.permissions.manage_roles:  # if got Manage roles permission, can grant roles
+            role = [x for x in guild.roles if str(x.id) in mute_role]
+            await user.add_roles(*role,reason = "{} requests with mute command".format(ctx.message.author))
+            await self.bot.say(ctx,content = "Done muting {}".format(user.mention))
+
+    @commands.command(brief="Unmute user")
+    @commands.check(check_roles)
+    @commands.check(has_mute_role)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def unmute(self,ctx,user:discord.Member):
+        mute_role = await self.redis.smembers("{}:Mod:mute_roles".format(ctx.message.guild.id))
+        guild = ctx.message.guild
+        if guild.me.top_role.permissions.manage_roles:  # if got Manage roles permission, can grant roles
+            role = [x for x in guild.roles if str(x.id) in mute_role]
+            try:
+                await user.remove_roles(*role,reason = "{} requests with unmute command".format(ctx.message.author))
+                await self.bot.say(ctx,content = "Done unmuting {}".format(user.mention))
+            except:
+                pass
 
 def setup(bot):
     bot.add_cog(Mod(bot))
