@@ -181,8 +181,9 @@ class AntiRaid():
             await self.check_spamming_msg(msg)
 
     async def on_member_join(self,member):
-        await self.check_account_age(member)
-        await self.check_multi_people_join(member)
+        if self.config.get(member.guild.id,False): #can be any as long as we know config exit
+            await self.check_account_age(member)
+            await self.check_multi_people_join(member)
 
 
 def setup(bot):
