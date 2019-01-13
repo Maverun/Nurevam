@@ -154,7 +154,7 @@ class AntiRaid():
             if self.redis.ttl("{}:AntiRaid:multi_ppl".format(guild.id)) == -1:
                 await self.redis.expire("{}:AntiRaid:multi_ppl".format(guild.id),int(self.get_config(guild.id, "multi_people_time")))
             # now checking how many join in during that time
-            if self.redis.scard("{}:AntiRaid:multi_ppl".format(guild.id)) >= int(self.get_config(guild.id, "multi_people_limit")):
+            if await self.redis.scard("{}:AntiRaid:multi_ppl".format(guild.id)) >= int(self.get_config(guild.id, "multi_people_limit")):
                     raw_member_list = await self.redis.smembers("{}:AntiRaid:multi_ppl".format(guild.id))
                     member_list = [guild.get_member(x) for x in raw_member_list]
                     for mem in member_list:
