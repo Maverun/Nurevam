@@ -170,7 +170,6 @@ class AntiRaid():
     async def on_message(self,msg):
         if msg.author.id == self.bot.user.id or isinstance(msg.channel,discord.DMChannel):
             return
-        utils.prCyan(msg)
         if self.config.get(msg.guild.id,False): #can be any as long as we know config exit
             await self.check_massive_ping(msg)
 
