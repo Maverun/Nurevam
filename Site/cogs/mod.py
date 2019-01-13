@@ -20,7 +20,6 @@ def dashboard(server_id):
     guild_roles = get_role['roles']
     admin_role = list(filter(lambda r: r['name'] in db_admin_role or r['id'] in db_admin_role, guild_roles))
     mute_role = list(filter(lambda r: r['name'] in db_mute_role or r['id'] in db_mute_role, guild_roles))
-    print(admin_role)
     return {"admin_roles": admin_role, "mute_roles":mute_role,"guild_roles": guild_roles}
 
 @blueprint.route('/update/<int:server_id>', methods=['POST'])
