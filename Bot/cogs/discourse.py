@@ -21,7 +21,7 @@ class Discourse(): #Discourse, a forums types.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
-        self.counter= 0
+        self.counter = 0
         self.log_error = {}
         self.bg_dis = utils.Background("discourse",60,30,self.timer,log)
         self.bot.background.update({"discourse":self.bg_dis})
@@ -192,28 +192,21 @@ class Discourse(): #Discourse, a forums types.
         log.debug("Finish checking {}".format(guild_id))
 
     async def timer(self):
-        self.bot.id_discourse += 1
-        id_count = self.bot.id_discourse #testing ID of loops, how many time is there that
-        utils.prPurple("Starting Discourse Loops time")
-        counter_loops = 0
+
         try:
-            log.debug("Back to start loops {}".format(counter_loops))
-            if counter_loops == 30:
-                self.counter += 1
+            log.debug("Back to start loops {}".format(self.counter))
+            self.counter += 1
+            if self.counter == 30:
                 utils.prRed("updating ID for discourse")
                 for guild in list(self.bot.guilds):
                     await self.get_update_id(guild.id)
-                utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
-                counter_loops = 0
-            if self.bot.id_discourse != id_count:  # if it don't match, it will return
-                return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
+                    self.counter_loops = 0
 
             for guild in list(self.bot.guilds): #start checking new thread and post.
                 log.debug("Checking guild {}".format(repr(guild)))
                 self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
                 await self.new_post(guild.id)
-            counter_loops += 1
-            log.debug("Sleeping...")
+
         except asyncio.CancelledError:
             return utils.prRed("Asyncio Cancelled Error")
         except Exception as e:
