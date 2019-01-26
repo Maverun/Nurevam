@@ -119,7 +119,7 @@ class Log():
                         return
                 author = msg.author
                 if msg.channel.permissions_for(msg.guild.me).view_audit_log:
-                    audit = await msg.guild.audit_logs(limit = 1 ,action = discord.AuditLogAction.message_delete).flatten()
+                    audit = await msg.guild.audit_logs(limit = 1 ,action = discord.AuditLogAction.message_delete,after = msg.id).flatten()
                     if audit:
                         author = audit[0].user
 

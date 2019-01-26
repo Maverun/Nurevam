@@ -26,11 +26,11 @@ class Discourse(): #Discourse, a forums types.
         self.bg_dis = utils.Background("discourse",60,30,self.timer,log)
         self.bot.background.update({"discourse":self.bg_dis})
 
-        loop = asyncio.get_event_loop()
-        self.loop_discourse_timer = loop.create_task(self.timer())
-
+        # loop = asyncio.get_event_loop()
+        # self.loop_discourse_timer = loop.create_task(self.timer())
+        self.bg_dis.start()
     def __unload(self):
-        self.loop_discourse_timer.cancel()
+        self.bg_dis.stop()
         utils.prLightPurple("Unloading Discourse")
 
     def __local_check(self,ctx):
@@ -196,31 +196,29 @@ class Discourse(): #Discourse, a forums types.
         id_count = self.bot.id_discourse #testing ID of loops, how many time is there that
         utils.prPurple("Starting Discourse Loops time")
         counter_loops = 0
-        while True:
-            try:
-                log.debug("Back to start loops {}".format(counter_loops))
-                if counter_loops == 30:
-                    self.counter += 1
-                    utils.prRed("updating ID for discourse")
-                    for guild in list(self.bot.guilds):
-                        await self.get_update_id(guild.id)
-                    utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
-                    counter_loops = 0
-                if self.bot.id_discourse != id_count:  # if it don't match, it will return
-                    return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
+        try:
+            log.debug("Back to start loops {}".format(counter_loops))
+            if counter_loops == 30:
+                self.counter += 1
+                utils.prRed("updating ID for discourse")
+                for guild in list(self.bot.guilds):
+                    await self.get_update_id(guild.id)
+                utils.prPurple("Discourse Loops check! {}-ID:{}".format(self.counter,id_count))
+                counter_loops = 0
+            if self.bot.id_discourse != id_count:  # if it don't match, it will return
+                return utils.prRed("{} does not match within ID of {}! Ending this loops now".format(self.bot.id_discourse,id_count))
 
-                for guild in list(self.bot.guilds): #start checking new thread and post.
-                    log.debug("Checking guild {}".format(repr(guild)))
-                    self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
-                    await self.new_post(guild.id)
-                counter_loops += 1
-                log.debug("Sleeping...")
-                await asyncio.sleep(30)
-            except asyncio.CancelledError:
-                return utils.prRed("Asyncio Cancelled Error")
-            except Exception as e:
-                print(e)
-                utils.prRed(traceback.format_exc())
+            for guild in list(self.bot.guilds): #start checking new thread and post.
+                log.debug("Checking guild {}".format(repr(guild)))
+                self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
+                await self.new_post(guild.id)
+            counter_loops += 1
+            log.debug("Sleeping...")
+        except asyncio.CancelledError:
+            return utils.prRed("Asyncio Cancelled Error")
+        except Exception as e:
+            print(e)
+            utils.prRed(traceback.format_exc())
 
 
 #########################################################################
