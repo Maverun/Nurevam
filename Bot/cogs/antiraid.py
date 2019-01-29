@@ -59,14 +59,17 @@ class AntiRaid():
                 await member.ban(reason = reason)
                 if level == 4:
                     await member.unban(reason = reason)
+                return True
             elif level == 3:
                 await member.kick(reason = reason)
+                return True
             elif level == 2:
                 #get role here
                 role_id = await self.redis.smembers('{}:AntiRaid:mute_roles'.format(member.guild.id))
                 role = [x for x in member.guild.roles if str(x.id) in role_id]
                 if role is None: return
                 await member.add_roles(*role,reason = reason)
+                return True
             elif level == 1:
                 #warn user
                 pass
@@ -75,18 +78,19 @@ class AntiRaid():
         except Exception as e: #no perm? oh well
             utils.prRed("Error from anti raid security level \n\n{}".format(e))
             pass
+        return  False
 
     async def check_discord_invite_link(self,msg):
         if "discord.gg/" in msg.content:
             if self.get_config(msg.guild.id,"invite_link"):
                 list_invite = await msg.guild.invites()
                 if len([x for x in list_invite if x.code in msg.content]) is 0:
-                    await self.security_level(msg.author,Mode_config.invite,"Invite Link not from this server. -AntiRaid")
-                    await msg.channel.send("Invite link are not allowed!")
-                    try:
-                        await msg.delete()
-                    except:
-                        pass
+                    if await self.security_level(msg.author,Mode_config.invite,"Invite Link not from this server. -AntiRaid"):
+                        await msg.channel.send("Invite link are not allowed!")
+                        try:
+                            await msg.delete()
+                        except:
+                            pass
 
     async def check_any_link(self,msg):
         if ("http" in msg.content or "www." in msg.content) and self.get_config(msg.guild.id,"any_link") != "0":
