@@ -117,23 +117,12 @@ class Log():
             if self.config[msg.guild.id].get("delete"):
                 if msg.author.bot and self.config[msg.guild.id].get("bot"):
                         return
-                author = msg.author
-                if msg.channel.permissions_for(msg.guild.me).view_audit_log:
-                    audit = await msg.guild.audit_logs(limit = 1 ,action = discord.AuditLogAction.message_delete,after = msg).flatten()
-                    if audit:
-                        author = audit[0].user
 
-                message = self.format_msg(author)
+                message = self.format_msg(msg.author)
                 if msg.attachments:
-                    if author != msg.author:
-                        message += "*has deleted {}'s attachments".format(msg.author)
-                    else:
-                        message += "*has deleted attachments*"
+                    message += "*has deleted attachments*"
                 else:
-                    if author != msg.author:
-                        message += "*has deleted the following message belong to {} from {}: ".format(msg.author,msg.channel.mention)
-                    else:
-                        message += "*has deleted the following message* in {}: ".format(msg.channel.mention)
+                    message += "*has deleted the following message* in {}: ".format(msg.channel.mention)
                     message += "{}".format(msg.clean_content)
                 await self.send(msg.guild.id,message)
 
