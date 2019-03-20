@@ -1,4 +1,5 @@
 import redis as rdb
+import traceback
 import datetime
 import platform
 import aiohttp
@@ -110,13 +111,19 @@ class Background:
 
 
     async def timer(self):
-        while True:
-            self.current = datetime.datetime.utcnow()
-            self.log.debug(self.current)
-            self.log.debug("Calling event")
-            await self.function()
-            self.log.debug("Enter sleep mode")
-            await asyncio.sleep(self.sleep_time)
+        try:
+            while True:
+                self.current = datetime.datetime.utcnow()
+                self.log.debug(self.current)
+                self.log.debug("Calling event")
+                await self.function()
+                self.log.debug("Enter sleep mode")
+                await asyncio.sleep(self.sleep_time)
+        except asyncio.CancelledError:
+            return prRed("Asyncio Cancelled Error")
+        except Exception as e:
+            print(e)
+            prRed(traceback.format_exc())
 
 class Embed_page:
     """

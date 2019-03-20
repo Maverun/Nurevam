@@ -24,13 +24,15 @@ class Discourse(): #Discourse, a forums types.
         self.counter = 0
         self.log_error = {}
         self.bg_dis = utils.Background("discourse",60,30,self.timer,log)
-        self.bot.background.update({"discourse":self.bg_dis})
+        self.bg_dis_id = utils.Background("discourse_ID",3600,1800,self.timer_update_ID,log)
+        self.bot.background.update({"discourse":self.bg_dis,"discourse_ID":self.bg_dis_id})
 
-        # loop = asyncio.get_event_loop()
-        # self.loop_discourse_timer = loop.create_task(self.timer())
         self.bg_dis.start()
+        self.bg_dis_id.start()
+
     def __unload(self):
         self.bg_dis.stop()
+        self.bg_dis_id.stop()
         utils.prLightPurple("Unloading Discourse")
 
     def __local_check(self,ctx):
@@ -191,27 +193,17 @@ class Discourse(): #Discourse, a forums types.
                 utils.prLightPurple("\n".join(values))
         log.debug("Finish checking {}".format(guild_id))
 
+    async def timer_update_ID(self):
+        utils.prRed("updating ID for discourse")
+        for guild in list(self.bot.guilds):
+            await self.get_update_id(guild.id)
+
     async def timer(self):
+        for guild in list(self.bot.guilds): #start checking new thread and post.
+            log.debug("Checking guild {}".format(repr(guild)))
+            self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
+            await self.new_post(guild.id)
 
-        try:
-            log.debug("Back to start loops {}".format(self.counter))
-            self.counter += 1
-            if self.counter == 30:
-                utils.prRed("updating ID for discourse")
-                for guild in list(self.bot.guilds):
-                    await self.get_update_id(guild.id)
-                    self.counter_loops = 0
-
-            for guild in list(self.bot.guilds): #start checking new thread and post.
-                log.debug("Checking guild {}".format(repr(guild)))
-                self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
-                await self.new_post(guild.id)
-
-        except asyncio.CancelledError:
-            return utils.prRed("Asyncio Cancelled Error")
-        except Exception as e:
-            print(e)
-            utils.prRed(traceback.format_exc())
 
 
 #########################################################################
