@@ -10,6 +10,7 @@ import time
 
 import html
 def synopis(term):
+    if not(bool(term)): return ""
     term = html.unescape(term.replace("<br />", ""))
     term = term.replace("[/","[").replace("[b]","**").replace("[i]","_").replace("<br>","\n")
     if len(term) >= 1500:
