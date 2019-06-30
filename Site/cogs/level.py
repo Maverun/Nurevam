@@ -362,6 +362,8 @@ def theme(server_id):
             aspectratio =  pic.width / pic.height
             pic = pic.resize((crop_width,int(crop_width / aspectratio)),Image.ANTIALIAS)
             pic = pic.crop(box = (0,int((pic.height-crop_height)/2),crop_width,int(crop_height+(pic.height-crop_height)/2)))
+            pic = pic.convert('RGB')
+
             if setting.get("blur") == "on":
                 pic = pic.filter(ImageFilter.BLUR)
             img.paste(pic)

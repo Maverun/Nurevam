@@ -21,6 +21,7 @@ def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         data_info.last_path = request.url #adding path of it so that we can redirect user to if they are given link.
+        print("last path is {}".format(data_info.last_path))
         # Does the user have an api_token?
         api_token = session.get('api_token')
         if api_token is None:

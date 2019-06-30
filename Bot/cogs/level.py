@@ -21,6 +21,7 @@ def is_cooldown(msg):
     return not(bool(config))
 
 
+# class Level(commands.Cog):
 class Level:
     """
     A level plugins, gain exp when talking.
@@ -41,14 +42,17 @@ class Level:
         return utils.is_enable(ctx,"level")
 
     #Those will set expire when member leave guild, to get new "space", they have 2 weeks to return, other wise, level data of their will be lost.
+    # @commands.Cog.listener()
     async def on_member_remove(self,member):
         await self.redis.srem("{}:Level:Player".format(member.guild.id),member.id)
         await self.redis.expire("{}:Level:Player:{}".format(member.guild.id,member.id),1209600)#setting expire dated for member, will last for 2 weeks, if there is change, it will stop expire, aka join back in guild
 
+    # @commands.Cog.listener()
     async def on_member_join(self,member):
         if await self.redis.exists("{}:Level:Player:{}".format(member.guild.id,member.id)):
             await self.redis.persist("{}:Level:Player:{}".format(member.guild.id,member.id))
 
+    # @commands.Cog.listener()
     async def on_member_update(self,before,after):
         if before.display_name != after.display_name:
             await self.redis.hset("{}:Level:Player:{}".format(after.guild.id,after.id),"Name",after.display_name)
@@ -81,6 +85,7 @@ class Level:
         await self.redis.hincrby("Info:Level:Player_Total_XP",msg.author.id,increment = xp)
         return
 
+    # @commands.Cog.listener()
     async def on_message(self,msg): #waiting for player reply
         if msg.author == self.bot.user or isinstance(msg.channel,discord.DMChannel) or msg.author.bot:
             return
@@ -438,6 +443,8 @@ class Level:
                     aspectratio =  pic.width / pic.height
                     pic = pic.resize((crop_width,int(crop_width / aspectratio)),Image.ANTIALIAS)
                     pic = pic.crop(box = (0,int((pic.height-crop_height)/2),crop_width,int(crop_height+(pic.height-crop_height)/2)))
+                    pic = pic.convert('RGB') #Just in case if pic is png or palette
+
                     if setting.get("blur") == "on":
                         pic = pic.filter(ImageFilter.BLUR)
                     img.paste(pic)
