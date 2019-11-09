@@ -23,7 +23,7 @@ Select the server you want Nurevam to join.
 >Bascially, it is just `<Main command> <subcommand>`
 
 ##What is my profile?
->Your profile is a global setting for all servers with Nurevam. If you, for example, have a MAL profile and enter your username on the website, you don't have to write down `!mal <username>`, but instead just `!mal` and the bot will do the work for you!
+>Your profile is a global setting for all servers with Nurevam. If you, for example, have a Anilist profile and enter your username on the website, you don't have to write down `!anilist <username>`, but instead just `!anilist` and the bot will do the work for you!
 
 ##Why are there so many permissions?
 >It is entirely up to you, which permissions you give. I included all permission, so you can pick. I would recommend leaving the `manage message` permission checked, so it can delete your and it's own messages (with the `clean` command).

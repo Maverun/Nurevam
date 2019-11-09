@@ -276,7 +276,7 @@ class Level(commands.Cog):
         try:
             player_rank = data.index(str(player.id))+1
         except:
-            return self.bot.say(ctx,content = "There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
+            return await self.bot.say(ctx,content = "There is problem with this, maybe you haven't got exp until now. Try chat for a few minutes then try again.")
         player_data = await self.redis.hgetall("{}:Level:Player:{}".format(ctx.message.guild.id, player.id))
         level,remain_xp,next_xp = self.next_Level(int(player_data["Total_XP"]))
 

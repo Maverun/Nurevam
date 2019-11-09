@@ -11,7 +11,7 @@
                 <div class="panel panel-primary">
                     <div class="panel-body">
                             {% if user["avatar"] !=None %}
-                                <center><img src="https://cdn.discordapp.com/avatars/{{user["ID"]}}/{{user["Avatar"]}}.jpg" style="width:100%" class="img-circle"></center>
+                                <center><img src="https://cdn.discordapp.com/avatars/{{user["id"]}}/{{user["avatar"]}}.jpg" style="width:100%" class="img-circle"></center>
                             {% else %}
                                 <center><img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:100%" class="img-circle"></center>
                             {%endif%}
