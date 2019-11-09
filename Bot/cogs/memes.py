@@ -6,7 +6,7 @@ import textwrap
 import aiohttp
 import discord
 
-class Memes:
+class Memes(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis

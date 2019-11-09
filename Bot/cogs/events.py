@@ -1,4 +1,5 @@
 from discord import errors as discord_error
+from discord.ext.commands import HelpCommand
 from prettytable import PrettyTable
 from discord.ext import commands
 from .utils import utils
@@ -7,7 +8,7 @@ import datetime
 import logging
 import discord
 
-class Events:
+class Events(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -26,7 +27,7 @@ class Events:
 #   |______| |_| |___/  \__|  \___| |_| |_|  \___| |_|      #
 #                                                           #
 #############################################################
-
+    @commands.Cog.listener()
     async def on_guild_join(self,guild): #IF Bot join guild, it will add to record of those.
         print ("\033[96m<EVENT JOIN>: \033[94m {} :({}) -- {}\033[00m".format(self.Time(), guild.id, guild.name))
         utils.prGreen("\t\t Servers: {}\t\t Members: {}".format(len(self.bot.guilds), len(self.bot.users)))
@@ -41,6 +42,7 @@ class Events:
         #Server setting
         await self.redis.hset("{}:Config:Delete_MSG".format(guild.id),"core","off") #just in case
 
+    @commands.Cog.listener()
     async def on_guild_remove(self,guild): #IF bot left or no longer in that guild. It will remove this
         print("\033[91m<EVENT LEFT>:\033[94m[ {} : \033[96m({})\033[92m -- {}\033[00m".format(self.Time(), guild.id, guild.name))
         utils.prGreen("\t\t Severs:{}\t\tMembers:{}".format(len(self.bot.guilds), len(self.bot.users)))
@@ -55,20 +57,24 @@ class Events:
             utils.prGreen("{0.days} day, {0.seconds} seconds".format(age))
         utils.prGreen("Set {} expire".format(count))
 
+    @commands.Cog.listener()
     async def on_guild_update(self,before,after): #If guild update name and w/e, just in case, Update those
         print("\033[95m<EVENT Update>:\033[94m {} :\033[96m {} \033[93m | \033[92m({}) -- {}\033[00m".format(self.Time(),after.name,after.id, after))
         if after.icon:
             await self.redis.hset("Info:Server_Icon",after.id,after.icon)
         await self.redis.hset("Info:Server",after.id,after.name)
 
+    @commands.Cog.listener()
     async def on_member_join(self,member):
         print("\033[98m<Event Member Join>:\033[94m {} :\033[96m {} ||| \033[93m ({})\033[92m  -- {} ||| {}\033[00m".format(self.Time(), member.guild.name, member.guild.id, member.name, member.id))
         await self.redis.set("Info:Total Member",len(set(self.bot.get_all_members())))
 
+    @commands.Cog.listener()
     async def on_member_remove(self,member):
         print("\033[93m<Event Member Left>:\033[94m {}:\033[96m {} ||| \033[93m ({})\033[92m -- {} ||| {}\033[00m".format(self.Time(), member.guild.name, member.guild.id, member.name, member.id))
         await self.redis.set("Info:Total Member",len(set(self.bot.get_all_members())))
 
+    @commands.Cog.listener()
     async def on_member_update(self,before,after):
         check = await self.redis.get("Member_Update:{}:check".format(after.id))
         if check: #If it true, return, it haven't cool down yet
@@ -83,11 +89,13 @@ class Events:
             await self.redis.hset("Info:Name",after.id,str(after))
         await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=15) #To stop multi update
 
+    @commands.Cog.listener()
     async def on_command(self,ctx):
         if isinstance(ctx.message.channel,discord.DMChannel):
             return
         print("\033[96m<Event Command>\033[94m {0}:\033[96m {1.guild.name} ||| \033[93m {1.author} ||| \033[94m ({1.author.id})\033[92m ||| {1.clean_content}\033[00m".format(self.Time(), ctx.message))
 
+    @commands.Cog.listener()
     async def on_message(self,msg):
             if self.bot.user.id == msg.author.id:
                 if isinstance(msg.channel,discord.DMChannel) is False:
@@ -118,6 +126,7 @@ class Events:
                     except:
                         utils.prGreen("<Event Send> {} : {} ||| {} ||| ({}) ||| {}".format(self.Time(), msg.author.name,msg.guild.name,msg.guild.id,msg.embeds))
 
+    @commands.Cog.listener()
     async def on_command_completion(self,ctx):
         if ctx.command.cog_name is None or isinstance(ctx.message.channel,discord.DMChannel):
             return
@@ -140,10 +149,12 @@ class Events:
             for page in pages:
                 await ctx.send(page.replace("\n","fix\n",1))
         else:
+            await HelpCommand.send_command_help(ctx,ctx.command)
             pages = await self.bot.formatter.format_help_for(ctx,ctx.command)
             for page in pages:
                 await ctx.send(page.replace("\n","fix\n",1))
 
+    @commands.Cog.listener()
     async def on_command_error(self,ctx,error):
         if self.bot.user.id == 181503794532581376 or self.error_log:
             print(error)

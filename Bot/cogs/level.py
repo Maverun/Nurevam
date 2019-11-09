@@ -21,8 +21,7 @@ def is_cooldown(msg):
     return not(bool(config))
 
 
-# class Level(commands.Cog):
-class Level:
+class Level(commands.Cog):
     """
     A level plugins, gain exp when talking.
     """
@@ -42,17 +41,17 @@ class Level:
         return utils.is_enable(ctx,"level")
 
     #Those will set expire when member leave guild, to get new "space", they have 2 weeks to return, other wise, level data of their will be lost.
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_member_remove(self,member):
         await self.redis.srem("{}:Level:Player".format(member.guild.id),member.id)
         await self.redis.expire("{}:Level:Player:{}".format(member.guild.id,member.id),1209600)#setting expire dated for member, will last for 2 weeks, if there is change, it will stop expire, aka join back in guild
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_member_join(self,member):
         if await self.redis.exists("{}:Level:Player:{}".format(member.guild.id,member.id)):
             await self.redis.persist("{}:Level:Player:{}".format(member.guild.id,member.id))
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_member_update(self,before,after):
         if before.display_name != after.display_name:
             await self.redis.hset("{}:Level:Player:{}".format(after.guild.id,after.id),"Name",after.display_name)
@@ -85,7 +84,7 @@ class Level:
         await self.redis.hincrby("Info:Level:Player_Total_XP",msg.author.id,increment = xp)
         return
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self,msg): #waiting for player reply
         if msg.author == self.bot.user or isinstance(msg.channel,discord.DMChannel) or msg.author.bot:
             return
@@ -230,7 +229,7 @@ class Level:
 
     @level_link.command(name="guild",brief="Prints a link of the guild leaderboard",pass_context=True)
     async def guild_level_link(self,ctx):
-        await self.bot.say(ctx, content = "Check this out!\nhttp://nurevam.site/level/guild".format(ctx.message.guild.id))
+        await self.bot.say(ctx, content = "Check this out!\nhttp://nurevam.site/level/{}".format(ctx.message.guild.id))
 
     def rank_embed(self,player,level,remain_xp,next_xp,rank,total_rank,description=""):
         embed = discord.Embed(description=description)

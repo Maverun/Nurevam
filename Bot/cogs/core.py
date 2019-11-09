@@ -10,7 +10,7 @@ import os
 log = logging.getLogger(__name__)
 
 
-class Core():
+class Core(commands.Cog):
     """
     The core of Nurevam, just essentials.
     """
@@ -18,7 +18,6 @@ class Core():
         self.bot = bot
         self.redis=bot.db.redis
         self.bot.say_edit = bot.say
-        self.api = OsuApi(utils.secret["osu"], connector=AHConnector())
 
     def get_bot_uptime(self): #to calculates how long it been up
         now = datetime.datetime.utcnow()
@@ -33,76 +32,75 @@ class Core():
 
         return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
-    @commands.command(hidden=True)
+    def get_time_delta(self,person):
+        delta = datetime.datetime.utcnow() - person
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        days, hours = divmod(hours, 24)
+        if days:
+            fmt = '{d} days, {h} hours, {m} minutes, and {s} seconds'
+        else:
+            fmt = '{h} hours, {m} minutes, and {s} seconds'
+
+        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
+
+
+    @commands.command()
     async def uptime(self,ctx): #Showing Time that bot been total run
         """Prints the uptime."""
         await self.bot.say(ctx,content = "```py\nI have been up for {}\n```".format(self.get_bot_uptime()))
 
-    @commands.command(hidden=True)
+    @commands.command()
     async def prefix(self,ctx):
         prefix = (await self.redis.get("{}:Config:CMD_Prefix".format(ctx.message.guild.id)))
         await self.bot.say(ctx,content = "```\n{}\n```".format(prefix))
 
-    @commands.command(hidden=True)
-    async def info(self,ctx):
-        guild = len(self.bot.guilds)
-        member = len(set(self.bot.get_all_members()))
-        app = await self.bot.application_info()
-        msg = "Name:{}".format(self.bot.user)
-        if ctx.message.guild.me.nick:
-            msg += "\nNickname:{}".format(ctx.message.guild.me.nick)
-        msg += "\nCreator: {}".format(app.owner)
-        msg += "\nServer:{}\nMembers:{}".format(guild,member)
-        link = "If you want to invite this bot to your sever, you can check it out here <http://nurevam.site>!"
-        await self.bot.say(ctx,content = "```xl\n{}\n```\n{}".format(msg,link))
+    @commands.command()
+    async def info(self,ctx,*,person:discord.Member = None):
+        """
+        About Nurevam or person by mention info
+        """
 
-    async def check_status(self,link):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(link) as resp:
-                log.debug(resp.status)
-                if resp.status == 200:
-                    return True
-                else:
-                    return False
-
-    @commands.group(hidden=True,invoke_without_command=True)
-    async def profile(self,ctx):
-        setting = await self.redis.hgetall("Profile:{}".format(ctx.message.author.id))
-        info = []
-        if setting:
-            for x in setting:
-                info.append("{}: {}".format(x,setting[x]))
-            msg = "To register, you can do !profile add osu <username here>"
-            await ctx.author.send("```xl\n{}\n```\n{}".format("\n".join(info),msg))
+        if not person:
+            guild = len(self.bot.guilds)
+            member = len(set(self.bot.get_all_members()))
+            app = await self.bot.application_info()
+            msg = "Name:{}".format(self.bot.user)
+            if ctx.message.guild.me.nick:
+                msg += "\nNickname:{}".format(ctx.message.guild.me.nick)
+            msg += "\nCreator: {}".format(app.owner)
+            msg += "\nServer:{}\nMembers:{}".format(guild,member)
+            link = "If you want to invite this bot to your server, you can check it out here <http://nurevam.site>!"
+            return await self.bot.say(ctx,content = "```xl\n{}\n```\n{}\n".format(msg,link))
         else:
-            await self.bot.say(ctx,content = "You didn't add any data! Make sure you add something first!")
+            e = discord.Embed()
+            e.title = "{} - {}".format(person,person.id)
+            e.set_thumbnail(url = person.avatar_url)
+            e.add_field(name = "Created at", value="{} - ({})".format(person.created_at,self.get_time_delta(person.created_at)),inline=False)
+            e.add_field(name = "Joined at", value="{} - ({})".format(person.joined_at,self.get_time_delta(person.joined_at)),inline=False)
+            e.add_field(name = "Total Roles", value=str(len(person.roles)),inline=False)
 
-    @profile.command()
-    async def add(self,ctx,plugin,name):
-        # setting = await self.redis.hgetall("Profile:{}".format(ctx.message.author.id))
-        print("OKAY HERE")
-        default = ["myanimelist","osu"]
-        check = False
-        if plugin in default:
-            print("check")
-            print(name)
-            if plugin == "myanimelist":
-                check = await self.check_status("http://myanimelist.net/profile/{}".format(name))
-            elif plugin == "osu":
-                results = await self.api.get_user(name)
-                print(results)
-                if results == []:
-                    print("failed")
-                    pass
-                else:
-                    check = True
-            if check:
-                await self.redis.hset("Profile:{}".format(ctx.message.author.id),plugin,name)
-                await ctx.send("Done.")
-            else:
-                await ctx.send("This isn't a valid username, please double check")
-        else:
-            await ctx.send("Please double check! The only databases so far are \n{}".format(",".join(default)))
+            if person.colour.value:
+                e.colour = person.color
+            await self.bot.say(ctx,embed = e)
+
+    @commands.command()
+    async def serverinfo(self,ctx):
+        """
+        Give info about this server
+        """
+        g = ctx.guild
+        embed = discord.Embed()
+        embed.set_thumbnail(url = g.icon_url)
+        embed.title = "{} - {}".format(g.name,g.id)
+        embed.add_field(name = "Owner",value="{} - {}".format(g.owner,g.owner.id),inline=False)
+        embed.add_field(name = "Created at", value = str(g.created_at), inline=False)
+        embed.add_field(name = "Total Roles", value= str(len(g.roles)), inline=False)
+        embed.add_field(name = "Total Members", value= str(g.member_count), inline=False)
+        embed.add_field(name = "Premium Member", value= str(g.premium_subscription_count), inline=False)
+        embed.add_field(name = "Premium Tier", value= str(g.premium_tier), inline=False)
+        await self.bot.say(ctx,embed = embed)
+
 
     @commands.command(hidden=True)
     async def command(self,ctx):
@@ -123,35 +121,38 @@ class Core():
         """
         await ctx.send("Yes this is a category.")
 
-    @commands.command(hidden = True)
+    @commands.command(brief = "Showing which plugin is enable")
     async def plugin(self,ctx):
+        """
+        Red = Disable
+        Blue = Enable
+
+        Any problem such as plugins on dashboard is enable but show disable here, info Owner
+        """
+        special_case = {"Anime":"myanimelist","Anti Raid":"antiraid"}
         plugin_setting = await self.redis.hgetall("{}:Config:Cogs".format(ctx.message.guild.id))
         embed = discord.Embed()
-        cogs = [x.lower() for x in list(self.bot.cogs.keys())]
-        files_cogs = [x.strip(".py") for x in os.listdir("cogs") if ".py" in x and x != "__init__.py"]
-        print(files_cogs)
-        for x in files_cogs:
-            setting =  	u"\U0001F534"
-            if x in cogs:
-                if x in ("core", "remindme", "tools", "repl","events"):  # A Owner's thing only.
-                    if ctx.message.author.id != self.bot.owner.id:
-                        continue
-                    setting = u"\U0001F535"
-                if x in plugin_setting:
-                    setting =  	u"\U0001F535"
-            else:
-                setting = u"\u26AA"
+        cogs = self.bot.cogs.keys()
+        for x in cogs:
+            setting =  	u"\U0001F534" #red
+            if x in ("Core", "Remindme", "Tools", "REPL","Events"):  # A Owner's thing only.
+                if ctx.message.author.id != self.bot.owner.id:
+                    continue
+                setting = u"\U0001F535" #blue
+            if x.lower() in plugin_setting or special_case.get(x) in plugin_setting:
+                setting =  	u"\U0001F535" #blue
             embed.add_field(name = x,value = setting)
         if ctx.message.guild.me.colour.value:
             embed.colour = ctx.message.guild.me.colour
 
+        embed.set_footer(text = "{} = Disable | {} = Enable".format(u"\U0001F534",u"\U0001F535"))
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.cooldown(rate = 1,per=300,type =  commands.BucketType.user)
     async def feedback(self,ctx,*,msg):
         """
-        Gives any feedback about bot.
+        Gives any feedback about bot. Cooldown: 5 min
         For example, reporting bot, new idea/suggestions.
         A quicker way to get hold of owner without joining server.
 
@@ -169,7 +170,7 @@ class Core():
         await channel.send(embed=embed)
         await ctx.send(u"\U0001F44C"+", Thank you for your valuable feedback. \nHopefully, the owner will reply to you soon.")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.check(utils.is_owner)
     async def pm(self,ctx,user_id:int,*,msg):
         user = self.bot.get_user(user_id)
@@ -179,7 +180,7 @@ class Core():
             return await ctx.send("User wasn't found.")
         message = "I have got a message from the owner,{}\n```fix\n{}\n```" \
                   "\n\nPlease note that the owner will not able to see any message of this before or after.\n" \
-                  "To reply back, please use {}reply <message>".format(self.bot.owner,msg,ctx.prefix)
+                  "To reply back, please use !reply <message>".format(self.bot.owner,msg)
         await user.send(message)
         await ctx.send(u"\U0001F44C")
 
@@ -189,7 +190,7 @@ class Core():
         if channel is None:
             return await ctx.send("Appear so, reply system is down...")
         embed = discord.Embed()
-        embed.set_author(name = ctx.message.author,icon_url=ctx.message.author.avatar_url or ctx.message.author.default_avatar_url)
+        embed.set_author(name = ctx.message.author,icon_url=ctx.message.author.avatar_url)
         embed.add_field(name = "Author",value = "**ID**:{0.author.id}".format(ctx.message))
         embed.add_field(name = "Reply",value = msg,inline=False)
         await channel.send(embed=embed)

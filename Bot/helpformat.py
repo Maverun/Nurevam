@@ -1,21 +1,21 @@
-from discord.ext.commands import formatter,Group
+from discord.ext.commands import help,Group
+import discord
 
-class Custom_format(formatter.HelpFormatter):
+class Custom_format(help.DefaultHelpCommand):
+    def add_indented_commands(self,commands,*, heading = None, max_size=None, indent = 0):
+        if not commands: return
+        if heading: self.paginator.add_line(heading)
+        max_size = max_size or self.get_max_size(commands)
 
-    def _add_subcommands_to_page(self, max_width, commands):
-        for name, command in commands:
-            if name in command.aliases:
-                # skip aliases
-                continue
+        get_width = discord.utils._string_width
+        uni = "├"
+        max_count = len(commands)
+        for index, command in enumerate(commands, start=1):
+            if index == max_count: uni = "└"
+            name = command.name
+            width = max_size - (get_width(name) - len(name))
+            entry = '{0}{uni}{1:<{width}} {2}'.format( (self.indent + indent) * ' ', name, command.short_doc, width=width,uni = uni)
+            self.paginator.add_line(self.shorten_text(entry))
+            if(isinstance(command,Group)):
+                self.add_indented_commands(command.commands,indent = self.indent + indent)
 
-            entry = '  {0:<{width}} {1}'.format(name, command.short_doc, width=max_width)
-            shortened = self.shorten(entry)
-            self._paginator.add_line(shortened)
-            if isinstance(command,Group):
-                    max_count = len(command.commands)
-                    uni = "├"
-                    for index,command in enumerate(command.commands,start = 1):
-                        if index == max_count: uni = "└"
-                        entry = '   {uni}{0:<{width}} {1}'.format(command.name, command.short_doc, width=max_width,uni=uni)
-                        shortened = self.shorten(entry)
-                        self._paginator.add_line(shortened)

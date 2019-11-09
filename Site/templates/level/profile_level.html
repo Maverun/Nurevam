@@ -18,7 +18,7 @@
                         {% if icon ==None %}
                             <center><img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:25%" class="img-circle"></center>
                         {%elif icon !=None %}
-                            <center><img src="https://discordapp.com/api/users/{{player_id}}/avatars/{{icon}}.jpg" style="width:25%" class="img-circle"></center>
+                            <center><img src="https://cdn.discordapp.com/avatars/{{player_id}}/{{icon}}.jpg" style="width:25%" class="img-circle"></center>
                         {%endif%}
                     <center><p style = "font-size:150%;">{{name}}</p></center>
                     </div>

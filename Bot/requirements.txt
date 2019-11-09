@@ -1,5 +1,4 @@
 # Latest discord.py
-git+https://github.com/Rapptz/discord.py@rewrite
 git+https://github.com/Maverun/Pyanimu
 aioredis
 redis

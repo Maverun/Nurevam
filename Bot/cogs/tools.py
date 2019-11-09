@@ -23,7 +23,7 @@ def list_cogs(): #Check a list and load it
         clean.append("cogs." + c.split("\\")[1].replace(".py", ""))
     return clean
 
-class Tools():
+class Tools(commands.Cog):
     """
     A Tools that is only for owner to control bots
     Such as reload/load/unload cogs(plugins)
@@ -117,7 +117,6 @@ class Tools():
     @commands.command(hidden=True)
     @commands.check(utils.is_owner)
     async def debug(self, ctx, *, code : str):
-        print("OK")
         """Evaluates code."""
         code = code.strip('` ')
         python = '```py\n{}\n```'

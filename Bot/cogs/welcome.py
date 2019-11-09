@@ -1,9 +1,10 @@
 from .utils import utils
+from discord.ext import commands
 import traceback
 import datetime
 import discord
 
-class Welcome(): #Allow to welcome new members who join guild. If it enable, will send them a message.
+class Welcome(commands.Cog): #Allow to welcome new members who join guild. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -17,6 +18,7 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
         error = '```py\n{}\n```'.format(traceback.format_exc())
         await self.bot.owner.send("```py\n{}```".format(Current_Time + "\n" + "ERROR!") + "\n" + error)
 
+    @commands.Cog.listener()
     async def on_member_join(self,member):
         if await self.redis.hget("{}:Config:Cogs".format(member.guild.id),"welcome") == "on":
             config = await self.redis.hgetall("{}:Welcome:Message".format(member.guild.id))
@@ -40,9 +42,10 @@ class Welcome(): #Allow to welcome new members who join guild. If it enable, wil
                     for x in role_list:
                         if x == '': #if it return empty string
                             continue
-                        role_obj.append(discord.utils.get(member.guild.roles,id=int(x)))
+                        # role_obj.append(discord.utils.get(member.guild.roles,id=int(x)))
+                        role_obj.append(member.guild.get_role(int(x)))
                     try:
-                        await member.add_roles(*role_obj)
+                        await member.add_roles(*role_obj,reason = "User has join the server,and an admin request to add role(s) to new person")
                     except discord.Forbidden:
                         pass #if unable to add user
                     except discord.NotFound:

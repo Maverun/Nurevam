@@ -9,8 +9,14 @@ import glob
 
 import helpformat
 
-description = '''Nurevam's Command List. '''
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True),formatter=helpformat.Custom_format())
+description = '''Nurevam's Command List.
+ To enable more commands, you must visit dashboard to enable certain plugins you want to run.
+ If there is a problem with the prefix etc, please do @nurevam prefix to see what prefix you can do
+ Any problem relating to Nurevam, please do contact owner Maverun (´･ω･`)#3333
+ 
+ First └ mean it is commands under that plugin, and if there is one or more under commands, it is a sub command that can invoke by doing !parent subcommand such as !rank global
+ '''
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True),help_command=helpformat.Custom_format())
 bot.db= storage.Redis()
 redis = utils.redis
 

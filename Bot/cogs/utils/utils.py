@@ -43,7 +43,7 @@ def is_enable(ctx,cog):
 def check_roles(ctx,cog,get_role): #Server ID  then which plugin, and Roles with set
     try:
         db_role= redis.smembers("{}:{}:{}".format(ctx.message.guild.id,cog,get_role))
-        print(db_role)
+        print("Roles: ",db_role)
         author_roles= [role.id for role in ctx.message.author.roles]
         print(author_roles)
         for role in db_role:

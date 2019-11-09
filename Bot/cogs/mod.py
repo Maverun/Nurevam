@@ -21,11 +21,7 @@ class get_person(commands.MemberConverter):
         self.lower = lower
         super().__init__()
 
-
-
-
-
-class Mod():
+class Mod(commands.Cog):
     """
     A mod tool for Mods.
     """
@@ -76,9 +72,8 @@ class Mod():
         Is able to clear messages of all users who have this role.
         """
         def delete_role(m):
-            print(m.author)
             return roles.id in [r.id for r in m.author.roles]
-        counter =await ctx.message.channel.purge(limit=limit,check=delete_role)
+        counter = await ctx.message.channel.purge(limit=limit,check=delete_role)
         await self.bot.say(ctx, content = "```py\nI cleared {} from person who have role of {}\n```".format(len(counter),roles.name))
 
     @clean.command(brief="Is able to clear a certain user's messages",invoke_without_command=True)
@@ -188,8 +183,9 @@ class Mod():
         <prefix> add <user name> <the role>
         Is able to add a role to a member, this is useful for people who are on phone.
         You can also add multiple roles to a member at the same time.
+        Note: this is cap-sensitives, if role have cap in, add cap in command
         """
-        await user.add_roles(user,*role,reason = "Request by {}".format(ctx.message.author))
+        await user.add_roles(*role,reason = "Request by {}".format(ctx.message.author))
         await self.bot.say(ctx,content = "Added a role to {}".format(user.name))
 
     @_role.command(brief="Is able to remove a role from a user")
@@ -200,8 +196,9 @@ class Mod():
         <prefix> remove <user name> <the role>
         Is able to remove a role from a member, this is useful for people who are on phone.
         You can also remove multiple roles from a member at the same time.
+        Note: this is cap-sensitives, if role have cap in, add cap in command
         """
-        await user.remove_roles(user,*role,reason ="Request by {}".format(ctx.message.author))
+        await user.remove_roles(*role,reason ="Request by {}".format(ctx.message.author))
         await self.bot.say(ctx,content = "Remove role from {}".format(user.name))
 
 

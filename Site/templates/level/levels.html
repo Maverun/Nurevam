@@ -66,7 +66,7 @@
                       </div>
                       <div class="col-md-1 col-sm-1 hidden-xs">
                         {% if player['Avatar']!= None %}
-                        <img src="https://discordapp.com/api/users/{{player['ID']}}/avatars/{{player['Avatar']}}.jpg" style="width:100%" class="img-circle">
+                        <img src="https://cdn.discordapp.com/avatars/{{player["ID"]}}/{{player["Avatar"]}}.jpg" style="width:100%" class="img-circle">
                         {%else%}
                           <img src="{{url_for('static', filename='img/no_logo.png')}}" style="width:100%" class="img-circle">
                         {%endif%}

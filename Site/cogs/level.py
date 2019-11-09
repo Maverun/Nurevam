@@ -232,6 +232,7 @@ def server_levels():
 def reset_player(server_id, player_id):
     log.info("Reset that player's data")
     db.delete('{}:Level:Player:{}'.format(server_id, player_id))
+    db.delete("{}:Level:{}:xp:check".format(server_id, player_id))  # just in case problem with exp
     db.srem('{}:Level:Player'.format(server_id), player_id)
     return redirect(url_for('level.levels', server_id=server_id))
 
@@ -241,7 +242,9 @@ def reset_all_players(server_id):
     log.info("Someone must be insane reset everything?")
     for player_id in db.smembers('{}:Level:Player'.format(server_id)):
         db.delete('{}:Level:Player:{}'.format(server_id, player_id))
+        db.delete("{}:Level:{}:xp:check".format(server_id,player_id)) #just in case problem with exp
         db.srem('{}:Level:Player'.format(server_id), player_id)
+
     return redirect(url_for('level.levels', server_id=server_id))
 
 @blueprint.route('/private_set/<int:server_id>/<int:bool>')
@@ -459,8 +462,6 @@ def update_theme(server_id):
     col_outlier = request.form.get("col_outlier")
     col_text = request.form.get("col_text")
 
-
-
     if pic != "":
         status = utils.check_link(pic)
     else:
@@ -474,6 +475,15 @@ def update_theme(server_id):
         db.hset("{}:Level:pic_setting".format(server_id),"blur",blur)
 
         if not "" in (col_border,col_row,col_outlier,col_text):
+
+            for x in [col_border, col_row, col_outlier, col_text]: #just making sure user doesnt enter string value such as white. or we can do edit html that input color? that will change better
+                temp = x.split(",")
+                for check in temp:
+                    if check.isdigit() is False:
+                        flash("color input cannot have text, it is only value in rgb such as 255,255,255 etc",
+                              "warning")
+                        return redirect(url_for("level.theme", server_id=server_id))
+
             db.hset("{}:Level:color".format(server_id),"border",col_border)
             db.hset("{}:Level:color".format(server_id),"row",col_row)
             db.hset("{}:Level:color".format(server_id),"outlier",col_outlier)

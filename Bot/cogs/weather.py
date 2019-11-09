@@ -4,7 +4,7 @@ import datetime
 import aiohttp
 import discord
 
-class Weather(): #Allow to welcome new members who join guild. If it enable, will send them a message.
+class Weather(commands.Cog): #Allow to welcome new members who join guild. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
         self.bot.say_edit = bot.say
@@ -19,18 +19,22 @@ class Weather(): #Allow to welcome new members who join guild. If it enable, wil
         !weather city,country
         country is optional.
         When include country, add comma after city name
-        Name (latitude,longitude)
-        Weather Conditions:
-        Humidity: % Current Temperature: %
-        Cloudiness: %   Wind Speed: m/s
+        Will show:
+        Name
+        Coordinates
+        Weather Conditions
+        Humidity: %
+        Current Temperature: %
+        Cloudiness: %
+        Wind Speed: m/s
         sunrise: 00:00:00 utc / sunset: 00:00:00 utc
         """
+        if(locations == "City,Country"): return await self.bot.say(ctx,content = "You need to enter the city name")
         locate = locations.replace(" ","_")
         async with aiohttp.ClientSession() as session:
             link = "http://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric".format(locate,self.api)
             async with session.get(link) as resp:
                 data = await resp.json()
-                print(data)
                 if data.get("cod") == '404':
                     return await self.bot.say(ctx,content = "{}, did you type command correctly? such as `city,country`, "
                                                             "note, it need comma for saying which country it is. You can just enter the city only.".format(data["message"]))

@@ -179,7 +179,9 @@ def confirm_login():
     session['api_token'] = api_token
     log.info("Clear, redirect...")
     if data_info.last_path:
-        return redirect(data_info.last_path)
+        path = data_info.last_path
+        data_info.last_path = None
+        return redirect(path)
     return redirect(url_for('after_login'))
 
 @app.route('/login_confirm')

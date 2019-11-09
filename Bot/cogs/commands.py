@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 from discord.ext import commands
 from .utils import utils
+import collections
 import traceback
 import functools
 import discord
@@ -26,12 +27,15 @@ class CreateCustom:
         self.guild_id= kwargs.get('guild_id')
 
 
-async def run_command(cmd,obj,ctx,*args:str):
+async def run_command(cmd,o,ctx,*args:str):
+    """
+    Custom Command
     """
 
+    """
     Args:
         cmd: CreateCustom Obj
-        obj:
+        o: Nothing
         ctx: ctx
         *args: any remain message from user
     """
@@ -40,9 +44,7 @@ async def run_command(cmd,obj,ctx,*args:str):
 
     if(bool(urlparse(cmd.content).netloc)):
         temp = cmd.content.find(".", int(len(cmd.content)/2))
-        utils.prGreen(temp)
         temp = cmd.content[temp:]
-        utils.prCyan(temp)
         picture = False
         for x in ["png","gif","jpg","bmp","jpeg"]:
             if x in temp.lower():
@@ -52,12 +54,11 @@ async def run_command(cmd,obj,ctx,*args:str):
             embed = discord.Embed()
             embed.set_image(url = cmd.content)
             return await ctx.send(embed = embed)
-
     msg = ctx.message
     name = ""
     mention = ""
     cmd.content = cmd.content.replace("\\t","\t").replace("\\n","\n") #a bad way to fix it, way i know, sorry.
-    if msg.mentions:
+    if msg.mentions: #putting mention in
         ment = msg.mentions
         for i in range(len(ment)):
             x = ment.pop(0)
@@ -79,10 +80,15 @@ async def run_command(cmd,obj,ctx,*args:str):
     await ctx.send(content[:2000]) #sorry folk, you wont make it past 2k!
 
 class CustomCmd(commands.Command):
-    def __init__(self,**kwargs):
+    def __init__(self,func,**kwargs):
         self._entries = {}
         self.module = None
-        super().__init__(**kwargs)
+        super().__init__(func,**kwargs)
+        self.name = kwargs.get("name",self.name)
+        self.brief = kwargs.get("brief",self.brief)
+        self.params = collections.OrderedDict()
+        self.params["cog"] = self.cog # These are for help command to ignore errors by user.
+        self.params["ctx"] = "nothing"# These are for help command to ignore errors by user.
 
     async def callback(self):
         pass #ignore any problem and JUST CARRY ON.
@@ -115,14 +121,13 @@ class CustomCmd(commands.Command):
             return bool(get_entry)
 
 
-class Custom_Commands():
+class Custom_Commands(commands.Cog, name = "Custom Commands"):
     """
     An unique custom commands for your server!
     """
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
-        self.object = None
         self.starter = True
         self.bg = utils.Background("customcmd",60,50,self.timer,log)
         self.bot.background.update({"customcmd":self.bg})
@@ -171,15 +176,12 @@ class Custom_Commands():
         cmd_exit = self.bot.get_command(cmd.name)
         log.debug(cmd_exit)
         if cmd_exit is None: #checking if we have exist command
-            command = self.bot.command(name = cmd.name, brief = cmd.brief,cls = CustomCmd, pass_context=True)(run_command) #Decorator
-            command.instance = self.object
+            command = self.bot.command(name = cmd.name, brief = cmd.brief,cls = CustomCmd)(run_command) #Decorator
+            command.cog = self #adding cog to command so it can format in help.
             command._entries[cmd.guild_id] = cmd
         elif isinstance(cmd_exit,CustomCmd):
             log.debug("command already exist")
             cmd_exit._entries[cmd.guild_id] = cmd
 
 def setup(bot):
-    #Doing Hacky way to Make command under Cogs instead of No Category.
-    the_object = Custom_Commands(bot)
-    the_object.object = the_object
-    bot.add_cog(the_object)
+    bot.add_cog(Custom_Commands(bot))

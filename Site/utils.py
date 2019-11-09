@@ -21,7 +21,6 @@ def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         data_info.last_path = request.url #adding path of it so that we can redirect user to if they are given link.
-        print("last path is {}".format(data_info.last_path))
         # Does the user have an api_token?
         api_token = session.get('api_token')
         if api_token is None:
@@ -40,7 +39,7 @@ def require_bot_admin(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if session["user"]["id"] == "105853969175212032":
-            print("It is dev Mave")
+            log.info("It is dev Mave")
             return f(*args, **kwargs)
         server_id = kwargs.get('server_id')
         user = get_user(session['api_token'])
@@ -91,7 +90,7 @@ def plugin_page(plugin_name):
         def wrapper(server_id):
             # user = get_user(session['api_token'])
             disable = request.args.get('disable')
-            print("the dashboard disable is ",disable,plugin_name)
+            log.info("the dashboard disable is ",disable,plugin_name)
             if disable:
                 log.info("Disable plugins, {} for {}".format(plugin_name,server_id))
                 db.hdel('{}:Config:Cogs'.format(server_id), plugin_name)

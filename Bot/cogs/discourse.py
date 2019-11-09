@@ -17,7 +17,7 @@ def html_unscape(term):
 def html_tag(term):
     return lxml.html.fromstring(term).text_content() #good grief righto?
 
-class Discourse(): #Discourse, a forums types.
+class Discourse(commands.Cog): #Discourse, a forums types.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis

@@ -16,7 +16,7 @@ class Mode_config:
     multi_people = "multi_people"
     multi_ping = "multi_ping"
 
-class AntiRaid():
+class AntiRaid(commands.Cog, name = "Anti Raid"):
     """
     A mod tool for Mods.
     """
@@ -170,7 +170,7 @@ class AntiRaid():
                             continue
                     await self.redis.delete("{}:AntiRaid:multi_ppl".format(guild.id)) #if there is still more to come after this.
 
-
+    @commands.Cog.listener()
     async def on_message(self,msg):
         if msg.author.id == self.bot.user.id or isinstance(msg.channel,discord.DMChannel):
             return
@@ -187,6 +187,7 @@ class AntiRaid():
             # checking if person spamming
             await self.check_spamming_msg(msg)
 
+    @commands.Cog.listener()
     async def on_member_join(self,member):
         if self.config.get(member.guild.id,False): #can be any as long as we know config exit
             await self.check_account_age(member)

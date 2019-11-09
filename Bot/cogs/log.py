@@ -10,7 +10,7 @@ import io
 
 log = logging.getLogger(__name__)
 
-class Log():
+class Log(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
@@ -68,6 +68,7 @@ class Log():
         except discord.Forbidden:
             pass #if bot cannot attach picture, that mean it does not have perma and there nothing we can do about it.
 
+    @commands.Cog.listener()
     async def on_member_update(self,before,after):
         if self.config.get(after.guild.id):
             msg_bool = False
@@ -91,6 +92,7 @@ class Log():
             if msg_bool:
                 await self.send(after.guild.id,msg)
 
+    @commands.Cog.listener()
     async def on_message_edit(self,before,after):
         if isinstance(before.channel,discord.TextChannel):
             if self.config.get(after.guild.id):
@@ -108,6 +110,7 @@ class Log():
                     # msg += "```diff\n-{}\n+{}\n```".format(before.clean_content.replace("\n","\n-").replace("`","\`"),after.clean_content.replace("\n","\n+").replace("`","\`"))
                     await self.send(after.guild.id,embed)
 
+    @commands.Cog.listener()
     async def on_message_delete(self,msg):
         if isinstance(msg.channel,discord.DMChannel):
             return
@@ -117,7 +120,6 @@ class Log():
             if self.config[msg.guild.id].get("delete"):
                 if msg.author.bot and self.config[msg.guild.id].get("bot"):
                         return
-
                 message = self.format_msg(msg.author)
                 if msg.attachments:
                     message += "*has deleted attachments*"
@@ -126,6 +128,7 @@ class Log():
                     message += "{}".format(msg.clean_content)
                 await self.send(msg.guild.id,message)
 
+    @commands.Cog.listener()
     async def on_member_join(self,member):
         if self.config.get(member.guild.id):
             if self.config[member.guild.id].get("join"):
@@ -151,6 +154,7 @@ class Log():
                 await self.send(member.guild.id,embed)
                 # await self.send(member.guild.id,msg)
 
+    @commands.Cog.listener()
     async def on_member_remove(self,member):
         if self.config.get(member.guild.id):
             if self.config[member.guild.id].get("left"):

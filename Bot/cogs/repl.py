@@ -6,7 +6,7 @@ import discord
 import inspect
 import io
 
-class REPL:
+class REPL(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.sessions = set()
