@@ -4,7 +4,7 @@ from .utils import utils
 import traceback
 import asyncio
 
-class Remindme(): #Allow to welcome new members who join guild. If it enable, will send them a message.
+class Remindme(commands.Cog): #Allow to welcome new members who join guild. If it enable, will send them a message.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
