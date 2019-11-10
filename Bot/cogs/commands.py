@@ -133,10 +133,10 @@ class Custom_Commands(commands.Cog, name = "Custom Commands"):
         self.bot.background.update({"customcmd":self.bg})
         self.bg.start()
 
-    def __unload(self):
+    def cog_unload(self):
         self.bg.stop()
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"custom commands")
 
     async def timer(self):

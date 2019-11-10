@@ -34,7 +34,7 @@ class Anime(commands.Cog):
         # self.main = Mal(utils.secret["MAL_USERNAME"],utils.secret["MAL_PASSWORD"],connectors.AioAnimu(user_agent="Nurevam:https://github.com/Maverun/Nurevam"))
         self.main_anilist = Anilist(connectors.AioAnimu(user_agent="Nurevam:https://github.com/Maverun/Nurevam"))
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"myanimelist")
 
     async def search_query(self,ctx,obj,anilist = False):

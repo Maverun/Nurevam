@@ -12,7 +12,7 @@ class Osu(commands.Cog):
         self.redis = bot.db.redis
         self.api = OsuApi(utils.secret["osu"], connector=AHConnector())
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"osu")
 
     async def get_account(self,ctx,author,isMention=False):

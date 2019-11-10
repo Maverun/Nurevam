@@ -30,7 +30,7 @@ class AntiRaid(commands.Cog, name = "Anti Raid"):
         self.bg.start()
 
 
-    def __unload(self):
+    def cog_unload(self):
         self.bg.stop()
 
     async def bg_event(self):

@@ -30,12 +30,12 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         self.bg_dis.start()
         self.bg_dis_id.start()
 
-    def __unload(self):
+    def cog_unload(self):
         self.bg_dis.stop()
         self.bg_dis_id.stop()
         utils.prLightPurple("Unloading Discourse")
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"discourse")
 
     def logging_info(self,status,link,thread_id,guild_id):

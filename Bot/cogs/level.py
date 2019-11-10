@@ -34,10 +34,10 @@ class Level(commands.Cog):
         self.bot.background.update({"level_reward":self.bg})
         self.bg.start()
 
-    def __unload(self):
+    def cog_unload(self):
         self.bg.stop()
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"level")
 
     #Those will set expire when member leave guild, to get new "space", they have 2 weeks to return, other wise, level data of their will be lost.

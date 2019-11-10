@@ -19,7 +19,7 @@ class Log(commands.Cog):
         self.bot.background.update({"log":self.bg})
         self.bg.start()
 
-    def __unload(self):
+    def cog_unload(self):
         self.bg.stop()
 
     def time(self):

@@ -12,7 +12,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         self.loop_reminder_timer = self.loop.create_task(self.timer())
         self.loop_list = []
 
-    def __unload(self):
+    def cog_unload(self):
         self.loop_reminder_timer.cancel()
         for x in self.loop_list:
             x.cancel()

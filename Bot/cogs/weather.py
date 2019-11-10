@@ -10,7 +10,7 @@ class Weather(commands.Cog): #Allow to welcome new members who join guild. If it
         self.bot.say_edit = bot.say
         self.api = utils.secret["weather"]
 
-    def __local_check(self,ctx):
+    def cog_check(self,ctx):
         return utils.is_enable(ctx,"weather")
 
     @commands.command(brief="Allow to give you a info of weather realtive on that locate.")
