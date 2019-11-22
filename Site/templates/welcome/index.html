@@ -42,35 +42,7 @@
                         Assign a role. Allow to assign a role to member when they join server auto. If enable, it will start assign role when member join, otherwise, ignore below this.
                     </label>
                 </div>
-
-                    <label class="control-label" for="assign_role">Assign Role</label>
-                    <input type="text" data-role="tagsinput" name="assign_role" class="assign_role"/><br/>
-                    <div class="well well-sm">
-                        Role that can assign a member. Multiple role work as well.
-                    </div>
-                    <script>
-				$(function() {
-				var roles = new Bloodhound({
-                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                    local: {{guild_roles|tojson|safe}}
-                                });
-                                roles.initialize();
-                                var elt = $('.assign_role');
-                                elt.tagsinput({
-                                    itemValue: 'id',
-                                    itemText: 'name',
-                                    typeaheadjs: {
-                                        name: 'roles',
-                                        displayKey: 'name',
-                                        source: roles.ttAdapter()
-                                    }
-                                });
-                                {% for role in assign_role %}
-                                    elt.tagsinput('add', {{role|tojson|safe}});
-                                {% endfor %}
-				});
-                    </script>
+                    {{template.typeahead("assign_role","Assign Role",assign_role,guild_roles,"assign_role","Role that can assign a member. Multiple role work as well.")}}
                     <br/>
                     <button type="submit" class="btn btn-primary">Update</button>
                 </div>

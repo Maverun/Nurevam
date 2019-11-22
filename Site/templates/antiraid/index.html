@@ -74,35 +74,8 @@
                 </div>
 
                 <div class="col-md-6">
+                    {{template.typeahead("mute_roles","Mute Role",mute_roles,guild_roles,"mute_roles","If you select any role grant during Config Action, this is what will give role to people")}}
 
-                    <label class="control-label" for="mute_roles">Mute Role</label>
-                        <input type="text" data-role="tagsinput" name="mute_roles" class="mute_roles"/><br/>
-                        <div class="well well-sm">
-                            If you select any Role grant during Config Action, this is what will give role to people.
-                        </div>
-                        <script>
-                    $(function() {
-                    var roles = new Bloodhound({
-                                        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                                        queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                        local: {{guild_roles|tojson|safe}}
-                                    });
-                                    roles.initialize();
-                                    var elt = $('.mute_roles');
-                                    elt.tagsinput({
-                                        itemValue: 'id',
-                                        itemText: 'name',
-                                        typeaheadjs: {
-                                            name: 'roles',
-                                            displayKey: 'name',
-                                            source: roles.ttAdapter()
-                                        }
-                                    });
-                                    {% for role in mute_roles %}
-                                        elt.tagsinput('add', {{role|tojson|safe}});
-                                    {% endfor %}
-                    });
-                        </script>
                 </div>
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary">Update</button>

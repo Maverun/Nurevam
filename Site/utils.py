@@ -20,7 +20,6 @@ def plugin_method(f):
 def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        data_info.last_path = request.url #adding path of it so that we can redirect user to if they are given link.
         # Does the user have an api_token?
         api_token = session.get('api_token')
         if api_token is None:
@@ -90,7 +89,7 @@ def plugin_page(plugin_name):
         def wrapper(server_id):
             # user = get_user(session['api_token'])
             disable = request.args.get('disable')
-            log.info("the dashboard disable is ",disable,plugin_name)
+            log.info("the dashboard disable is {} {}".format(disable,plugin_name))
             if disable:
                 log.info("Disable plugins, {} for {}".format(plugin_name,server_id))
                 db.hdel('{}:Config:Cogs'.format(server_id), plugin_name)

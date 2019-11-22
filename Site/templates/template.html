@@ -15,35 +15,40 @@
 
 {% endmacro %}
 
-{% macro typeahead(html_name,name,data,guild_data,var_key,item_text,description = "") %}
+{% macro typeahead(html_name,name,data_list,guild_data,var_key,description = "",key_name = "name") %}
 
                     <label class="control-label" for="{{html_name}}">{{name}}</label>
                     <input type="text" data-member="tagsinput" name="{{html_name}}" class="{{html_name}}"/><br/>
-                    {% if description != ""%}
                         <div class="well well-sm">
-                            {{description|safe}}
+                            {% if description != ""%}
+                                {{description|safe}}
+                            {% else %}
+
+                            {%endif%}
                         </div>
-                    {%endif%}
                     <script>
 				$(function() {
+				//var_key is like a function reference to
+				//html_name is what u can do to request.get()
+				//{{key_name}} is like key name in dict.
 				var {{var_key}} = new Bloodhound({
-                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('{{item_text}}'),
+                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('{{key_name}}'),
                                     queryTokenizer: Bloodhound.tokenizers.whitespace,
                                     local: {{guild_data|tojson|safe}}
                                 });
                                 {{var_key}}.initialize();
-                                var elt = $('.{{data}}');
+                                var elt = $('.{{html_name}}');
                                 elt.tagsinput({
                                     itemValue: 'id',
-                                    itemText: '{{item_text}}',
+                                    itemText: '{{key_name}}',
                                     typeaheadjs: {
                                         name: '{{var_key}}',
-                                        displayKey: '{{item_text}}',
+                                        displayKey: '{{key_name}}',
                                         source: {{var_key}}.ttAdapter()
                                     }
                                 });
-                                {% for user in data %}
-                                    elt.tagsinput('add', {{user|tojson|safe}});
+                                {% for data in data_list %}
+                                    elt.tagsinput('add', {{data|tojson|safe}});
                                 {% endfor %}
 				});
 

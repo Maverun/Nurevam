@@ -90,8 +90,7 @@ class Tools(commands.Cog):
             await ctx.send("This module doesn't exist.".format(module))
             return
         try:
-            self.bot.unload_extension(module)
-            self.bot.load_extension(module)
+            self.bot.reload_extension(module)
         except Exception as e:
             await ctx.send('\U0001f52b')
             await ctx.send('{}: {}'.format(type(e).__name__, e))

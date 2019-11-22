@@ -32,100 +32,10 @@
                         <strong>Leaderboard: </strong><a href="{{url_for('level.levels', server_id=server['id'])}}"
                                                          target="_blank">HERE</a> !
                     </div>
+                    {{template.typeahead("banned_members","Banned Member",banned_members,guild_members,"banned_members","These member won't get <strong>xp</strong>.","username")}}
+                    {{template.typeahead("banned_roles","Banned Role",banned_roles,guild_roles,"banned_roles","These roles won't get <strong>xp</strong>.")}}
+                    {{template.typeahead("banned_channels","Banned Channels",banned_channels,guild_channels,"banned_channels","These channel that user speak won't get <strong>xp</strong>.")}}
 
-                    <label class="control-label" for="banned_members">Banned Member</label>
-                    <input type="text" data-member="tagsinput" name="banned_members" class="banned_members"/><br/>
-                    <div class="well well-sm">
-                        These member won't get <strong>xp</strong>.
-                    </div>
-                    <script>
-				$(function() {
-				var members = new Bloodhound({
-                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('username'),
-                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                    local: {{guild_members|tojson|safe}}
-                                });
-                                members.initialize();
-                                var elt = $('.banned_members');
-                                elt.tagsinput({
-                                    itemValue: 'id',
-                                    itemText: 'username',
-                                    typeaheadjs: {
-                                        name: 'members',
-                                        displayKey: 'username',
-                                        source: members.ttAdapter()
-                                    }
-                                });
-                                {% for user in banned_members %}
-                                    elt.tagsinput('add', {{user|tojson|safe}});
-                                {% endfor %}
-				});
-
-
-
-                    </script>
-
-                    <label class="control-label" for="banned_roles">Banned Role</label>
-                    <input type="text" data-role="tagsinput" name="banned_roles" class="banned_roles"/><br/>
-                    <div class="well well-sm">
-                        These roles won't get <strong>xp</strong>.
-                    </div>
-                    <script>
-				$(function() {
-				var roles = new Bloodhound({
-                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                    local: {{guild_roles|tojson|safe}}
-                                });
-                                roles.initialize();
-                                var elt = $('.banned_roles');
-                                elt.tagsinput({
-                                    itemValue: 'id',
-                                    itemText: 'name',
-                                    typeaheadjs: {
-                                        name: 'roles',
-                                        displayKey: 'name',
-                                        source: roles.ttAdapter()
-                                    }
-                                });
-                                {% for role in banned_roles %}
-                                    elt.tagsinput('add', {{role|tojson|safe}});
-                                {% endfor %}
-				});
-
-                    </script>
-
-
-                    <label class="control-label" for="banned_channels">Banned Channels</label>
-                    <input type="text" data-role="tagsinput" name="banned_channels" class="banned_channels"/><br/>
-                    <div class="well well-sm">
-                        These channel that user speak won't get <strong>xp</strong>.
-                    </div>
-                    <script>
-				$(function() {
-				var channels = new Bloodhound({
-                                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                    local: {{guild_channels|tojson|safe}}
-                                });
-                                channels.initialize();
-                                var elt = $('.banned_channels');
-                                elt.tagsinput({
-                                    itemValue: 'id',
-                                    itemText: 'name',
-                                    typeaheadjs: {
-                                        name: 'channels',
-                                        displayKey: 'name',
-                                        source: channels.ttAdapter()
-                                    }
-                                });
-                                {% for channel in banned_channels %}
-                                    elt.tagsinput('add', {{channel|tojson|safe}});
-                                {% endfor %}
-				});
-
-                    </script>
-                    <br/>
 
                     <div class="well well-sm">
                         <strong>Picture of Table: </strong><a href="{{url_for('level.theme', server_id=server['id'])}}"

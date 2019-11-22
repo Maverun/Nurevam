@@ -64,7 +64,6 @@ data_info.DOMAIN = secret.get('VIRTUAL_HOST', 'localhost:5000')
 data_info.TOKEN_URL = data_info.API_BASE_URL + '/oauth2/token'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 data_info.headers = {"Authorization": "Bot " + secret["nurevam_token"]}
-data_info.last_path = None  #getting last path so we can redirect it easily after login.
 data_info.anilist_token = secret["anilist_token"]
 data_info.anilist_id = secret["anilist_id"]
 utils.data_info = data_info
@@ -73,6 +72,7 @@ osu_api = OsuApi(secret["osu"], connector=ReqConnector())
 files_cogs = db.smembers("Website:Cogs")
 blueprint_lib = {}
 
+data_info.last_path = None  #getting last path so we can redirect it easily after login.
 #loading cogs within dirty way, so I can test other files without need to edit this (when push to server)
 for x in files_cogs:
     lib = importlib.import_module("cogs.{}".format(x))
@@ -133,8 +133,9 @@ def dashboard_cog(server_id,cog):
 
 @app.route('/login')
 def login():
+    data_info.last_path = request.referrer
     log.info("User is logging in")
-    scope = ['identify', 'guilds']
+    scope = ['identify', 'guilds','email'] #email is for discourse rank purpose.
     discord = utils.make_session(scope=scope)
     authorization_url, state = discord.authorization_url(
         data_info.AUTHORIZATION_BASE_URL,
@@ -175,13 +176,15 @@ def confirm_login():
         'api_key': api_key,
         'user_id': user['id']
     }
+
     session.permanent = True
     session['api_token'] = api_token
     log.info("Clear, redirect...")
-    if data_info.last_path:
+    if data_info.last_path and data_info.last_path != request.url_root: #if if it just homepage then we will direct user to after login..
         path = data_info.last_path
         data_info.last_path = None
         return redirect(path)
+    data_info.last_path = None
     return redirect(url_for('after_login'))
 
 @app.route('/login_confirm')
