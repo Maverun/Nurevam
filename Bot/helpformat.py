@@ -17,5 +17,5 @@ class Custom_format(help.DefaultHelpCommand):
             entry = '{0}{uni}{1:<{width}} {2}'.format( (self.indent + indent) * ' ', name, command.short_doc, width=width,uni = uni)
             self.paginator.add_line(self.shorten_text(entry))
             if(isinstance(command,Group)):
-                self.add_indented_commands(command.commands,indent = self.indent + indent)
+                return self.add_indented_commands(command.commands,indent = self.indent + indent)
 

@@ -25,14 +25,16 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         self.log_error = {}
         self.bg_dis = utils.Background("discourse",60,30,self.timer,log)
         self.bg_dis_id = utils.Background("discourse_ID",3600,1800,self.timer_update_ID,log)
-        self.bot.background.update({"discourse":self.bg_dis,"discourse_ID":self.bg_dis_id})
-
+        self.bg_dis_trust = utils.Background("discourse_ID",10800,7200,self.timer_trust_role,log) #assign role every 2 hours.
+        self.bot.background.update({"discourse":self.bg_dis,"discourse_ID":self.bg_dis_id,"discourse_trust_role":self.bg_dis_trust})
         self.bg_dis.start()
         self.bg_dis_id.start()
+        self.bg_dis_trust.start()
 
     def cog_unload(self):
         self.bg_dis.stop()
         self.bg_dis_id.stop()
+        self.bg_dis_trust.stop()
         utils.prLightPurple("Unloading Discourse")
 
     def cog_check(self,ctx):
@@ -47,7 +49,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             elif status == 403:
                 status = "Cannot access it."
             else:
-                status = "???"
+                status = "???:{}".format(status)
         elif bool(status) is True:
             status = "Working."
         elif bool(status) is False:
@@ -63,8 +65,11 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         if count == 10:  # 5 hours later and it is still down, it will auto turn off setting, sorry folks
             utils.prRed("Discourse: Turning off for {}".format(guild))
             await self.redis.hdel('{}:Config:Cogs'.format(guild), "discourse")
+            await guild.owner.send("Hello there, it look like your discourse site is down for at least 5 hours?"
+                                   " I have disable Discourse plugin on dashboard,"
+                                   " so once you got site working again, please enable it again. Sorry for trouble.")
 
-    async def get_update_id(self,guild_id):
+    async def get_update_id(self,guild_id,api_key = "api_key"): #api_key.. sometime it doens't work on certain site, so api work instead, prob due to update or? Will have to look into it later
         if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
             return
         if await self.redis.get("{}:Discourse:Temp_off".format(guild_id)):
@@ -75,7 +80,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             if not (config):
                 return
             async with aiohttp.ClientSession(read_timeout = 15) as request:
-                async with request.get(config["domain"]+"/latest.json?api_key={}&api_username={}".format(config["api_key"],config["username"])) as resp:
+                async with request.get(config["domain"]+"/latest.json?{}={}&api_username={}".format(api_key,config["api_key"],config["username"])) as resp:
                     if resp.status == 200:
                         files = await resp.json()
                         number =[]
@@ -91,12 +96,13 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                         else:
                             utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
                             #await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
-
+                    elif(api_key == "api_key"):
+                        return await self.get_update_id(guild_id,"api")
         except:
             utils.prRed(traceback.format_exc())
             await self.repeat_error(guild_id,config["domain"])
 
-    async def get_data(self,link,api,username,domain,guild=None):
+    async def get_data(self,link,api,username,domain,guild=None,api_key = "api_key"):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
         # utils.prCyan("Under get_data, {}".format(link))
@@ -105,12 +111,14 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                 log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
                 return False,None #None might be best for this?
             headers = {"Host": domain.replace("http://","").replace("https://","")}
-            link = "{}.json?api_key={}&api_username={}".format(link,api,username)
+            link = "{}.json?{}={}&api_username={}".format(link,api_key,api,username)
             async with aiohttp.ClientSession(read_timeout = 15) as discourse:
                 async with discourse.get(link,headers=headers) as resp:
                     log.debug(resp.status)
                     if resp.status == 200:
                         return True,await resp.json()
+                    elif api_key == "api_key":
+                        return await self.get_data(link,api,username,domain,guild,"api") #just in case api_key doesn't work.
                     else:
                         return False,resp.status
 
@@ -149,7 +157,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             link = "{}/t/{}".format(config['domain'],counter)
             status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'],guild_id)
             if status is False:
-                if get_post in (403,410): #private or delete, continue
+                if get_post in (403,410): #private or delete, continue. Altho, for private...it is actually return 404 why....
                     error_count += 1
                     if error_count == 10:
                         break
@@ -193,8 +201,65 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                 utils.prLightPurple("\n".join(values))
         log.debug("Finish checking {}".format(guild_id))
 
+    async def get_trust_role(self,config,level,api_key = "api_key"):
+        async with aiohttp.ClientSession(read_timeout=15) as request:
+            async with request.get(
+                    config["domain"] + "/groups/trust_level_{}/members.json?{}={}&api_username={}".format(level,api_key, config["api_key"],
+                                                                                   config["username"])) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                elif (api_key == "api_key"):
+                    return await self.get_trust_role(config,level, "api")
+
+    async def check_trust_role(self,guild,level,data,current_list,all_role_trust_level):
+        data = data["members"] #getting list of trust level x member
+        trust_role_list = {x["id"] for x in data}
+        current_list_id = set(current_list).intersection(trust_role_list)
+        for discourse_id in current_list_id:
+            member = guild.get_member(current_list[discourse_id])
+            if guild.me.top_role > member.top_role: #just to make sure i can grant them a role other wise... ignore it
+                member_role = {x.id for x in member.roles if x != guild.default_role} #getting id of member's role each
+                missing_role = all_role_trust_level - member_role#in case they already have it or not.
+                if missing_role:
+                    role = [x for x in guild.roles if x.id in missing_role]
+                    await member.add_roles(*role,reason = "This member has reached trust level {} on discourse".format(level))
+
+    async def update_role(self,guild):
+        if await self.redis.hget('{}:Config:Cogs'.format(guild.id),"discourse") is None:
+            return
+        elif await self.redis.get("{}:Discourse:trust_bool".format(guild.id)) in ["0",None]: #either owner set it off or None.
+            return
+        try:
+            config = await self.redis.hgetall("{}:Discourse:Config".format(guild.id))
+            if not (config): return
+
+            #getting list of user that already link up with discourse. KEY:VALUE = Discourse_ID:Discord_ID
+            current_list_user = await self.redis.hgetall("{}:Discourse:Trust_User_ID".format(guild.id))
+            current_list_user = [{int(key):int(value)} for key,value in current_list_user.items()]
+            if bool(current_list_user) is False: return #if plugin is on and already set roles, but no one havent link.. well..
+            current_list_user = current_list_user[0]
+
+            all_role_list = set() #creating set {} so we can union them.
+            for x in range(1,5):
+                #this here wiLl add trust_level_role to previous, this reason is that when doing api call, they dont include 0 but only one that member is at.
+                #so if member is at level 2, then 0 and 1 will also include, etc.
+                current_role_trust_level = await self.redis.smembers("{}:Discourse:trust_role{}".format(guild.id, x))
+                if current_role_trust_level.count('') >= 1:  current_role_trust_level.remove('') #if it empty string '' then remove it.
+                all_role_list = all_role_list.union({int(x) for x in current_role_trust_level}) #making sure all role id are in int.
+
+                data = await self.get_trust_role(config,x) #getting trust level x row list.
+                if data and bool(all_role_list): #if role is empty, well obviously cant give one to user.
+                    await self.check_trust_role(guild,x,data,current_list_user,all_role_list)
+        except:
+            utils.prRed(traceback.format_exc())
+
+    async def timer_trust_role(self):
+        utils.prGreen("Updating trust level role")
+        for guild in list(self.bot.guilds):
+            await self.update_role(guild)
+
     async def timer_update_ID(self):
-        utils.prRed("updating ID for discourse")
+        utils.prGreen("updating ID for discourse")
         for guild in list(self.bot.guilds):
             await self.get_update_id(guild.id)
 
@@ -250,6 +315,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
         data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
+        print(data)
         data = data[1]
         stat=data["about"]["stats"]
         await self.bot.say(ctx,content = "```xl"

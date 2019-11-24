@@ -1,0 +1,45 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% include 'sidebar.html' %}
+        {% set csrf = csrf_token() %}
+        <div class="col-md-8">
+            {% include 'flash.html' %}
+            <form id="discourse" method="POST" action="{{url_for('discourse.update_trust_level', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                <h3>Trust Level Grant Roles(Early Access?)</h3>
+                <div class="well well-sm">
+                    <strong>Note</strong> Make sure Nurevam does have role grant permission and highest role than most member so it can grant them easily.. (discord role hierarchy)
+                    <br>
+                    <strong>Note</strong>, Nurevam will not remove roles if any thing here changed, or user has drop their level.
+                    <br>
+                    <br>
+                    Note: Trust level 0 are not involved since it is default level that everyone have so from 1 to 4.
+                    <br>
+                    If all box are empty, it will assume there is no role to grant and will not grant any role to user.
+                    <br>
+                    Role will grant every 2-3 hours.
+                    <br>
+                    <br>
+                    <string>NOTE</string> In order for this to work, it will to be admin api key account other wise it cant able to check emails to compare between discord and discourse to confirm if it indeed same person.
+                    <br>
+                    <br>
+                    People who want to linked between their account of discourse and discord can access <a href={{url_for('discourse.discourse_link', server_id=server['id'])}}>here</a>, I recommend bookmark it so you can get there faster (Share link with other admin!)
+
+                </div>
+
+                {{template.typeahead("trust1","Trust level 1 Role",assign_role1,guild_roles,"role1","Role for people who have Trust level 1")}}
+                {{template.typeahead("trust2","Trust level 2 Role",assign_role2,guild_roles,"role2","Role for people who have Trust level 2")}}
+                {{template.typeahead("trust3","Trust level 3 Role",assign_role3,guild_roles,"role3","Role for people who have Trust level 3")}}
+                {{template.typeahead("trust4","Trust level 4 Role",assign_role4,guild_roles,"role4","Role for people who have Trust level 4")}}
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+
+{% endblock %}

@@ -53,7 +53,8 @@ class Core(commands.Cog):
     @commands.command()
     async def prefix(self,ctx):
         prefix = (await self.redis.get("{}:Config:CMD_Prefix".format(ctx.message.guild.id)))
-        await self.bot.say(ctx,content = "```\n{}\n```".format(prefix))
+        prefix = set(prefix + ctx.prefix) #if user didnt set any, it will be default to ! which set prefix to be None? In case it is not, we can add current prefix to it.
+        await self.bot.say(ctx,content = "```\n{}\n```".format(",".join(prefix)))
 
     @commands.command()
     async def info(self,ctx,*,person:discord.Member = None):

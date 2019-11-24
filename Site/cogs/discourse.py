@@ -12,18 +12,21 @@ name = "discourse"
 description = "A Discourse forum! Allow Nurevam check if there is a new post, if there is one, it will post it out!"
 
 db = None  #Database
+def find_latest_topic(data):
+    number = []
+    for x in data["topic_list"]["topics"]:
+        number.append(x["id"])
+    return max(number)
 
-def discourse(domain,api,username):
+def discourse(domain,api,username,query = "latest.json",api_key = "api_key="):
     try:
-        r=requests.get(domain+"/latest.json?api_key={}&api_username={}".format(api,username))
+        r=requests.get(domain+"/{}?{}&api_username={}".format(query,api_key+api,username))
         if r.status_code == 200:
-            files = r.json()
-            number =[]
-            for x in files["topic_list"]["topics"]:
-                number.append(x["id"])
-            return max(number)
-    except:
-        pass
+            return r.json()
+        elif api_key == "api_key=":
+            return discourse(domain,api,username,query = query,api_key = "api=") #mainly api_key work but sometime it wont and api also work...
+    except Exception as e:
+        print("Error under discourse: ",e)
 
 @utils.plugin_page('discourse')
 def dashboard(server_id):
@@ -69,6 +72,7 @@ def update_discourse(server_id):
         if currently_topic is None:
             flash("There seem to be problem, please double check with domain,api key or username", 'warning')
         else:
+            currently_topic = find_latest_topic(currently_topic)
             db.set("{}:Discourse:ID".format(server_id), currently_topic)
             flash('Settings updated!', 'success')
     return dashboard(server_id = server_id)
@@ -108,8 +112,12 @@ def category(server_id):
         'icon':db.hget("Info:Server_Icon",server_id)}
 
     #making requests to discourse site within API to get category info so we can send topics to certain channel chosen by user.
-    r = requests.get("{}/site.json?api_key={}&api_username={}".format(domain,api_key,username))
-    raw_data = r.json()["categories"]
+    raw_data = discourse(domain,api_key,username,"site.json")
+    if raw_data is None:
+        flash("There is problem with accessing to site...","warning")
+        return dashboard(server_id)
+    raw_data = raw_data["categories"]
+
     data = []
     sub_temp = {}
     for x in raw_data: #checking subcategory and category
@@ -147,3 +155,106 @@ def update_category(server_id):
     except Exception as e:
         log.info("There is error\n{}".format(e))
     return redirect(url_for("discourse.category",server_id = server_id))
+
+@blueprint.route("/trust_level/<int:server_id>")
+@utils.plugin_method
+def trust_level(server_id):
+    #Getting info about server, id, name and icon of it to display it.
+    server = {
+        'id':server_id,
+        'name':db.hget("Info:Server",server_id),
+        'icon':db.hget("Info:Server_Icon",server_id)}
+
+    def ar(i): #ar for assign_role,shortcut ik...
+        db_assign_role = db.smembers("{}:Discourse:trust_role{}".format(server_id,i)) or []
+        return list(filter(lambda r: r['name'] in db_assign_role or r['id'] in db_assign_role, guild_roles))
+
+    get_role = utils.resource_get("/guilds/{}".format(server_id))
+    guild_roles = get_role['roles']
+
+    config = db.hgetall("{}:Discourse:Config".format(server_id))
+    data = discourse(config["domain"],config["api_key"],config["username"],"groups/trust_level_0/members.json")
+
+    if data is None:
+        flash("Please Note, Nurevam cannot access to groups for some reason, maybe account you provide is not active or you forget to set config at dashboard?","warning")
+        return dashboard(server_id = server_id)
+
+    return render_template("trust_role.html",server=server,guild_roles=guild_roles,
+                           assign_role1=ar(1),
+                           assign_role2=ar(2),assign_role3=ar(3),assign_role4=ar(4))
+
+@blueprint.route("/trust_level/update/<int:server_id>", methods = ['POST'])
+@utils.plugin_method
+def update_trust_level(server_id):
+    def add_role(i):
+        r =request.form.get("trust{}".format(i)).split(',')
+        if len(r) > 0:
+            db.sadd("{}:Discourse:trust_role{}".format(server_id,i),*r)
+            return True
+    isAssign = False
+    for i in range(1,5):
+        db.delete("{}:Discourse:trust_role{}".format(server_id, i)) #just in case
+        gotAssign = add_role(i) #then add role. No need to make another loops
+        if gotAssign:
+            isAssign = True
+
+    if isAssign:
+        flash('Settings updated!', 'success')
+        db.set("{}:Discourse:trust_bool".format(server_id),1)
+    else:
+        db.set("{}:Discourse:trust_bool".format(server_id), 0)
+
+    return redirect(url_for("discourse.trust_level",server_id = server_id))
+
+@blueprint.route("/user_link/<int:server_id>/")
+@utils.require_auth
+def discourse_link(server_id):
+    server = {
+        'id':server_id,
+        'name':db.hget("Info:Server",server_id),
+        'icon':db.hget("Info:Server_Icon",server_id)}
+    discourse_id = db.hget("{}:Discourse:Trust_User".format(server_id),utils.session["user"]["id"])
+    config = db.hgetall("{}:Discourse:Config".format(server_id))
+    data = "" #setting default since user doing it first time maybe
+    if discourse_id: #if user actually did link up by checking ID in database then we will get username
+        data_get = discourse(config["domain"],config["api_key"],config["username"],"admin/users/{}.json".format(discourse_id))
+        if data_get:
+            data = data_get["username"]
+    return render_template("user_link_account.html",server=server,user_name = data)
+
+@blueprint.route("/user_link/update/<int:server_id>", methods = ['POST'])
+@utils.plugin_method
+def update_user_account_link(server_id):
+    name = request.form.get("discourse_user")
+    config = db.hgetall("{}:Discourse:Config".format(server_id))
+    #we are checkig if it confirm.
+    data = discourse(config["domain"],config["api_key"],config["username"],"users/{}/emails.json".format(name))
+    is_pass = False
+    discord_email = utils.session["user"]["email"]
+    if data is None:
+        flash("There is problem, I cannot check, there is likely a issue, please report this to your owner")
+        return redirect(url_for("discourse.discourse_link", server_id=server_id,cog = "discourse"))
+    elif discord_email == data["email"] or discord_email in data["secondary_emails"]:
+        is_pass = True
+    elif discord_email in [x["description"] for x in data["associated_accounts"]]:
+        is_pass = True
+
+    if is_pass is False:
+        get_id = db.hget("{}:Discourse:Trust_User".format(server_id),utils.session["user"]["id"])
+        if(get_id):
+            db.hdel("{}:Discourse:Trust_User".format(server_id),utils.session["user"]["id"])
+            db.hdel("{}:Discourse:Trust_User_ID".format(server_id),get_id)
+        flash("Your email doesn't match up with discord email!","warning")
+        return redirect(url_for("discourse.discourse_link", server_id=server_id,cog = "discourse"))
+
+    #since we got email, we should also get their ID
+    discourse_id = discourse(config["domain"], config["api_key"], config["username"], "/users/{}.json".format(name))
+    discourse_id = discourse_id['user']['id']
+    db.hset("{}:Discourse:Trust_User".format(server_id),utils.session["user"]["id"],discourse_id)
+    db.hset("{}:Discourse:Trust_User_ID".format(server_id),discourse_id,utils.session["user"]["id"]) #reverse of Trust_user where it is discord ID: discourse_Id, this one is discourseID : Discord ID.
+    flash("Update done!","success")
+    return redirect(url_for("discourse.discourse_link",server_id=server_id))
+
+
+
+#/groups/trust_level_0/members.json

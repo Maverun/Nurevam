@@ -16,7 +16,7 @@ description = '''Nurevam's Command List.
  
  First └ mean it is commands under that plugin, and if there is one or more under commands, it is a sub command that can invoke by doing !parent subcommand such as !rank global
  '''
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,help_attrs=dict(pm_help=False,hidden=True),help_command=helpformat.Custom_format())
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,hidden = True,pm_help = False,help_command=helpformat.Custom_format())
 bot.db= storage.Redis()
 redis = utils.redis
 
@@ -65,9 +65,9 @@ async def command_checker(msg):
         bot.command_prefix = commands.when_mentioned_or(*cmd_prefix)
         if "help" in msg.content: #changing setting for help, if guild owner want Help command to be via PM or to guild.
             if await bot.db.redis.get("{}:Config:Whisper".format(msg.guild.id)) == "on":
-                bot.pm_help =True
+                bot.dm_help =True
             else:
-                bot.pm_help=False
+                bot.dm_help =False
     except:
         pass
 

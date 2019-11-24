@@ -1,0 +1,43 @@
+{% extends 'dash_base.html' %}
+{% block dash_content %}
+<div class="container">
+    <div class="row">
+        {% set csrf = csrf_token() %}
+        <div class="col-md-12">
+            {% include 'flash.html' %}
+            <form id="discourse" method="POST" action="{{url_for('discourse.update_user_account_link', server_id=server['id'])}}">
+                <input name=_csrf_token type=hidden value="{{ csrf }}">
+                <h3>Discord and Discourse account link (Early Access?)</h3>
+                <div class="well well-sm">
+                    This is where you will enter your discourse username, and Nurevam will check and get email and compare between your discord email.
+                    <br>
+                    <br>
+                    If your discord email and discourse email are different, it will not work of course,
+                    <br>
+                    <br>
+                    you will have few choice to do... such as changing one of them to same email
+                    or info your admin/owner to link up account via "<strong>!discourse link @mention username</strong>"
+                    <br>(Without quote of course, and change prefix if you are using custom.)
+                    <br>
+                    where username is discourse username of your.
+                    <br>
+                    <br>
+                    Reason why Nurevam will be checking your both email is to confirm if you are indeed user.
+                    (This is to avoid people tricking Nurevam and get highest level to access hidden channel or what so ever reason...)
+
+                    All you need to do here is enter your own discourse username, and it will check and get email from there.
+                </div>
+
+                {{template.text_box("discourse_user","Discourse Username",description = "Enter your discourse username here and Nurevam will check to confirm.",data = user_name)}}
+
+
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+
+{% endblock %}
