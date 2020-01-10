@@ -69,6 +69,7 @@ def update_customcmd(server_id):
     return dashboard(server_id=server_id)
 
 def max_use(server_id):
+    if utils.is_owner(): return 99 #well.....
     user = utils.session.get('user')
     role_data = db.hgetall("{}:Customcmd:role".format(server_id))
     get_user_role = utils.resource_get("/guilds/{}/members/{}".format(server_id,user['id']))["roles"]

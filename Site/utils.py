@@ -10,6 +10,12 @@ log = logging.getLogger('Nurevam.site')
 
 db = None
 data_info = None
+def is_owner():
+    if session["user"]["id"] == "105853969175212032":
+        log.info("It is dev Mave")
+        return True
+    return False
+
 
 def my_dash(f):
     return require_auth(require_bot_admin(server_check(f)))
@@ -37,9 +43,7 @@ def require_auth(f):
 def require_bot_admin(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if session["user"]["id"] == "105853969175212032":
-            log.info("It is dev Mave")
-            return f(*args, **kwargs)
+        if is_owner(): return f(*args,**kwargs)
         server_id = kwargs.get('server_id')
         user = get_user(session['api_token'])
         guilds = get_user_guilds(session['api_token'])
@@ -69,9 +73,7 @@ def require_role(f):
     @require_auth
     @wraps(f)
     def wrapper(*args,**kwargs):
-        if session["user"]["id"] == "105853969175212032":
-            log.info("It is dev Mave")
-            return f(*args, **kwargs)
+        if is_owner(): return f(*args,**kwargs)
         cog = kwargs.get("cog").title()
         server_id = kwargs.get("server_id")
         user = session.get('user')
