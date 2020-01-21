@@ -18,12 +18,8 @@ def prLightGray(prt): print("\033[97m{}\033[00m".format(prt))
 def prBlack(prt): print("\033[98m{}\033[00m".format(prt))
 ###############################################################
 
-if platform.system() == "Windows": #due to different path for linux and window
-    path = "..\\secret.json"
-else:
-    path = "/home/mave/Nurevam/secret.json"
 #read files and save it to secret
-with open (path,"r",encoding = "utf8") as f:
+with open ("../secret.json","r",encoding = "utf8") as f:
     secret = json.load(f)
 
 ###########Connection Line####################
@@ -58,7 +54,7 @@ def check_roles(ctx,cog,get_role): #Server ID  then which plugin, and Roles with
 async def send_hastebin(info):
     async with aiohttp.ClientSession() as session:
         async with session.post("https://hastebin.com/documents",data = str(info)) as resp:
-            if resp.status is 200:
+            if resp.status == 200:
                 return "https://hastebin.com/{}.py".format((await resp.json())["key"])
 
 async def input(bot,ctx,msg,check):

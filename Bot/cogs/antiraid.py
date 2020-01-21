@@ -84,7 +84,7 @@ class AntiRaid(commands.Cog, name = "Anti Raid"):
         if "discord.gg/" in msg.content:
             if self.get_config(msg.guild.id,"invite_link"):
                 list_invite = await msg.guild.invites()
-                if len([x for x in list_invite if x.code in msg.content]) is 0:
+                if len([x for x in list_invite if x.code in msg.content]) == 0:
                     if await self.security_level(msg.author,Mode_config.invite,"Invite Link not from this server. -AntiRaid"):
                         await msg.channel.send("Invite link are not allowed!")
                         try:

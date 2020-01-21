@@ -14,13 +14,11 @@ import json
 import os
 
 
-if platform.system() == "Windows": #due to different path for linux and window
-    path = "secret.json"
-else:
-    path = "/home/mave/Nurevam/secret.json"
+
+
 
 #read files and save it to secret
-with open (path,"r") as f:
+with open ("../secret.json","r") as f:
     secret = json.load(f)
 
 #Getting database connected

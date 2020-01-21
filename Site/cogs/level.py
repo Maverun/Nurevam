@@ -162,9 +162,9 @@ def levels(server_id):
     total_exp = 0
     for x in range(0,len(player_data),2):
 
+            if player_data[x] is None: continue
             if name_list.get(player_data[x]) is None:
                 db.srem("{}:Level:Player".format(server_id),player_data[x])
-            if player_data[x] is None: continue
             # print(player_data[x],player_data[x+1]) #for future references
             total_exp += int(player_data[x+1])
             level, remain,next_xp= next_Level(int(player_data[x+1]))

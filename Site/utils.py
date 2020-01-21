@@ -102,7 +102,7 @@ def plugin_page(plugin_name):
                 return redirect(url_for('dashboard', server_id=server_id))
 
             db.hset('{}:Config:Cogs'.format(server_id), plugin_name,"on")
-            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,None)
+            db.hset("{}:Config:Delete_MSG".format(server_id),plugin_name,"None")
 
             icon = db.hget("Info:Server_Icon", server_id)
             name = db.hget("Info:Server", server_id)
