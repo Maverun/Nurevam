@@ -1,3 +1,4 @@
+from prettytable import PrettyTable
 from discord.ext import commands
 from .utils import utils
 import lxml.html
@@ -69,40 +70,36 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                                    " I have disable Discourse plugin on dashboard,"
                                    " so once you got site working again, please enable it again. Sorry for trouble.")
 
-    async def get_update_id(self,guild_id,api_key = "api_key"): #api_key.. sometime it doens't work on certain site, so api work instead, prob due to update or? Will have to look into it later
+    async def get_update_id(self,guild_id,api_key = "api_key",api_username = "api_username"): #api_key.. sometime it doens't work on certain site, so api work instead, prob due to update or? Will have to look into it later
         if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
             return
         if await self.redis.get("{}:Discourse:Temp_off".format(guild_id)):
             log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild_id))
             return
+        config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
+        if not (config):
+            return
         try:
-            config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
-            if not (config):
-                return
-            async with aiohttp.ClientSession(read_timeout = 15) as request:
-                async with request.get(config["domain"]+"/latest.json?{}={}&api_username={}".format(api_key,config["api_key"],config["username"])) as resp:
-                    if resp.status == 200:
-                        files = await resp.json()
-                        number =[]
-                        for x in files["topic_list"]["topics"]:
-                            number.append(x["id"])
-                        lastest_id = max(number)
-                        current_id = int(await self.redis.get("{}:Discourse:ID".format(guild_id)))
-                        if current_id < lastest_id: #if it not really up to dated.
-                            utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
-                            await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
-                        elif current_id == lastest_id:
-                            utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
-                        else:
-                            utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
-                            #await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
-                    elif(api_key == "api_key"):
-                        return await self.get_update_id(guild_id,"api")
+            flag,data = await self.get_data(config,"latest",guild_id)
+            if flag == True:
+                number =[]
+                for x in data["topic_list"]["topics"]:
+                    number.append(x["id"])
+                lastest_id = max(number)
+                current_id = int(await self.redis.get("{}:Discourse:ID".format(guild_id)))
+                if current_id < lastest_id: #if it not really up to dated.
+                    utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
+                    await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
+                elif current_id == lastest_id:
+                    utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
+                else:
+                    utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
+                    #await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
         except:
             utils.prRed(traceback.format_exc())
             await self.repeat_error(guild_id,config["domain"])
 
-    async def get_data(self,link,api,username,domain,guild=None,api_key = "api_key"):
+    async def get_data(self,config,path,guild=None,api_key = "api_key",api_username = "api_username"):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
         # utils.prCyan("Under get_data, {}".format(link))
@@ -110,18 +107,19 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             if await self.redis.get("{}:Discourse:Temp_off".format(guild)):
                 log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
                 return False,None #None might be best for this?
-            headers = {"Host": domain.replace("http://","").replace("https://","")}
-            link = "{}.json?{}={}&api_username={}".format(link,api_key,api,username)
+            headers = {"Host": config["domain"].replace("http://","").replace("https://",""),
+                       api_key:config["api_key"],
+                       api_username:config["username"]}
+            url = "{}/{}.json".format(config["domain"],path)
             async with aiohttp.ClientSession(read_timeout = 15) as discourse:
-                async with discourse.get(link,headers=headers) as resp:
+                async with discourse.get(url,headers=headers) as resp:
                     log.debug(resp.status)
                     if resp.status == 200:
                         return True,await resp.json()
                     elif api_key == "api_key":
-                        return await self.get_data(link,api,username,domain,guild,"api") #just in case api_key doesn't work.
+                        return await self.get_data(config,path,guild,"Api-Key","Api-Username") #just in case api_key doesn't work. Eventually, once most forums is update to latest, then will start using Api-Key as main now.
                     else:
                         return False,resp.status
-
         except asyncio.CancelledError: #Just in case here for some reason
             utils.prRed("Under get_data function")
             utils.prRed("Asyncio Cancelled Error")
@@ -129,7 +127,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         except:
             utils.prRed("Under get_data function, server: {}".format(guild))
             utils.prRed(traceback.format_exc())
-            await self.repeat_error(guild,domain)
+            await self.repeat_error(guild,config["domain"])
             return False,None #None might be best for this? I hope...-
 
     async def new_post(self,guild_id):
@@ -155,7 +153,7 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             self.logging_info(get_post, link, counter, guild_id)
             counter += 1
             link = "{}/t/{}".format(config['domain'],counter)
-            status,get_post = await self.get_data(link, config['api_key'], config['username'], config['domain'],guild_id)
+            status,get_post = await self.get_data(config,"t/{}".format(counter),guild_id)
             if status is False:
                 if get_post in (403,410): #private or delete, continue. Altho, for private...it is actually return 404 why....
                     error_count += 1
@@ -201,16 +199,6 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                 utils.prLightPurple("\n".join(values))
         log.debug("Finish checking {}".format(guild_id))
 
-    async def get_trust_role(self,config,level,api_key = "api_key"):
-        async with aiohttp.ClientSession(read_timeout=15) as request:
-            async with request.get(
-                    config["domain"] + "/groups/trust_level_{}/members.json?{}={}&api_username={}".format(level,api_key, config["api_key"],
-                                                                                   config["username"])) as resp:
-                if resp.status == 200:
-                    return await resp.json()
-                elif (api_key == "api_key"):
-                    return await self.get_trust_role(config,level, "api")
-
     async def check_trust_role(self,guild,level,data,current_list,all_role_trust_level):
         data = data["members"] #getting list of trust level x member
         trust_role_list = {x["id"] for x in data}
@@ -241,14 +229,13 @@ class Discourse(commands.Cog): #Discourse, a forums types.
 
             all_role_list = set() #creating set {} so we can union them.
             for x in range(1,5):
-                #this here wiLl add trust_level_role to previous, this reason is that when doing api call, they dont include 0 but only one that member is at.
+                #this here will add trust_level_role to previous, this reason is that when doing api call, they dont include 0 but only one that member is at.
                 #so if member is at level 2, then 0 and 1 will also include, etc.
                 current_role_trust_level = await self.redis.smembers("{}:Discourse:trust_role{}".format(guild.id, x))
                 if current_role_trust_level.count('') >= 1:  current_role_trust_level.remove('') #if it empty string '' then remove it.
                 all_role_list = all_role_list.union({int(x) for x in current_role_trust_level}) #making sure all role id are in int.
-
-                data = await self.get_trust_role(config,x) #getting trust level x row list.
-                if data and bool(all_role_list): #if role is empty, well obviously cant give one to user.
+                flag,data = await self.get_data(config,"groups/trust_level_{}/members",guild) #getting trust level x row list.
+                if flag == 200 and bool(all_role_list): #if role is empty, well obviously cant give one to user.
                     await self.check_trust_role(guild,x,data,current_list_user,all_role_list)
         except:
             utils.prRed(traceback.format_exc())
@@ -293,10 +280,8 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         Posts Read:
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
-        link ="{}/users/{}/summary".format(config["domain"],name)
-        data = await self.get_data(link,config["api_key"],config['username'],config["domain"],ctx.message.guild.id)  #Get info of that users
-        data = data[1]
-        if data == 404: #If there is error  which can be wrong user
+        flag,data = await self.get_data(config,"users/ {}/summary".format(name),ctx.message.guild.id)  #Get info of that users
+        if flag == False or data == 404: #If there is error  which can be wrong user
             await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
             return
         summary=data["user_summary"] #Dict short for print_data format
@@ -314,29 +299,20 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         Show a table of Topics,Posts, New Users, Active Users, Likes for All Time, Last 7 Days and Lasts 30 Days
         '''
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
-        data=await self.get_data("{}/about".format(config["domain"]),config["api_key"],config["username"],config["domain"]) #Read files from link Main page/about
-        print(data)
-        data = data[1]
+        flag,data=await self.get_data(config,"about",ctx.message.guild.id) #Read files from link Main page/about
+        if flag == False: return await self.bot.say("Unable to get data, there is a problem with site")
         stat=data["about"]["stats"]
-        await self.bot.say(ctx,content = "```xl"
-                           "\n┌──────────────┬──────────┬──────────────┬──────────────┐\n"
-                           "│              │ All Time │ Lasts 7 Days │ Last 30 Days │"
-                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
-                           "\n│ Topics       │{0:^10}│{1:^14}│{2:^14}│"
-                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
-                           "\n│ Posts        │{3:^10}│{4:^14}│{5:^14}│"
-                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
-                           "\n│ New Users    │{6:^10}│{7:^14}│{8:^14}│"
-                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
-                           "\n│ Active Users │    —     │{9:^14}│{10:^14}│"
-                           "\n├──────────────┼──────────┼──────────────┼──────────────┤"
-                           "\n│ Likes        │{11:^10}│{12:^14}│{13:^14}│"
-                           "\n└──────────────┴──────────┴──────────────┴──────────────┘\n```".format(
-                   stat["topic_count"],stat["topics_7_days"],stat["topics_30_days"],
-                   stat["post_count"],stat["posts_7_days"],stat["posts_30_days"],
-                   stat["user_count"],stat["users_7_days"],stat["users_30_days"],
-                   stat["active_users_7_days"],stat["active_users_30_days"],
-                   stat["like_count"],stat["likes_7_days"],stat["likes_30_days"]))
+        x = PrettyTable()
+        x.field_names = [" ","All Time","Lasts 7 Days","Last 30 Days"]
+        x.align = 'c'
+        x.horizontal_char = '─'
+
+        x.add_row(["Topics",stat["topic_count"],stat["topics_7_days"],stat["topics_30_days"]])
+        x.add_row(["Posts",stat["post_count"],stat["posts_7_days"],stat["posts_30_days"]])
+        x.add_row(["New Users",stat["user_count"],stat["users_7_days"],stat["users_30_days"]])
+        x.add_row(["Active Users","",stat["active_users_7_days"],stat["active_users_30_days"]])
+        x.add_row(["Likes",stat["like_count"],stat["likes_7_days"],stat["likes_30_days"]])
+        await self.bot.say(ctx,content = "```xl\n{}\n```".format(x.get_string()))
 
     @commands.command(brief="Give a bio of that user")
     async def bio(self,ctx,name:str):
@@ -354,11 +330,11 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             await self.bot.say(ctx,content = "There is space in! There is no such name that have space in! Please Try again!")
             return
         config =await self.redis.hgetall("{}:Discourse:Config".format(ctx.message.guild.id))
-        read= await self.get_data("{}/users/{}".format(config["domain"],name),config["api_key"],config["username"],config["domain"],ctx.message.guild.id)
-        if read[1] == 404: #If there is error  which can be wrong user
+        flag,read = await self.get_data(config,"users/{}".format(name),ctx.message.guild.id)
+        print(flag,read)
+        if flag == False : #If there is error  which can be wrong user
             await self.bot.say(ctx,content = "{} is not found! Please double check case and spelling!".format(name))
             return
-        read= read[1]
         data =read["user"]
         data_array=[]
         data_array.append("**Username**: {}".format(data["username"]))

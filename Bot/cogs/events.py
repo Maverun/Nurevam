@@ -142,26 +142,18 @@ class Events(commands.Cog):
             utils.prRed("Failed to delete user command - {0.name}  - {0.id}\n".format(ctx.message.guild))
             utils.prRed(traceback.format_exc())
 
-    async def send_cmd_help(self,ctx):
-        if ctx.invoked_subcommand:
-            pages = await self.bot.formatter.format_help_for(ctx,ctx.invoked_subcommand)
-            print(pages)
-            for page in pages:
-                await ctx.send(page.replace("\n","fix\n",1))
-        else:
-            await HelpCommand.send_command_help(ctx,ctx.command)
-            pages = await self.bot.formatter.format_help_for(ctx,ctx.command)
-            for page in pages:
-                await ctx.send(page.replace("\n","fix\n",1))
-
     @commands.Cog.listener()
     async def on_command_error(self,ctx,error):
         if self.bot.user.id == 181503794532581376 or self.error_log:
             print(error)
         if isinstance(error, commands.MissingRequiredArgument):
-            await self.send_cmd_help(ctx)
+            self.bot.help_command.context = ctx
+            await self.bot.help_command.command_callback(ctx,command= str(ctx.command))
         elif isinstance(error,commands.BadArgument):
-            await self.send_cmd_help(ctx)
+            self.bot.help_command.context = ctx
+            await self.bot.help_command.command_callback(ctx,command= str(ctx.command))
+        elif isinstance(error,commands.NoPrivateMessage):
+            await ctx.author.send("This command cannot be used in private message")
         elif isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original,discord_error.Forbidden):
                 await ctx.send("I am sorry, I need a certain permission to run it...")
