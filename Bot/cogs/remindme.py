@@ -70,7 +70,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         if time_set < time_now:
             delta_time += timedelta(days=1)
             
-        await self.remindme(self,ctx,str(timedelta(seconds=delta_time)),*,message="")
+        await self.remindme(self,ctx,str(timedelta(seconds=int(delta_time.total_seconds()))),*,message="")
         
     @commands.command(hidden=True,pass_context=True)
     async def remindme(self,ctx,get_time,*,message=""):
