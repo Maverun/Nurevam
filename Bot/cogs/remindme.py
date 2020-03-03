@@ -55,6 +55,21 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await self.redis.hdel("{}:Remindme:time".format(guild), x)
 
     @commands.command(hidden=True,pass_context=True)
+    async def remindtime(self,ctx,get_time,*,message=""):     
+        time = get_time.split(":")
+        if not time[0].isdigit():
+            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+        if len(time) == 2:
+          time[2] = '0'
+        if len(time) == 1:
+          time[1] = '0'
+        delta_time = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2])) - datetime.utcnow()
+        if delta_time < 0:
+            delta_time += datetime.timedelta(days=1)
+            
+        await self.remindme(self,ctx,str(delta_time),*,message="")
+        
+    @commands.command(hidden=True,pass_context=True)
     async def remindme(self,ctx,get_time,*,message=""):
         time = get_time.split(":")
         if not time[0].isdigit():
@@ -64,14 +79,14 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         id_time = 0
         print(message)
         if len(time) == 3:
-            remind_time += int(time[0])*3600 + int(time[1])*60+ int(time[2])
+            remind_time += int(time[0])*3600 + int(time[1])*60 + int(time[2])
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
             remind_time += int(time[0])*60 + int(time[1])
             msg += "{} minute {} second".format(time[0],time[1])
         else:
-            msg += "{} second".format(time[0])
             remind_time += int(time[0])
+            msg += "{} second".format(time[0])
         if not message:
             message = "{}, unspecified reminder.".format(ctx.message.author.mention)
         else:
