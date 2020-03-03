@@ -63,8 +63,11 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
           time[2] = '0'
         if len(time) == 1:
           time[1] = '0'
-        delta_time = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2])) - datetime.utcnow()
-        if delta_time < timedelta():
+        
+        time_set = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
+        time_now = datetime.utcnow()
+        delta_time = time_set - time_now
+        if time_set < time_now:
             delta_time += timedelta(days=1)
             
         await self.remindme(self,ctx,str(timedelta(seconds=delta_time)),*,message="")
