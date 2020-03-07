@@ -59,9 +59,10 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         time = get_time.split(":")
         if not time[0].isdigit():
             return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
-        if len(time) == 2:
-            time.append('0')
         if len(time) == 1:
+            time.append('0')
+            time.append('0')
+        elif len(time) == 2:
             time.append('0')
         
         time_set = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
