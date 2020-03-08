@@ -65,7 +65,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         elif len(time) == 2:
             time.append('0')
         
-         if 0 > int(time[0]) or int(time[0]) > 24 or 0 > int(time[1]) or int(time[1]) > 59 or 0 > int(time[2]) or int(time[2]) > 59:
+         if 0 > int(time[0]) or int(time[0]) > 23 or 0 > int(time[1]) or int(time[1]) > 59 or 0 > int(time[2]) or int(time[2]) > 59:
             return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
         
         time_set = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
