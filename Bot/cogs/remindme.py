@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from .utils import utils
 import traceback
 import asyncio
+import pytz
 
 class Remindme(commands.Cog): #Allow to welcome new members who join guild. If it enable, will send them a message.
     def __init__(self,bot):
@@ -54,7 +55,18 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await self.redis.hdel("{}:Remindme:channel".format(guild), x)
         await self.redis.hdel("{}:Remindme:time".format(guild), x)
 
-    @commands.command(hidden=True,pass_context=True)
+    @commands.command(hidden =  True)
+    async def setTimezoneRemind(self,ctx,timez):
+        try:
+            #so we are checking if this timezone exists, if no error, we are clear.
+            #I will make this command more sense or pretty when I get a chance to rewrite them.... #TODO
+            tz = pytz.timezone(timez)
+            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),timez)
+            return await ctx.send("Timezone set for your remind only!",delete_after = 30)
+        except pytz.UnknownTimeZoneError:
+            await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
+
+    @commands.command(hidden=True,pass_context=True,aliases=["rt"])
     async def remindtime(self,ctx,get_time,*,message=""):     
         time = get_time.split(":")
         if not time[0].isdigit():
@@ -67,16 +79,21 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         
         if 0 > int(time[0]) or int(time[0]) > 23 or 0 > int(time[1]) or int(time[1]) > 59 or 0 > int(time[2]) or int(time[2]) > 59:
             return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
-        
-        time_set = datetime.utcnow().replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
-        time_now = datetime.utcnow()
+
+        #we are grabbing timezone from user set, if user didnt set, it will return None, and when we  create timezone, it will auto select UTC format.
+        timezone = await self.redis.get("Profile:{}:Remind_Timezone".format(ctx.author.id))
+        timez = pytz.timezone(timezone or "UTC") #if none, then UTC default.
+
+        time_set = datetime.now(timez).replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
+        time_now = datetime.now(timez)
+
         delta_time = time_set - time_now
         if time_set < time_now:
             delta_time += timedelta(days=1)
             
         await self.remindme_base(ctx,str(timedelta(seconds=int(delta_time.total_seconds()))),message=message)
         
-    @commands.command(hidden=True,pass_context=True)
+    @commands.command(hidden=True,pass_context=True,aliases=["rm"])
     async def remindme(self,ctx,get_time,*,message=""):
         await self.remindme_base(ctx,get_time,message=message)
         
