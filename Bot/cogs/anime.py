@@ -104,7 +104,11 @@ class Anime(commands.Cog):
                 if time > 3600:
                     hour = time/3600 #getting hour
                     min = (time%3600)/60 #getting min
-                    air_msg = "{} hour(s) and {} min(s) left for {} episode".format(int(hour),round(min),ep)
+                    day = ""
+                    if hour >= 24: #if it more than 1 day, then  we will convert it.
+                        day = "{} day(s), ".format(int(hour/24))
+                        hour = hour % 24
+                    air_msg = "{}{} hour(s) and {} min(s) left for {} episode".format(day,int(hour),round(min),ep)
                 else:
                     time /= 60
                     air_msg = "{} min(s) left for {} episode".format(round(time,2),ep)
