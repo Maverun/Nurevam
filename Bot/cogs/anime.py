@@ -95,7 +95,7 @@ class Anime(commands.Cog):
         footer = ""
         #i am making most of values to lower case instead of FINISHED, should be finished etc, doing this way is due to season. lazy sorry i know.
         if category == 0: #anime
-            value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date, data["season"]]]
+            value = [str(x).lower() for x in [data["averageScore"], data["status"], data["format"], date, data["season"]]]
             text += "**Episode:** {0[episodes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**Season:** {6}\n**ID:** {0[id]}"
             if data["nextAiringEpisode"]:
                 airing = data["nextAiringEpisode"]
