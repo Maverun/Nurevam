@@ -177,7 +177,7 @@ class Tools(commands.Cog):
 
     @owner.command()
     @commands.check(utils.is_owner)
-    async def logout(self):
+    async def logout(self,ctx):
         """
         Safetly to logout and close redis nicely.
         """
