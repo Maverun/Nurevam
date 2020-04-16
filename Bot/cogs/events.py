@@ -84,10 +84,12 @@ class Events(commands.Cog):
                 return
             print("\033[97m<Event Member Update Avatar>:\033[94m {} :\033[92m {} ||| {}\033[00m".format(self.Time(), after.name, after.id))
             await self.redis.hset("Info:Icon",after.id,after.avatar)
+            await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=30) #To stop multi update
         if before.name != after.name:
             print("\033[97m<Event Member Update Name>: \033[94m {}:\033[93m Before : {} |||\033[92m After : {} ||| {}\033[00m".format(self.Time(),before.name,after.name, after.id))
             await self.redis.hset("Info:Name",after.id,str(after))
-        await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=15) #To stop multi update
+            await self.redis.set("Member_Update:{}:check".format(after.id),'cooldown',expire=30) #To stop multi update
+
 
     @commands.Cog.listener()
     async def on_command(self,ctx):

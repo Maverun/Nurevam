@@ -142,7 +142,9 @@ class Anime(commands.Cog):
 
         #Start making embed system,and have user click reaction for function.
         data_embed = utils.Embed_page(self.bot,[embed],reaction = reaction_list,alt_edit = bool(extra),original_msg=msg)
-        await data_embed.start(ctx.message.channel,check = check,timeout = 40,is_async = True,extra = [data,ctx]+extra)
+        try:
+            await data_embed.start(ctx.message.channel,check = check,timeout = 40,is_async = True,extra = [data,ctx]+extra)
+        except:pass #ignoring trying to delete already gone message.
         #concern about memory leak due to object references, so hope this will help.
         del data_embed
         del data
@@ -353,22 +355,21 @@ class Anime(commands.Cog):
             if name.isdigit():
                 name = int(name)
             user = await self.get_user(ctx,name)
-
         embed = discord.Embed(title = user["name"],url = user["siteUrl"])
         embed.set_thumbnail(url = user["avatar"]["large"])
-        anime_stat = user["stats"]["animeStatusDistribution"]
+        anime_stat = user["statistics"]["anime"]
         anime_text = ""
-        for data in anime_stat:
-            anime_text += "{0[status]}: {0[amount]}\n".format(data)
+        for data in anime_stat["statuses"]:
+            anime_text += "{0[status]}: {0[count]}\n".format(data)
 
-        manga_stat = user["stats"]["mangaStatusDistribution"]
+        manga_stat = user["statistics"]["manga"]
         manga_text = ""
-        for data in manga_stat:
-            manga_text += "{0[status]}:{0[amount]}\n".format(data)
+        for data in manga_stat["statuses"]:
+            manga_text += "{0[status]}:{0[count]}\n".format(data)
 
-        if user["stats"]["animeListScores"] is not None:
-            anime_text += "mean:{0[stats][animeListScores][meanScore]}\nSD:{0[stats][animeListScores][standardDeviation]}".format(user)
-            manga_text += "mean:{0[stats][mangaListScores][meanScore]}\nSD:{0[stats][mangaListScores][standardDeviation]}".format(user)
+        if user["statistics"]["anime"] is not None:
+            anime_text += "mean: {0[meanScore]}\nSD: {0[standardDeviation]}".format(anime_stat)
+            manga_text += "mean: {0[meanScore]}\nSD: {0[standardDeviation]}".format(manga_stat)
 
         embed.add_field(name = "Anime Stats",value=anime_text.lower().title())
         embed.add_field(name = "Manga Stats",value=manga_text.lower().title())
