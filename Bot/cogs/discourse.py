@@ -94,7 +94,8 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                     utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
                 else:
                     utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
-                    #await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
+                    if abs(current_id-lastest_id)  >= 10: #in case if it 10 ahead...
+                        await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
         except:
             utils.prRed(traceback.format_exc())
             await self.repeat_error(guild_id,config["domain"])
@@ -366,6 +367,25 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             embed.add_field(name = "ID", value = "[{0[id]}]({0[link]})".format(data))
             embed.timestamp = data["time"]
             await self.bot.say(ctx,embed=embed)
+
+    @commands.command(brief = "Show last topic or by provide ID")
+    async def drepost(self,ctx, thread_id = None):
+        """
+        Allow to show last post or the id that was given.
+        """
+        thread_id =  thread_id if thread_id else  await self.redis.get("{}:Discourse:ID".format(ctx.guild.id))
+        config = await self.redis.hgetall("{}:Discourse:Config".format(ctx.guild.id))
+        status, get_post = await self.get_data(config, "t/{}".format(thread_id),ctx.guild.id)
+        print(status)
+        if  not status: return await self.bot.say(ctx,content =  "There is a problem with this {}".format(thread_id))
+        link = "{}/t/{}".format(config['domain'], thread_id)
+        # custom msg
+        msg_template = config.get("msg", "{title}\t\tAuthor: {author}\n{link}").format(
+            author=get_post["details"]["created_by"]["username"],
+            link=link, title=html_unscape(get_post["fancy_title"]),
+            summary=html_tag(html_unscape(get_post["post_stream"]["posts"][0]["cooked"])))
+        msg_template = msg_template.replace("\\t", "\t").replace("\\n", "\n")  # a bad fix...
+        await self.bot.say(ctx, content = msg_template)
 
 def setup(bot):
     bot.add_cog(Discourse(bot))
