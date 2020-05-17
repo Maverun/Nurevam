@@ -60,11 +60,11 @@ class Level(commands.Cog):
         if isinstance(member,discord.Member):
             is_ban_member = await self.redis.smembers("{}:Level:banned_members".format(member.guild.id))
             is_ban_role = await self.redis.smembers("{}:Level:banned_roles".format(member.guild.id))
-            for role in member.roles:
-                if role.id in is_ban_role:
-                    return True
-            if member.id in is_ban_member:
+            if str(member.id) in is_ban_member:
                 return True
+            for role in member.roles:
+                if  str(role.id) in is_ban_role:
+                    return True
         return False
 
     async def on_message_global(self,msg,xp):
@@ -99,10 +99,11 @@ class Level(commands.Cog):
 
             await self.on_message_global(msg,xp)
 
-            if await self.is_ban(msg.author) is True:
+            #first we check if it blacklist channel, otherwise we will check members, if not blacklist we can give exp to them.
+            if str(msg.channel.id) in await self.redis.smembers("{}:Level:banned_channels".format(msg.guild.id)): #a banned channel
                 return
 
-            if msg.channel.id in await self.redis.smembers("{}:Level:banned_channels".format(msg.guild.id)): #a banned channel
+            if await self.is_ban(msg.author) is True:
                 return
 
             #Getting ID
