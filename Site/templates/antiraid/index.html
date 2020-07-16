@@ -1,3 +1,24 @@
+<!--
+  _   _                                                         
+ | \ | |                                                        
+ |  \| |_   _ _ __ _____   ____ _ _ __ ___                      
+ | . ` | | | | '__/ _ \ \ / / _` | '_ ` _ \                     
+ | |\  | |_| | | |  __/\ V / (_| | | | | | |                    
+ |_| \_|\__,_|_|__\___| \_/ \__,_|_| |_| |_|_   ____        _   
+     /\     |  __ \(_)                     | | |  _ \      | |  
+    /  \    | |  | |_ ___  ___ ___  _ __ __| | | |_) | ___ | |_ 
+   / /\ \   | |  | | / __|/ __/ _ \| '__/ _` | |  _ < / _ \| __|
+  / ____ \  | |__| | \__ \ (_| (_) | | | (_| | | |_) | (_) | |_ 
+ /_/__  \_\ |_____/|_|___/\___\___/|_|  \__,_| |____/ \___/ \__|
+ |  _ \        |  \/  |                                         
+ | |_) |_   _  | \  / | __ ___   _____ _ __ _   _ _ __          
+ |  _ <| | | | | |\/| |/ _` \ \ / / _ \ '__| | | | '_ \         
+ | |_) | |_| | | |  | | (_| |\ V /  __/ |  | |_| | | | |        
+ |____/ \__, | |_|  |_|\__,_| \_/ \___|_|   \__,_|_| |_|        
+         __/ |                                                  
+        |___/                                                   
+-->
+
 {% extends 'dash_base.html' %}
 {% block dash_content %}
 <div class="container">
@@ -10,67 +31,67 @@
             <form id="Anti-Raid" method="POST" action="{{url_for('antiraid.update_antiraid', server_id=server['id'])}}">
                 <input name=_csrf_token type=hidden value="{{ csrf }}">
                 <h6>
-                    Please note, this is extremely beta, unable to test it myself as it require more people for overall feature. If such a thing doesn't work, please check setting here, if it looking fine, please do report to me in Nurevam server or contact me Maverun (´･ω･`)#3333...
-                    Should something happen that you wasn't expecting, and wasn't happy with result, I greatly apologies for this, as this is extreme beta with lack of testing.
+                    Please note, this is in beta, I am unable to test it myself as it would require more people for the overall features. If something doesn't work, please check the settings here, if it is looking fine, please report it to me in the Nurevam server or contact me @Maverun (´･ω･`)#3333...
+                    Should something happen that you are not expecting, and you aren't happy with the result, I'm very sorry for this, as this is beta with a lack of testing.
 
 
-                    Please do note that this plugin is only monitoring people who join server for a day.
+                    Please do note that this plugin is only monitoring people who join this server for a day.
                     Which mean as long as they join server within 24 hours, this plugin is watching them over.
                     (Discord invite link might apply to all member regardless of 24 hours.)
 
                     It will update every min or so in bot, so please wait for it take effect.
                 </h6>
-                <h2>Config action</h2>
+                <h2>Config actions</h2>
                 <hr>
                 <div class="col-md-6">
-                    {{template.select_list("invite_link","Discord Invite Link",option_data,"If person post a default discord invite link that is not in this server, it will take an action",config['invite_link'])}}
+                    {{template.select_list("invite_link","Discord Invite Link",option_data,"If person posts a discord invite link that is not this server, it will take action",config['invite_link'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.select_list("any_link","Any Link",option_data,"If person post a link right after it join within time, it will take action (such as sex bot etc)",config['any_link'])}}
+                    {{template.select_list("any_link","Any Link",option_data,"If person posts a link right after it join within x time, it will take action (such as sex bot etc)",config['any_link'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.select_list("spam_msg","Spamming similar message",option_data,"If person spam similar/same message within limit and sec, it will take an action (look below)",config['spam_msg'])}}
+                    {{template.select_list("spam_msg","Spamming similar messages",option_data,"If person spams a similar message x times within x sec, it will take action (look below)",config['spam_msg'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.select_list("member_age","Age of account",option_data,"If person join server and their account is below x sec(for example 10 sec old), it will take an action.",config['member_age'])}}
+                    {{template.select_list("member_age","Age of account",option_data,"If person joins this server and their account is younger then x seconds old (for example 10 sec old), it will take an action",config['member_age'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.select_list("multi_people","Mutli people joining at a same time",option_data,"If there is multi of people joining server within x sec, it will do action on all of that recently members",config['multi_people'])}}
+                    {{template.select_list("multi_people","Mutliple people joining at a same time",option_data,"If there is multiple people joining this server within x sec, it will take action on all of those members",config['multi_people'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.select_list("multi_ping","Massive Ping",option_data,"If there is massive ping such as mention more than 20 people in a message(will also delete ping message)",config['multi_ping'])}}
+                    {{template.select_list("multi_ping","Massive Ping",option_data,"If there is a massive mention such as mention more than 20 people in a message (will also delete said message)",config['multi_ping'])}}
                 </div>
 
                 <div class="col-md-12">
-                <h2>Setting for each config</h2>
+                <h2>Settings for each config</h2>
                 <hr>
                 </div>
                 <div class="col-md-6">
-                    {{template.text_box("any_link_time","Any link time","If user post any link (Not invite link note) within time it join, action taken. Note this is second(s)",config['any_link_time'])}}
+                    {{template.text_box("any_link_time","Any link time","If a user posts any link (Not invite link) within x seconds from join, action taken. Note this is second(s)",config['any_link_time'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.text_box("member_age_time","New user's account age","If user is below this x sec, it will take an action to this user. Note: number are in second(s)",config['member_age_time'])}}
-                </div>
-
-                <div class="col-md-6">
-                    {{template.text_box("multi_people_limit","Total of multi people joining at once","This is checking how many are they member joining within time",config['multi_people_limit'])}}
+                    {{template.text_box("member_age_time","New user's account age","If user is below x age, it will take an action to this user. Note: number are in second(s)",config['member_age_time'])}}
                 </div>
 
                 <div class="col-md-6">
-                    {{template.text_box("multi_people_time","Total of multi people joining time checking","Check how many member join within second Note: This number is taken in second",config['multi_people_time'])}}
+                    {{template.text_box("multi_people_limit","Total of multiple people joining at once","Maximum members that can join before the bot takes action",config['multi_people_limit'])}}
                 </div>
 
                 <div class="col-md-6">
-                    {{template.text_box("spam_msg_count","Spamming similar message count","This is checking how many time has this same user spam similar message",config['spam_msg_count'])}}
+                    {{template.text_box("multi_people_time","Total of multiple people joining timeout","Check how many members join within x seconds",config['multi_people_time'])}}
+                </div>
+
+                <div class="col-md-6">
+                    {{template.text_box("spam_msg_count","Spamming similar message count","This is checking how many time has this same user spams a similar message",config['spam_msg_count'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.text_box("spam_msg_time","Spamming similar message timer","If user spam amount of similar message within time, it will take an action",config['spam_msg_time'])}}
+                    {{template.text_box("spam_msg_time","Spamming similar message timer","If a user spams x amount of similar message within time, it will take an action",config['spam_msg_time'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.text_box("spam_msg_percent","Spamming similar message percent","This is checking how close is message to each other from 1 to 100. Such as 'meat!', 'meAt!' etc. Recommend: 90 ",config['spam_msg_percent'])}}
+                    {{template.text_box("spam_msg_percent","Similarity checking percent","This is checking how close is message to each other from 1 to 100. Such as 'meat!', 'meAt!' etc. Recommend: 90 ",config['spam_msg_percent'])}}
                 </div>
                 <div class="col-md-6">
-                    {{template.text_box("multi_ping_limit","Massive ping limit","If user multi ping above x in one message, It will take an actions",config['multi_ping_limit'])}}
+                    {{template.text_box("multi_ping_limit","Massive ping limit","If user pings more then x times in one message, It will take an action",config['multi_ping_limit'])}}
                 </div>
 
                 <div class="col-md-6">

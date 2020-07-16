@@ -1,3 +1,23 @@
+<!--
+  _   _                                                         
+ | \ | |                                                        
+ |  \| |_   _ _ __ _____   ____ _ _ __ ___                      
+ | . ` | | | | '__/ _ \ \ / / _` | '_ ` _ \                     
+ | |\  | |_| | | |  __/\ V / (_| | | | | | |                    
+ |_| \_|\__,_|_|__\___| \_/ \__,_|_| |_| |_|_   ____        _   
+     /\     |  __ \(_)                     | | |  _ \      | |  
+    /  \    | |  | |_ ___  ___ ___  _ __ __| | | |_) | ___ | |_ 
+   / /\ \   | |  | | / __|/ __/ _ \| '__/ _` | |  _ < / _ \| __|
+  / ____ \  | |__| | \__ \ (_| (_) | | | (_| | | |_) | (_) | |_ 
+ /_/__  \_\ |_____/|_|___/\___\___/|_|  \__,_| |____/ \___/ \__|
+ |  _ \        |  \/  |                                         
+ | |_) |_   _  | \  / | __ ___   _____ _ __ _   _ _ __          
+ |  _ <| | | | | |\/| |/ _` \ \ / / _ \ '__| | | | '_ \         
+ | |_) | |_| | | |  | | (_| |\ V /  __/ |  | |_| | | | |        
+ |____/ \__, | |_|  |_|\__,_| \_/ \___|_|   \__,_|_| |_|        
+         __/ |                                                  
+        |___/                                                   
+-->
 {% extends 'full-page.html' %}
 {% block content %}
 <div class="jumbotron home-jumbotron">
@@ -5,12 +25,12 @@
     <div class="row">
         <div class="col-md-7 col-sm-12 ">
             <h3>Introducing <strong>Nurevam</strong> the <img src="{{ url_for('static', filename='img/discord-logo.svg') }}" class="discord-logo2"> bot </h3>
-            <h3>Total Server: {{info['Server']}}, Total Member: {{info['Member']}}</h3>
+            <h3>Total Servers: {{info['Server']}}, Total Users: {{info['Member']}}</h3>
             <h2>for everyone in your <img src="{{ url_for('static', filename='img/discord.svg') }}" class="discord-logo1"> server</h2>
             <p>
                 <a href="{{url_for('login')}}" class="btn btn-home btn-lg">Add to discord</a>
                 <a href="{{url_for('about')}}" class="btn btn-about btn-lg">About</a>
-                <a href="{{url_for('faq')}}" class="btn btn-about btn-lg">F.A.Q</a>
+                <a href="{{url_for('faq')}}" class="btn btn-about btn-lg">FAQ</a>
             </p>
         </div>
         <div class="col-md-5 hidden-sm hidden-xs text-center animated bounceInRight">
