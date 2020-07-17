@@ -1,3 +1,23 @@
+<!--
+  _   _                                                         
+ | \ | |                                                        
+ |  \| |_   _ _ __ _____   ____ _ _ __ ___                      
+ | . ` | | | | '__/ _ \ \ / / _` | '_ ` _ \                     
+ | |\  | |_| | | |  __/\ V / (_| | | | | | |                    
+ |_| \_|\__,_|_|__\___| \_/ \__,_|_| |_| |_|_   ____        _   
+     /\     |  __ \(_)                     | | |  _ \      | |  
+    /  \    | |  | |_ ___  ___ ___  _ __ __| | | |_) | ___ | |_ 
+   / /\ \   | |  | | / __|/ __/ _ \| '__/ _` | |  _ < / _ \| __|
+  / ____ \  | |__| | \__ \ (_| (_) | | | (_| | | |_) | (_) | |_ 
+ /_/__  \_\ |_____/|_|___/\___\___/|_|  \__,_| |____/ \___/ \__|
+ |  _ \        |  \/  |                                         
+ | |_) |_   _  | \  / | __ ___   _____ _ __ _   _ _ __          
+ |  _ <| | | | | |\/| |/ _` \ \ / / _ \ '__| | | | '_ \         
+ | |_) | |_| | | |  | | (_| |\ V /  __/ |  | |_| | | | |        
+ |____/ \__, | |_|  |_|\__,_| \_/ \___|_|   \__,_|_| |_|        
+         __/ |                                                  
+        |___/                                                   
+-->
 {% extends 'full-page.html' %}
 {% block content %}
 <div class="jumbotron home-jumbotron">
@@ -10,14 +30,14 @@
                     <div class="well well-sm">
                         <h6>Enter name and contents</h6></h6>
                         <h6>Brief are for explanations in help (!help etc)</h6>
-                        <h6>Exist command that Nurevam have in will not add(meaning as that you can create command in here but won't be used in discord)</h6>
+                        <h6>Existing command that Nurevam has already will not be saved (meaning as that you can create command in here but won't be used in discord)</h6>
                         <br>
                         <h6>You can make it even more custom on discord, such as calling someone name</h6>
                         <h6>{cmduser} is name of person who issue commands</h6>
                         <h6>{cmdmention} is mention of person who issue commands</h6>
                         <h6>{user} are name of person who have been mention with commands</h6>
                         <h6>{mention} are mention of person who have been mention with commands</h6>
-                        <h6>{msg} msg after command</h6>
+                        <h6>{msg} msg after the command</h6>
                         <br>
                         <h6>For example,content is "hey {mention}, {cmduser} would like to greet you with this msg: {msg}"</h6>
                         <h6>maverun:!welcome @Cookie hope you will enjoy!</h6>
@@ -27,7 +47,7 @@
                         <h6>Once you update, please wait for 1-2 minutes, it will take time for Nurevam update for discord</h6>
                     </div>
                     <div class="well well-sm">
-                        You have {{current}}/{{max_use}}, you can't create command more than {{max_use}}
+                        You have {{current}}/{{max_use}}, you can't create commands more than {{max_use}} times!
                     </div>
 
                     <div class="col-md-4">

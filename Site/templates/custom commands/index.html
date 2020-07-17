@@ -1,3 +1,23 @@
+<!--
+  _   _                                                         
+ | \ | |                                                        
+ |  \| |_   _ _ __ _____   ____ _ _ __ ___                      
+ | . ` | | | | '__/ _ \ \ / / _` | '_ ` _ \                     
+ | |\  | |_| | | |  __/\ V / (_| | | | | | |                    
+ |_| \_|\__,_|_|__\___| \_/ \__,_|_| |_| |_|_   ____        _   
+     /\     |  __ \(_)                     | | |  _ \      | |  
+    /  \    | |  | |_ ___  ___ ___  _ __ __| | | |_) | ___ | |_ 
+   / /\ \   | |  | | / __|/ __/ _ \| '__/ _` | |  _ < / _ \| __|
+  / ____ \  | |__| | \__ \ (_| (_) | | | (_| | | |_) | (_) | |_ 
+ /_/__  \_\ |_____/|_|___/\___\___/|_|  \__,_| |____/ \___/ \__|
+ |  _ \        |  \/  |                                         
+ | |_) |_   _  | \  / | __ ___   _____ _ __ _   _ _ __          
+ |  _ <| | | | | |\/| |/ _` \ \ / / _ \ '__| | | | '_ \         
+ | |_) | |_| | | |  | | (_| |\ V /  __/ |  | |_| | | | |        
+ |____/ \__, | |_|  |_|\__,_| \_/ \___|_|   \__,_|_| |_|        
+         __/ |                                                  
+        |___/                                                   
+-->
 {% extends 'dash_base.html' %}
 {% block dash_content %}
 <div class="container">
@@ -11,15 +31,15 @@
                 <div class="form-group">
                     <input name=_csrf_token type=hidden value="{{ csrf }}">
                     <div class="well well-sm">
-                        People who have right to make command can access <a href={{url_for('customcmd.customcmd', server_id=server['id'],cog="customcmd")}}>here</a>, I recommend bookmark it so you can get there faster (Share link with creator role!)
+                        People who have the right to make command can access <a href={{url_for('customcmd.customcmd', server_id=server['id'],cog="customcmd")}}>here</a>, I recommend bookmarking it so you can get there faster (Share link with creator role!)
                     </div>
 
 
                     <h3>Creator role</h3>
                     <div class="well well-sm">
-                        <strong>Note:</strong> 0 mean person who have this role can't create command, Other than that, above 0 will allow user who have that role can create x commands
+                        <strong>Note:</strong> 0 means person who have this role can't create command, Other than that, above 0 will allow user who have that role can create x commands
                         For now, {{limit}} is max for each person,(so meaning role will not add up total! keep that in mind), if wish to increase more than 10, complain to owner.
-                        If user have multi role, user will get max use from role that have higher than other
+                        If user have multi role, user will get max use from role that is higher than other
                     </div>
 
                     {% for roles_half in role_max %}
