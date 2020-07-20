@@ -67,8 +67,9 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
             await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
 
     @commands.command(hidden=True,pass_context=True,aliases=["rt"])
-    async def remindtime(self,ctx,get_time,*,message=""):     
-        time = get_time.split(":")
+    async def remindtime(self,ctx,get_time,*,message=""):
+        time = get_time.replace('.', ':')
+        time = time.split(":")
         if not time[0].isdigit():
             return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
         if len(time) == 1:
@@ -98,7 +99,8 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await self.remindme_base(ctx,get_time,message=message)
         
     async def remindme_base(self,ctx,get_time,*,message=""):
-        time = get_time.split(":")
+        time = get_time.replace('.', ':')
+        time = time.split(":")
         if not time[0].isdigit():
             return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindme hh:mm:ss message".format(ctx.prefix))
         remind_time = 0
