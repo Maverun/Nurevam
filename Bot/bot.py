@@ -111,7 +111,10 @@ async def on_error(event,*args,**kwargs):
     utils.prRed("Error!")
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
-    await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+    try:
+        await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+    except:
+        utils.prRed("Unable to send to owner!")
 
 if __name__ == '__main__':
     bot.run(utils.secret["nurevam_token"])
