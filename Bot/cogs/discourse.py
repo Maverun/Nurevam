@@ -6,7 +6,6 @@ import traceback
 import datetime
 import asyncio
 import aiohttp
-import discord
 import logging
 import html
 
@@ -23,41 +22,19 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         self.bot = bot
         self.redis = bot.db.redis
         self.counter = 0
-        self.log_error = {}
         self.bg_dis = utils.Background("discourse",60,30,self.timer,log)
-        self.bg_dis_id = utils.Background("discourse_ID",3600,1800,self.timer_update_ID,log)
         self.bg_dis_trust = utils.Background("discourse_ID",10800,7200,self.timer_trust_role,log) #assign role every 2 hours.
-        self.bot.background.update({"discourse":self.bg_dis,"discourse_ID":self.bg_dis_id,"discourse_trust_role":self.bg_dis_trust})
+        self.bot.background.update({"discourse":self.bg_dis,"discourse_trust_role":self.bg_dis_trust})
         self.bg_dis.start()
-        self.bg_dis_id.start()
         self.bg_dis_trust.start()
 
     def cog_unload(self):
         self.bg_dis.stop()
-        self.bg_dis_id.stop()
         self.bg_dis_trust.stop()
         utils.prLightPurple("Unloading Discourse")
 
     def cog_check(self,ctx):
         return utils.is_enable(ctx,"discourse")
-
-    def logging_info(self,status,link,thread_id,guild_id):
-        if isinstance(status,int):
-            if status == 404:
-                status = "Not found."
-            elif status == 410:
-                status = "Missing."
-            elif status == 403:
-                status = "Cannot access it."
-            else:
-                status = "???:{}".format(status)
-        elif bool(status) is True:
-            status = "Working."
-        elif bool(status) is False:
-            status = "Cannot connect."
-        else:
-            status = "???"
-        self.log_error[guild_id] = {"status":status,"link":link,"id":thread_id,"time":datetime.datetime.now()}
 
     async def repeat_error(self,guild,domain):
         await self.redis.set("{}:Discourse:Temp_off".format(guild), domain, expire=1800)
@@ -70,55 +47,25 @@ class Discourse(commands.Cog): #Discourse, a forums types.
                                    " I have disable Discourse plugin on dashboard,"
                                    " so once you got site working again, please enable it again. Sorry for trouble.")
 
-    async def get_update_id(self,guild_id,api_key = "api_key",api_username = "api_username"): #api_key.. sometime it doens't work on certain site, so api work instead, prob due to update or? Will have to look into it later
-        if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
-            return
-        if await self.redis.get("{}:Discourse:Temp_off".format(guild_id)):
-            log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild_id))
-            return
-        config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
-        if not (config):
-            return
-        try:
-            flag,data = await self.get_data(config,"latest",guild_id)
-            if flag == True:
-                number =[]
-                for x in data["topic_list"]["topics"]:
-                    number.append(x["id"])
-                lastest_id = max(number)
-                current_id = int(await self.redis.get("{}:Discourse:ID".format(guild_id)))
-                if current_id < lastest_id: #if it not really up to dated.
-                    utils.prPurple("This guild [ {} ] for discourse is behind! Current ID: {} and lastest ID:{}".format(guild_id,current_id,lastest_id))
-                    await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id-1) #one behind.
-                elif current_id == lastest_id:
-                    utils.prPurple("This guild [ {} ] for discourse is same! Current ID: {}".format(guild_id,current_id))
-                else:
-                    utils.prPurple("This guild [ {} ] for discourse,something not right? Current ID: {} Lastest ID {}".format(guild_id,current_id,lastest_id))
-                    if abs(current_id-lastest_id)  >= 10: #in case if it 10 ahead...
-                        await self.redis.set("{}:Discourse:ID".format(guild_id),lastest_id) #since it is ahead, we should fix it.
-        except:
-            utils.prRed(traceback.format_exc())
-            await self.repeat_error(guild_id,config["domain"])
-
-    async def get_data(self,config,path,guild=None,api_key = "api_key",api_username = "api_username"):
+    async def get_data(self,config,path,guild_id=None,api_key = "api_key",api_username = "api_username",param = None):
         #Using headers so it can support both http/1 and http/2
         #Two replace, one with https and one with http...
         # utils.prCyan("Under get_data, {}".format(link))
         try:
-            if await self.redis.get("{}:Discourse:Temp_off".format(guild)):
-                log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild))
+            if await self.redis.get("{}:Discourse:Temp_off".format(guild_id)):
+                log.debug("Site is temp ignore for while, GUILD ID: {}".format(guild_id))
                 return False,None #None might be best for this?
             headers = {"Host": config["domain"].replace("http://","").replace("https://",""),
                        api_key:config["api_key"],
                        api_username:config["username"]}
-            url = "{}/{}.json".format(config["domain"],path)
+            url = "{}/{}.json".format(config["domain"],path,param)
             async with aiohttp.ClientSession(read_timeout = 15) as discourse:
-                async with discourse.get(url,headers=headers) as resp:
+                async with discourse.get(url,headers=headers,params = param) as resp:
                     log.debug(resp.status)
                     if resp.status == 200:
                         return True,await resp.json()
                     elif api_key == "api_key":
-                        return await self.get_data(config,path,guild,"Api-Key","Api-Username") #just in case api_key doesn't work. Eventually, once most forums is update to latest, then will start using Api-Key as main now.
+                        return await self.get_data(config,path,guild_id,"Api-Key","Api-Username",param) #just in case api_key doesn't work. Eventually, once most forums is update to latest, then will start using Api-Key as main now.
                     else:
                         return False,resp.status
         except asyncio.CancelledError: #Just in case here for some reason
@@ -126,79 +73,84 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             utils.prRed("Asyncio Cancelled Error")
             return False,None
         except:
-            utils.prRed("Under get_data function, server: {}".format(guild))
+            utils.prRed("Under get_data function, server: {}".format(guild_id))
             utils.prRed(traceback.format_exc())
-            await self.repeat_error(guild,config["domain"])
+            await self.repeat_error(guild_id,config["domain"])
             return False,None #None might be best for this? I hope...-
 
-    async def new_post(self,guild_id):
+    def get_user_name(self,user_data,uid):
+        for ele in user_data:
+            if ele["id"] == uid: return ele["username"]
+
+    def format_msg(self,config,data,user_data = None):
+        """
+        Format message before being to send.
+        """
+        link = "{}/t/{}".format(config['domain'], data["id"])
+        if user_data:  author = self.get_user_name(user_data,data["posters"][0]["user_id"])
+        else: author = data["details"]["created_by"]["username"]
+
+        msg_template = config.get("msg", "{title}\t\tAuthor: {author}\n{link}").format(
+            author=author,
+            link=link, title=html_unscape(data["fancy_title"]))
+        msg_template = msg_template.replace("\\t", "\t").replace("\\n", "\n")  # a bad fix...
+        return msg_template
+
+    async def send_message(self,rch,msg,chid,config):
+        """
+        rch = raw channel
+        msg = msg to send
+        chid = category id
+        """
+        channel = rch.get(str(chid), config["channel"])
+        if channel == "0":
+            channel = config["channel"]
+        elif channel == "-1":  # None
+            return
+        # Sending message here
+        channel_send = self.bot.get_channel(int(channel))
+        if channel_send is None:
+            log.debug("Channel is not found, {}".format(channel))
+            return
+        await channel_send.send(msg)
+
+    async def new_thread(self,guild_id):
         log.debug(guild_id)
-        if await self.redis.hget('{}:Config:Cogs'.format(guild_id),"discourse") is None:
+        if await self.redis.hget('{}:Config:Cogs'.format(guild_id), "discourse") is None:
             return log.debug("Disable")
 
         config = await self.redis.hgetall("{}:Discourse:Config".format(guild_id))
-        log.debug(config) #checking to see if there is config in
-        if not (config):
-            return
-        id_post = await self.redis.get("{}:Discourse:ID".format(guild_id))
-        log.debug(id_post)
-        if not(id_post):
-            return log.debug("ID post is missing")
+        log.debug(config)  # checking to see if there is config in
+        if not (config): return
 
-        data = {}
-        status,link,get_post = "???"
-        error_count = 0
-        while True:
-            counter = await self.redis.incr("{}:Discourse:ID".format(guild_id))
-            log.debug("Counter is {} - id {}:".format(counter,guild_id))
-            self.logging_info(get_post, link, counter, guild_id)
-            counter += 1
-            link = "{}/t/{}".format(config['domain'],counter)
-            status,get_post = await self.get_data(config,"t/{}".format(counter),guild_id)
-            if status is False:
-                if get_post in (403,410): #private or delete, continue. Altho, for private...it is actually return 404 why....
-                    error_count += 1
-                    if error_count == 10:
-                        break
-                    continue
-                await self.redis.decr("{}:Discourse:ID".format(guild_id))
-                break # it reached not found page. or any other error
-            elif status is True:
-                log.debug("It have post")
-                if get_post["archetype"] == "regular":
-                    check_exist = data.get(get_post["category_id"])
-                    if check_exist is None:
-                        data[get_post["category_id"]] = []
-                    #custom msg
-                    msg_template = config.get("msg","{title}\t\tAuthor: {author}\n{link}").format(author = get_post["details"]["created_by"]["username"],
-                                                                                                  link = link,title =html_unscape(get_post["fancy_title"]),
-                                                                                                  summary = html_tag(html_unscape(get_post["post_stream"]["posts"][0]["cooked"])))
-                    msg_template = msg_template.replace("\\t","\t").replace("\\n","\n") #a bad fix...
-                    if len(msg_template) > 1000:
-                        msg_template = msg_template[:1000] + "..." #just in case someone use summary.
-                    data[get_post["category_id"]].append(msg_template)
-        if data:
-            log.debug("Got a data to post to channel")
-            raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
-            for key,values in data.items():
-                log.debug("{} and {}".format(key,values))
-                channel = raw_channel.get(str(key),config["channel"])
-                if channel == "0":
-                    channel = config["channel"]
-                elif channel == "-1": #None
-                    continue
-                #Sending message here
-                channel_send = self.bot.get_channel(int(channel))
-                if channel_send is None:
-                    log.debug("Channel is not found, {}".format(channel))
-                    continue
-                if len("\n".join(values)) > 2000:
-                    for msg in values:
-                        await channel_send.send(msg)
-                else:
-                    await channel_send.send("\n".join(values))
-                utils.prLightPurple("\n".join(values))
-        log.debug("Finish checking {}".format(guild_id))
+        #Get latest data and status.
+        status,data = await self.get_data(config,"latest",guild_id,param = {"order":"created"})
+        if not status: return log.debug("Issue with connect to thread - {} " .format(guild_id))
+
+        #lid = latest ID, cid = current ID
+        user_data = data["users"]
+        data = data["topic_list"]["topics"]
+        lid = data[0]["id"]
+        cid = await self.redis.get("{}:Discourse:ID".format(guild_id))
+        log.debug("Latest ID: {} and Current ID: {}" .format(lid,cid))
+
+        if not (cid): #if we have record of it in databased, else run this
+            await self.redis.set("{}:Discourse:ID".format(guild_id),lid)
+            return log.debug("ID post is missing, adding to database and return.")
+
+        cid = int(cid) #covert to int
+        if lid == cid: return log.debug("Same ID, returning")
+
+        hold_data = [x for x in data if x["id"] > cid and x["archetype"] == "regular"]  # if it past current ID, we will stop here. also we need to make sure it is not PM threads.
+        hold_data = reversed(hold_data) #backward.
+        #Archetype is need just in case, since some people may put ADMIN key instead of regular user key. so meaning bot can view all channel.
+
+        raw_channel = await self.redis.hgetall("{}:Discourse:Category".format(guild_id))
+
+        for raw in hold_data:
+            await self.send_message(raw_channel,self.format_msg(config,raw,user_data),raw["category_id"],config)
+
+        await self.redis.set("{}:Discourse:ID".format(guild_id),lid)
 
     async def check_trust_role(self,guild,level,data,current_list,all_role_trust_level):
         data = data["members"] #getting list of trust level x member
@@ -246,17 +198,12 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         for guild in list(self.bot.guilds):
             await self.update_role(guild)
 
-    async def timer_update_ID(self):
-        utils.prGreen("updating ID for discourse")
-        for guild in list(self.bot.guilds):
-            await self.get_update_id(guild.id)
-
     async def timer(self):
         for guild in list(self.bot.guilds): #start checking new thread and post.
             log.debug("Checking guild {}".format(repr(guild)))
             self.bg_dis.current = datetime.datetime.utcnow() #let see if it work that way,
-            await self.new_post(guild.id)
-
+            # await self.new_post(guild.id)
+            await self.new_thread(guild.id)
 
 
 #########################################################################
@@ -353,21 +300,6 @@ class Discourse(commands.Cog): #Discourse, a forums types.
             data_array.append("**Bio**: \n```\n{}\n```".format(bio))
         await self.bot.say(ctx,content = "\n".join(data_array))
 
-    @commands.command(brief="show Logging of discourse",hidden = True)
-    async def dstatus(self,ctx):
-        """
-        Allow to display a log for this guild, Give you a update current ID.
-        """
-        data = self.log_error.get(ctx.message.guild.id)
-        if data is None:
-            await self.bot.say(ctx,content = "I cannot check it at this moment!")
-        else:
-            embed = discord.Embed()
-            embed.add_field(name = "Status", value=data["status"])
-            embed.add_field(name = "ID", value = "[{0[id]}]({0[link]})".format(data))
-            embed.timestamp = data["time"]
-            await self.bot.say(ctx,embed=embed)
-
     @commands.command(brief = "Show last topic or by provide ID")
     async def drepost(self,ctx, thread_id = None):
         """
@@ -376,15 +308,9 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         thread_id =  thread_id if thread_id else  await self.redis.get("{}:Discourse:ID".format(ctx.guild.id))
         config = await self.redis.hgetall("{}:Discourse:Config".format(ctx.guild.id))
         status, get_post = await self.get_data(config, "t/{}".format(thread_id),ctx.guild.id)
-        print(status)
         if  not status: return await self.bot.say(ctx,content =  "There is a problem with this {}".format(thread_id))
-        link = "{}/t/{}".format(config['domain'], thread_id)
         # custom msg
-        msg_template = config.get("msg", "{title}\t\tAuthor: {author}\n{link}").format(
-            author=get_post["details"]["created_by"]["username"],
-            link=link, title=html_unscape(get_post["fancy_title"]),
-            summary=html_tag(html_unscape(get_post["post_stream"]["posts"][0]["cooked"])))
-        msg_template = msg_template.replace("\\t", "\t").replace("\\n", "\n")  # a bad fix...
+        msg_template = self.format_msg(config,get_post)
         await self.bot.say(ctx, content = msg_template)
 
 def setup(bot):
