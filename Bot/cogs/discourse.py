@@ -115,6 +115,11 @@ class Discourse(commands.Cog): #Discourse, a forums types.
         await channel_send.send(msg)
 
     async def new_thread(self,guild_id):
+        """
+        The way it work is getting latest thread ID by this
+        {ForumsLINK}/latest.json?order=created&API-----
+        by sorting them in order of created, we can see top of value is latest thread under topics key.
+        """
         log.debug(guild_id)
         if await self.redis.hget('{}:Config:Cogs'.format(guild_id), "discourse") is None:
             return log.debug("Disable")

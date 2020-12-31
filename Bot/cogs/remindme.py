@@ -19,6 +19,11 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
             x.cancel()
         utils.prPurple("unload remindme task")
 
+    async def clear(self,gid,tid):
+        await self.redis.hdel("{}:Remindme:data".format(gid), tid)
+        await self.redis.hdel("{}:Remindme:channel".format(gid), tid)
+        await self.redis.hdel("{}:Remindme:time".format(gid), tid)
+    
     async def timer(self): #Checking if there is remindme task that bot lost during shutdown/restart (losing data from memory)
         await asyncio.sleep(10)#give it a moment..
         utils.prYellow("Remindme Timer start")
@@ -38,9 +43,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
                             chan = self.bot.get_channel(int(channel[x]))
                             if chan:
                                 await chan.send("I am deeply sorry for not reminding you earlier! You were reminded of the following:\n{}".format(data[x]))
-                            await self.redis.hdel("{}:Remindme:data".format(guild.id), x)
-                            await self.redis.hdel("{}:Remindme:channel".format(guild.id), x)
-                            await self.redis.hdel("{}:Remindme:time".format(guild.id), x)
+                                await self.clear(guild.id,x)
                         else:
                             self.loop_list.append(self.loop.create_task(self.time_send(channel[x],data[x],remain_time,guild.id,x)))
                     except:
@@ -51,9 +54,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         channel =  self.bot.get_channel(int(channel))
         if channel:
             await channel.send(msg)
-        await self.redis.hdel("{}:Remindme:data".format(guild), x)
-        await self.redis.hdel("{}:Remindme:channel".format(guild), x)
-        await self.redis.hdel("{}:Remindme:time".format(guild), x)
+        await self.clear(guild,x)
 
     @commands.command(hidden =  True)
     async def setTimezoneRemind(self,ctx,timez):
@@ -66,20 +67,28 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         except pytz.UnknownTimeZoneError:
             await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
 
+    async def split_time(self,t):
+        t = t.replace(".",":")
+        t = t.split(":")
+        if all(x.isdigit() for x in t) is False:
+            await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+            return None
+        return t
+
     @commands.command(hidden=True,pass_context=True,aliases=["rt"])
     async def remindtime(self,ctx,get_time,*,message=""):
-        time = get_time.replace('.', ':')
-        time = time.split(":")
-        if not time[0].isdigit():
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+        #Split them and check if  they are valid.
+        time = await self.split_time(get_time)
+        if time is None: return
+        
         if len(time) == 1:
             time.append('0')
             time.append('0')
         elif len(time) == 2:
             time.append('0')
-        
+
         if 0 > int(time[0]) or int(time[0]) > 23 or 0 > int(time[1]) or int(time[1]) > 59 or 0 > int(time[2]) or int(time[2]) > 59:
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+            return await self.bot.say(ctx,content = "You enter the number out of range than they should!")
 
         #we are grabbing timezone from user set, if user didnt set, it will return None, and when we  create timezone, it will auto select UTC format.
         timezone = await self.redis.get("Profile:{}:Remind_Timezone".format(ctx.author.id))
@@ -91,7 +100,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         delta_time = time_set - time_now
         if time_set < time_now:
             delta_time += timedelta(days=1)
-            
+
         await self.remindme_base(ctx,str(timedelta(seconds=int(delta_time.total_seconds()))),message=message)
         
     @commands.command(hidden=True,pass_context=True,aliases=["rm"])
@@ -99,14 +108,12 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await self.remindme_base(ctx,get_time,message=message)
         
     async def remindme_base(self,ctx,get_time,*,message=""):
-        time = get_time.replace('.', ':')
-        time = time.split(":")
-        if not time[0].isdigit():
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindme hh:mm:ss message".format(ctx.prefix))
+        #Split them and check if  they are valid.
+        time = await self.split_time(get_time)
+        if time is None: return
         remind_time = 0
         msg = "Time set "
         id_time = 0
-        print(message)
         if len(time) == 3:
             remind_time += int(time[0])*3600 + int(time[1])*60 + int(time[2])
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
@@ -134,10 +141,7 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await ctx.send(message)
         if remind_time >= 60: #cleaning them up
             guild = ctx.message.guild.id
-            await self.redis.hdel("{}:Remindme:data".format(guild),id_time)
-            await self.redis.hdel("{}:Remindme:channel".format(guild),id_time)
-            await self.redis.hdel("{}:Remindme:time".format(guild),id_time)
-
+            await self.clear(guild,id_time)
 
 def setup(bot):
     bot.add_cog(Remindme(bot))
