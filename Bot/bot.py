@@ -13,10 +13,17 @@ description = '''Nurevam's Command List.
  To enable more commands, you must visit dashboard to enable certain plugins you want to run.
  If there is a problem with the prefix etc, please do @nurevam prefix to see what prefix you can do
  Any problem relating to Nurevam, please do contact owner Maverun (´･ω･`)#3333
- 
+
  First └ mean it is commands under that plugin, and if there is one or more under commands, it is a sub command that can invoke by doing !parent subcommand such as !rank global
  '''
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), description=description,hidden = True,pm_help = False,help_command=helpformat.Custom_format())
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"),
+                   help_command=helpformat.Custom_format(),
+                   description=description,
+                   pm_help = False,
+                   intents=intents,
+                   hidden = True,)
 bot.db= storage.Redis()
 redis = utils.redis
 
@@ -86,7 +93,7 @@ def load_cogs():
     for cogs in cogs:
         try:
             bot.load_extension(cogs)
-            print ("Load {}".format(cogs))
+            print (f"Load {cogs}")
         except Exception as e:
             utils.prRed(cogs)
             utils.prRed(e)
@@ -112,7 +119,8 @@ async def on_error(event,*args,**kwargs):
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
     try:
-        await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+        # await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
+        await bot.owner.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
     except:
         utils.prRed("Unable to send to owner!")
 
