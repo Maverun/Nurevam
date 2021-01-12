@@ -1,4 +1,5 @@
 # Latest discord.py
+discord.py
 git+https://github.com/Maverun/Pyanimu
 aioredis
 redis

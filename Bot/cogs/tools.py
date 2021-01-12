@@ -58,11 +58,13 @@ class Tools(commands.Cog):
             return
         try:
             self.bot.load_extension(module)
+        except commands.ExtensionAlreadyLoaded as e:
+            return await ctx.send("Already loaded!")
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
             raise
         else:
-            await ctx.send("Enabled.".format(module))
+            await ctx.send("{} Enabled.".format(module))
 
     @commands.command(hidden=True)
     @commands.check(utils.is_owner)
@@ -75,6 +77,8 @@ class Tools(commands.Cog):
             return
         try:
             self.bot.unload_extension(module)
+        except commands.ExtensionNotLoaded as e:
+            return ctx.send("Already unloaded!")
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
@@ -87,10 +91,12 @@ class Tools(commands.Cog):
         Example: reload cogs.mod"""
         module ="cogs."+module.strip()
         if not module in list_cogs():
-            await ctx.send("This module doesn't exist.".format(module))
+            await ctx.send("This module {} doesn't exist.".format(module))
             return
         try:
             self.bot.reload_extension(module)
+        except commands.ExtensionNotLoaded as e:
+            return await ctx.send("This cogs is not even loaded in first place!")
         except Exception as e:
             await ctx.send('\U0001f52b')
             await ctx.send('{}: {}'.format(type(e).__name__, e))
@@ -278,7 +284,7 @@ class Tools(commands.Cog):
         embed.add_field(name = "Redis last save",value=redis_last_save)
         embed.add_field(name = "Redis Info",value = redis_info_msg)
         if BG_checker is not None:
-            embed.add_field(name = "Background Task", value = "\n".join(BG_checker) or "None")
+            embed.add_field(name = "Failed Background Task", value = "\n".join([f"{k}:{v}" for k,v in BG_checker.items()]) or "None")
         await ctx.send(embed = embed)
 
     async def update_all(self):

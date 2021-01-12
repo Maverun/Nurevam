@@ -51,15 +51,18 @@ class Anime(commands.Cog):
                 return obj_data[0]
             elif bool(obj_data) is True:
                 data = ["{}. {}".format(index,name) for index,name in enumerate([x["title"]["romaji"] for x in obj_data],start = 1) if index <= 25]#wew lad
-                answer = await utils.input(self.bot,ctx,"```{}```\nWhich number?".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user
+                answer = await utils.input(self.bot,ctx,"```{}```\nWhich number? (0 for cancel)".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user
                 if answer is None: return None
                 if int(answer.content) <= len(data): #checking if it below range, so don't split out error
+                    if int(answer.content) == 0:
+                        await self.bot.say(ctx,content = "Cancel query")
+                        return None
                     return obj_data[int(answer.content) - 1 ]
                 else:
                     await self.bot.say(ctx,content = "You entered a number that is out of range!")
             await self.bot.say(ctx, content = "I cannot find what you are asking for.")
             return None
-        
+
         if isinstance(obj,list): #if it list then we must do something about it such as asking user which one
             data = ["{}. {}".format(index,name) for index,name in enumerate([x.title for x in obj],start = 1)]#wew lad
             answer = await utils.input(self.bot,ctx,"```{}```\nWhich number?".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user

@@ -5,48 +5,83 @@ import traceback
 import asyncio
 import pytz
 
-class Remindme(commands.Cog): #Allow to welcome new members who join guild. If it enable, will send them a message.
+loop_list = {}
+
+class Remindme(commands.Cog): #This is to remind user about task they set.
     def __init__(self,bot):
         self.bot = bot
         self.redis = bot.db.redis
         self.loop = asyncio.get_event_loop()
         self.loop_reminder_timer = self.loop.create_task(self.timer())
-        self.loop_list = []
 
     def cog_unload(self):
         self.loop_reminder_timer.cancel()
-        for x in self.loop_list:
-            x.cancel()
+        for val in loop_list.values():
+            val.cancel()
         utils.prPurple("unload remindme task")
 
+    async def clear(self,gid,uid,mid):
+        lp = loop_list.pop(mid,None) #pop out of list. Cast int just in case
+        if lp is not None:
+            lp.cancel() #just in case it was running and someone CANCEL IT
+
+        await self.redis.lrem(f"{gid}:Remindme:Person:{uid}",1,mid)
+        await self.redis.hdel(f"{gid}:Remindme:member",mid)
+        await self.redis.hdel(f"{gid}:Remindme:data", mid)
+        await self.redis.hdel(f"{gid}:Remindme:channel", mid)
+        await self.redis.hdel(f"{gid}:Remindme:time", mid)
+
     async def timer(self): #Checking if there is remindme task that bot lost during shutdown/restart (losing data from memory)
-        await asyncio.sleep(10)#give it a moment..
+        await asyncio.sleep(5)#give it a moment..
         utils.prYellow("Remindme Timer start")
         guild_list = list(self.bot.guilds)
         for guild in guild_list: #checking each guild
             get_time  = datetime.now().timestamp()
-            utils.prLightPurple("Checking {}".format(guild.name))
-            data = await self.redis.hgetall("{}:Remindme:data".format(guild.id))
+            utils.prLightPurple(f"Checking {guild.name}")
+            data = await self.redis.hgetall(f"{guild.id}:Remindme:data")
             if data: #if there is exist data then  get info about info about channel
-                channel = await self.redis.hgetall("{}:Remindme:channel".format(guild.id))
-                time = await self.redis.hgetall("{}:Remindme:time".format(guild.id))
-                for x in data: #run every Id in data and return timer
+                author_list = await self.redis.hgetall(f"{guild.id}:Remindme:member")
+                channel = await self.redis.hgetall(f"{guild.id}:Remindme:channel")
+                time = await self.redis.hgetall(f"{guild.id}:Remindme:time")
+                for mid in data: #run every Id in data and return timer
                     try:
-                        remain_time = int(time[x]) - int(get_time)
-                        utils.prYellow("Time: {},Channel: {}, Message: {}".format(remain_time,channel[x],data[x]))
+                        if author_list.get(mid): #to be compaitable with old legacy.
+                            chan = guild.get_channel(int(channel[mid]))
+                            author = guild.get_member(int(author_list[mid]))
+                        #Once Legacy will be gone, there might be some leftover
+                        #such as one that was set really long.. that last years...
+                        #those will be likely to be delete.
+                        remain_time = int(time[mid]) - int(get_time)
+                        utils.prYellow(f"Time: {remain_time},Channel: {channel[mid]}, Message: {data[mid]}")
                         if remain_time <= 0:
-                            chan = self.bot.get_channel(int(channel[x]))
                             if chan:
-                                await chan.send("I am deeply sorry for not reminding you earlier! You were reminded of the following:\n{}".format(data[x]))
-                            await self.redis.hdel("{}:Remindme:data".format(guild.id), x)
-                            await self.redis.hdel("{}:Remindme:channel".format(guild.id), x)
-                            await self.redis.hdel("{}:Remindme:time".format(guild.id), x)
+                                await chan.send(f"{author.mention}\nI am deeply"
+                                                " sorry for not reminding you earlier!"
+                                                " You were reminded of the following:\n"
+                                                f"```fix\n {data[mid]} \n```")
+                                await self.clear(guild.id,author.id,mid)
                         else:
-                            self.loop_list.append(self.loop.create_task(self.time_send(channel[x],data[x],remain_time,guild.id,x)))
+                            if author_list.get(mid):
+                                task = self.loop.create_task(self.time_send(
+                                                    chan,author,data[mid],
+                                                   remain_time,guild.id,mid))
+                            else: #Old legacy... Soon to be delete once confirm 
+                                task = self.loop.create_task(self.old_time_send(
+                                                    channel[mid],data[mid],
+                                                    remain_time,guild.id,mid))
+                            loop_list[mid] = task
                     except:
                         utils.prRed(traceback.format_exc())
 
-    async def time_send(self,channel,msg,time,guild,x):
+    async def time_send(self,channel,author,msg,time,guild,mid):
+        await asyncio.sleep(time)
+        #if it not in list, then dont send it as it is likely cancel.
+        if channel and loop_list.get(mid): #Making sure it not in list...
+            await self.send_msg(channel,author,msg)
+
+        await self.clear(guild,author.id,mid)
+
+    async def old_time_send(self,channel,msg,time,guild,x): #Legacy. Will delete
         await asyncio.sleep(time)
         channel =  self.bot.get_channel(int(channel))
         if channel:
@@ -55,88 +90,161 @@ class Remindme(commands.Cog): #Allow to welcome new members who join guild. If i
         await self.redis.hdel("{}:Remindme:channel".format(guild), x)
         await self.redis.hdel("{}:Remindme:time".format(guild), x)
 
+    async def send_msg(self,ctx,author,msg):
+        await ctx.send(f"{author.mention} Reminder:\n```fix\n{msg}\n```")
+
     @commands.command(hidden =  True)
     async def setTimezoneRemind(self,ctx,timez):
         try:
-            #so we are checking if this timezone exists, if no error, we are clear.
-            #I will make this command more sense or pretty when I get a chance to rewrite them.... #TODO
+            #so we are checking if this timezone exists,
+            #if no error, we are clear.
+            #I will make this command more sense or pretty 
+            #when I get a chance to rewrite them.... #TODO
             tz = pytz.timezone(timez)
-            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),timez)
+            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),tz)
             return await ctx.send("Timezone set for your remind only!",delete_after = 30)
         except pytz.UnknownTimeZoneError:
             await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
 
+    async def split_time(self,ctx,t):
+        t = t.replace(".",":")
+        t = t.split(":")
+        if all(x.isdigit() for x in t) is False:
+            await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+            return None
+        return [int(x) for x in t] #Returning them but first make sure its int!
+
     @commands.command(hidden=True,pass_context=True,aliases=["rt"])
     async def remindtime(self,ctx,get_time,*,message=""):
-        time = get_time.replace('.', ':')
-        time = time.split(":")
-        if not time[0].isdigit():
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+        #Split them and check if  they are valid.
+        time = await self.split_time(ctx,get_time)
+        if time is None: return
+
         if len(time) == 1:
-            time.append('0')
-            time.append('0')
+            time.append(0)
+            time.append(0)
         elif len(time) == 2:
-            time.append('0')
-        
-        if 0 > int(time[0]) or int(time[0]) > 23 or 0 > int(time[1]) or int(time[1]) > 59 or 0 > int(time[2]) or int(time[2]) > 59:
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindtime hh:mm:ss message".format(ctx.prefix))
+            time.append(0)
 
-        #we are grabbing timezone from user set, if user didnt set, it will return None, and when we  create timezone, it will auto select UTC format.
-        timezone = await self.redis.get("Profile:{}:Remind_Timezone".format(ctx.author.id))
-        timez = pytz.timezone(timezone or "UTC") #if none, then UTC default.
+        if 0 > time[0] or time[0] > 23 or 0 > time[1] or time[1] > 59 or 0 > time[2] or time[2] > 59:
+            return await self.bot.say(ctx,content = "You enter the number out of range than they should!")
 
-        time_set = datetime.now(timez).replace(hour=int(time[0]),minute=int(time[1]),second=int(time[2]))
+        #we are grabbing timezone from user set, if user didnt set,
+        #it will return None, and when we  create timezone,
+        #it will auto select UTC format.
+        tz = await self.redis.get(f"Profile:{ctx.author.id}:Remind_Timezone")
+        timez = pytz.timezone(tz or "UTC") #if none, then UTC default.
+
+        time_set = datetime.now(timez).replace(hour   = time[0],
+                                               minute = time[1],
+                                               second = time[2])
         time_now = datetime.now(timez)
 
         delta_time = time_set - time_now
         if time_set < time_now:
             delta_time += timedelta(days=1)
-            
-        await self.remindme_base(ctx,str(timedelta(seconds=int(delta_time.total_seconds()))),message=message)
-        
+        utils.prGreen(ctx)
+        await self.remindme_base(ctx,
+                                 str(timedelta(seconds=int(delta_time.total_seconds())))
+                                 ,message=message)
+
     @commands.command(hidden=True,pass_context=True,aliases=["rm"])
     async def remindme(self,ctx,get_time,*,message=""):
         await self.remindme_base(ctx,get_time,message=message)
-        
+
     async def remindme_base(self,ctx,get_time,*,message=""):
-        time = get_time.replace('.', ':')
-        time = time.split(":")
-        if not time[0].isdigit():
-            return await self.bot.say(ctx,content = "You enter the format wrong! It should be look like this {}remindme hh:mm:ss message".format(ctx.prefix))
+        #Split them and check if  they are valid.
+        time = await self.split_time(ctx,get_time)
+        if time is None: return
         remind_time = 0
         msg = "Time set "
-        id_time = 0
-        print(message)
         if len(time) == 3:
-            remind_time += int(time[0])*3600 + int(time[1])*60 + int(time[2])
+            remind_time += time[0]*3600 + time[1]*60 + time[2]
             msg += "{} hours {} minute {} second".format(time[0],time[1],time[2])
         elif len(time) == 2:
-            remind_time += int(time[0])*60 + int(time[1])
+            remind_time += time[0]*60 + time[1]
             msg += "{} minute {} second".format(time[0],time[1])
         else:
-            remind_time += int(time[0])
+            remind_time += time[0]
             msg += "{} second".format(time[0])
-        if not message:
-            message = "{}, unspecified reminder.".format(ctx.message.author.mention)
-        else:
-            message = "{}, Reminder: ```fix\n{}\n```".format(ctx.message.author.mention,message)
-
-        if remind_time >= 60: #if it more than 1 hours, then add id so it can remind you in cases
+        if not message: message = "unspecified reminder"
+        rid = None
+        if remind_time >= 60:
+            #if it more than 1 min, then add id so it can remind you in cases
+            #bot goes down...
             time = datetime.now().timestamp() + remind_time
-            guild = ctx.message.guild.id
-            id_time =  await self.redis.incr("{}:Remindme:ID".format(guild))
-            await self.redis.hset("{}:Remindme:data".format(guild),id_time,message)
-            await self.redis.hset("{}:Remindme:channel".format(guild),id_time,ctx.message.channel.id)
-            await self.redis.hset("{}:Remindme:time".format(guild),id_time,int(time))
+            #making ID of Message, User/Member, Guild
+            print(ctx)
+            mid = ctx.message.id
+            uid = ctx.author.id
+            gid = ctx.guild.id
+            cid = ctx.channel.id
+            #we will be using idea as LINK-LIST where we will push msg ID to tail
+            #This allow to keep as in order for ID so we can cancel when need
+            rid = await self.redis.rpush(f"{gid}:Remindme:Person:{uid}",mid)
+            #Setting MSGID to UserID, so we can find who responsiblity for this
+            await self.redis.hset(f"{gid}:Remindme:member",mid,uid)
+            await self.redis.hset(f"{gid}:Remindme:data",mid,message)
+            await self.redis.hset(f"{gid}:Remindme:channel",mid,cid)
+            await self.redis.hset(f"{gid}:Remindme:time",mid,int(time))
 
+        msg = f"{msg}\nID: {rid}" if rid else msg
         await ctx.send(msg,delete_after=30)
-        await asyncio.sleep(remind_time)
-        await ctx.send(message)
-        if remind_time >= 60: #cleaning them up
-            guild = ctx.message.guild.id
-            await self.redis.hdel("{}:Remindme:data".format(guild),id_time)
-            await self.redis.hdel("{}:Remindme:channel".format(guild),id_time)
-            await self.redis.hdel("{}:Remindme:time".format(guild),id_time)
+
+        task = self.loop.create_task( self.time_send(ctx.channel, ctx.author,
+                                                    message, remind_time,
+                                                    ctx.guild, str(ctx.message.id)))
+        loop_list[str(ctx.message.id)] = task
+        # await asyncio.sleep(remind_time)
+        # await self.send_msg(ctx,ctx.author,message)
+#         if remind_time >= 60: #cleaning them up
+#             guild = ctx.guild.id
+#             mid = ctx.message.id
+#             await self.clear(guild,ctx.author.id,mid)
+
+    @commands.command(aliases = ["rl"], hidden = True)
+    async def remindlist(self, ctx, ):
+        #There we will show a list of user's ID reminder.
+        uid = ctx.author.id
+        gid = ctx.guild.id
+
+        current_time = datetime.now().timestamp()
+        id_list   = await self.redis.lrange(f"{gid}:Remindme:Person:{uid}",0,-1)
+        data_list = await self.redis.hgetall(f"{gid}:Remindme:data")
+        time_list = await self.redis.hgetall(f"{gid}:Remindme:time")
+        result = ""
+        if not any(id_list): return await ctx.send("You haven't set any reminder!")
+        for i, rid in enumerate(id_list,start = 1):
+            remain_time = int(time_list[rid]) - current_time
+            hold = [-1,-1,-1]
+            if remain_time >= 3600:
+                hold[0] = remain_time/3600 #hours
+                remain_time %= 3600 #get remiander min
+            if remain_time >= 60: #if min leftover
+                hold[1] = remain_time/60 #min
+                remain_time %= 60 #get remainder second
+            hold[2] = remain_time
+            ft = ["H","M","S"]
+            #we will then convert them to time message (5H,2M) etc.
+            #Cast int to cut off decimal
+            rtmsg = ",".join(f"{int(hold[i])} {ft[i]}" for i in range(3) if hold[i] != -1 )
+            #now we will set message, with 30 char of "data" to remind user
+            result += f"ID: {i} - {rtmsg} - {data_list[rid][:30]}\n"
+        await ctx.send(result)
+
+    @commands.command(aliases = ["rc"], hidden = True)
+    async def remindcancel(self, ctx, raw_rid:int):
+        #We will just assume user know what they are doing lol
+        gid = ctx.guild.id
+        uid = ctx.author.id
+        #First we will get what element it is at. Index start at 0 duh.
+        rid = await self.redis.lindex(f"{gid}:Remindme:Person:{uid}",raw_rid-1)
+        #if we get none, out of range!
+        if rid is None: return await ctx.send("Out of range!", delete_after = 30)
+        #Since we are here, then that mean it is inside, and we will just pop it
+        await self.clear(gid,uid,rid) #Clear up from DB
+        await ctx.send(f"Done. Note: Any ID after {rid} will go down by 1")
+
 
 
 def setup(bot):
