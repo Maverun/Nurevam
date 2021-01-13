@@ -223,12 +223,12 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
                 hold[1] = remain_time/60 #min
                 remain_time %= 60 #get remainder second
             hold[2] = remain_time
-            ft = ["H","M","S"]
+            ft = ["h","m","s"]
             #we will then convert them to time message (5H,2M) etc.
             #Cast int to cut off decimal
-            rtmsg = ",".join(f"{int(hold[i])} {ft[i]} " for i in range(3) if hold[i] != -1 )
+            rtmsg = " ".join(f"{int(hold[i])}{ft[i]}" for i in range(3) if hold[i] != -1 )
             #now we will set message, with 30 char of "data" to remind user
-            result += f"ID: {i} - {rtmsg} - {data_list[rid][:30]}\n"
+            result += f"ID: {i} - {rtmsg} left - {data_list[rid][:30]}\n"
         await ctx.send(result)
 
     @commands.command(aliases = ["rc"], hidden = True)
