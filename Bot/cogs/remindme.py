@@ -202,7 +202,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
 #             await self.clear(guild,ctx.author.id,mid)
 
     @commands.command(aliases = ["rl"], hidden = True)
-    async def remindlist(self, ctx, ):
+    async def remindlist(self, ctx):
         #There we will show a list of user's ID reminder.
         uid = ctx.author.id
         gid = ctx.guild.id
@@ -232,12 +232,14 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
         await ctx.send(result)
 
     @commands.command(aliases = ["rc"], hidden = True)
-    async def remindcancel(self, ctx, raw_rid:commands.Greedy[int]):
+    async def remindcancel(self, ctx, raw_rid:commands.Greedy[int], *, all = ''):
         #We will just assume user know what they are doing lol
-        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs!")
-        gid = ctx.guild.id
         uid = ctx.author.id
-
+        gid = ctx.guild.id
+        
+        if all == 'all': raw_rid = await self.redis.lrange(f"{gid}:Remindme:Person:{uid}",0,-1)        
+        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs!")
+        
         raw_rid = sorted(raw_rid, reverse = True) #Sorting and in reverse
         #Just in case user enter 1 3 then realized need to include 2.
         for ri in raw_rid:
