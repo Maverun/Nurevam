@@ -238,7 +238,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
         gid = ctx.guild.id
         
         if all == 'all': raw_rid = await self.redis.lrange(f"{gid}:Remindme:Person:{uid}",0,-1)        
-        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs!")
+        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs! or 'all'")
         
         raw_rid = sorted(raw_rid, reverse = True) #Sorting and in reverse
         #Just in case user enter 1 3 then realized need to include 2.
