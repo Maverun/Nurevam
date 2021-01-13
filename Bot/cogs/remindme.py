@@ -243,7 +243,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
         if rid is None: return await ctx.send("Out of range!", delete_after = 30)
         #Since we are here, then that mean it is inside, and we will just pop it
         await self.clear(gid,uid,rid) #Clear up from DB
-        await ctx.send(f"Done. Note: Any ID after {rid} will go down by 1")
+        await ctx.send(f"Done. Note: Any ID after {raw_rid} will go down by 1")
 
 
 
