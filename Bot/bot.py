@@ -24,6 +24,7 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"),
                    pm_help = False,
                    intents=intents,
                    hidden = True,)
+
 bot.db= storage.Redis()
 redis = utils.redis
 
@@ -50,6 +51,7 @@ async def on_ready():
         bot.owner = (await bot.application_info()).owner
         bot.background = {}
         bot.id_discourse = 0
+        # bot.eng_lang = utils.read_lang("English")
         load_cogs()
     await bot.change_presence(activity = discord.Game("http://nurevam.site/"))
 
@@ -121,6 +123,7 @@ async def on_error(event,*args,**kwargs):
     try:
         # await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
         await bot.owner.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
+        # await bot.owner.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
     except:
         utils.prRed("Unable to send to owner!")
 
