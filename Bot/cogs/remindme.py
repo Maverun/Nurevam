@@ -202,7 +202,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
 #             await self.clear(guild,ctx.author.id,mid)
 
     @commands.command(aliases = ["rl"], hidden = True)
-    async def remindlist(self, ctx, ):
+    async def remindlist(self, ctx ):
         #There we will show a list of user's ID reminder.
         uid = ctx.author.id
         gid = ctx.guild.id
@@ -223,21 +223,25 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
                 hold[1] = remain_time/60 #min
                 remain_time %= 60 #get remainder second
             hold[2] = remain_time
-            ft = ["H","M","S"]
+            ft = ["h","m","s"]
             #we will then convert them to time message (5H,2M) etc.
             #Cast int to cut off decimal
-            rtmsg = ",".join(f"{int(hold[i])} {ft[i]} " for i in range(3) if hold[i] != -1 )
+            rtmsg = " ".join(f"{int(hold[i])}{ft[i]}" for i in range(3) if hold[i] != -1 )
             #now we will set message, with 30 char of "data" to remind user
-            result += f"ID: {i} - {rtmsg} - {data_list[rid][:30]}\n"
+            result += f"ID: {i} | {rtmsg} left | {data_list[rid][:30]}\n"
         await ctx.send(result)
 
     @commands.command(aliases = ["rc"], hidden = True)
-    async def remindcancel(self, ctx, raw_rid:commands.Greedy[int]):
+    async def remindcancel(self, ctx, raw_rid:commands.Greedy[int],
+                           is_all:str=""):
         #We will just assume user know what they are doing lol
-        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs!")
         gid = ctx.guild.id
         uid = ctx.author.id
-
+        if is_all == "all":
+            raw_len = await self.redis.llen(f"{gid}:Remindme:Person:{uid}")
+            raw_rid = [x for x in range(raw_len)]
+        if len(raw_rid) == 0:
+            return await ctx.send("You need to enter IDs (or \"all\")!")
         raw_rid = sorted(raw_rid, reverse = True) #Sorting and in reverse
         #Just in case user enter 1 3 then realized need to include 2.
         for ri in raw_rid:
@@ -248,7 +252,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
                 return await ctx.send("Out of range!", delete_after = 30)
             #Since we are here, then that mean it is inside, and we will just pop it
             await self.clear(gid,uid,rid) #Clear up from DB
-        await ctx.send(f"Done. Note: Any ID after you enter will go down by 1")
+        await ctx.send("Done.\nNote: Any ID after you enter will go down by 1")
 
 
 
