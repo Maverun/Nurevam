@@ -78,7 +78,6 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
         #if it not in list, then dont send it as it is likely cancel.
         if channel and loop_list.get(mid): #Making sure it not in list...
             await self.send_msg(channel,author,msg)
-
         await self.clear(guild,author.id,mid)
 
     async def old_time_send(self,channel,msg,time,guild,x): #Legacy. Will delete
@@ -193,7 +192,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
 
         task = self.loop.create_task( self.time_send(ctx.channel, ctx.author,
                                                     message, remind_time,
-                                                    ctx.guild, str(ctx.message.id)))
+                                                    ctx.guild.id, str(ctx.message.id)))
         loop_list[str(ctx.message.id)] = task
         # await asyncio.sleep(remind_time)
         # await self.send_msg(ctx,ctx.author,message)
@@ -227,23 +226,30 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
             ft = ["H","M","S"]
             #we will then convert them to time message (5H,2M) etc.
             #Cast int to cut off decimal
-            rtmsg = ",".join(f"{int(hold[i])} {ft[i]}" for i in range(3) if hold[i] != -1 )
+            rtmsg = ",".join(f"{int(hold[i])} {ft[i]} " for i in range(3) if hold[i] != -1 )
             #now we will set message, with 30 char of "data" to remind user
             result += f"ID: {i} - {rtmsg} - {data_list[rid][:30]}\n"
         await ctx.send(result)
 
     @commands.command(aliases = ["rc"], hidden = True)
-    async def remindcancel(self, ctx, raw_rid:int):
+    async def remindcancel(self, ctx, raw_rid:commands.Greedy[int]):
         #We will just assume user know what they are doing lol
+        if len(raw_rid) == 0: return await ctx.send("You need to enter IDs!")
         gid = ctx.guild.id
         uid = ctx.author.id
-        #First we will get what element it is at. Index start at 0 duh.
-        rid = await self.redis.lindex(f"{gid}:Remindme:Person:{uid}",raw_rid-1)
-        #if we get none, out of range!
-        if rid is None: return await ctx.send("Out of range!", delete_after = 30)
-        #Since we are here, then that mean it is inside, and we will just pop it
-        await self.clear(gid,uid,rid) #Clear up from DB
-        await ctx.send(f"Done. Note: Any ID after {rid} will go down by 1")
+
+        raw_rid = sorted(raw_rid, reverse = True) #Sorting and in reverse
+        #Just in case user enter 1 3 then realized need to include 2.
+        for ri in raw_rid:
+            #First we will get what element it is at. Index start at 0 duh.
+            rid = await self.redis.lindex(f"{gid}:Remindme:Person:{uid}",ri-1)
+            #if we get none, out of range!
+            if rid is None:
+                return await ctx.send("Out of range!", delete_after = 30)
+            #Since we are here, then that mean it is inside, and we will just pop it
+            await self.clear(gid,uid,rid) #Clear up from DB
+        await ctx.send(f"Done. Note: Any ID after you enter will go down by 1")
+
 
 
 
