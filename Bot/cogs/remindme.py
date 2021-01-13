@@ -228,7 +228,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
             #Cast int to cut off decimal
             rtmsg = " ".join(f"{int(hold[i])}{ft[i]}" for i in range(3) if hold[i] != -1 )
             #now we will set message, with 30 char of "data" to remind user
-            result += f"ID: {i} - {rtmsg} left - {data_list[rid][:30]}\n"
+            result += f"ID: {i}, {rtmsg} left, {data_list[rid][:30]}\n"
         await ctx.send(result)
 
     @commands.command(aliases = ["rc"], hidden = True)
