@@ -46,6 +46,11 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
                 for mid in data: #run every Id in data and return timer
                     try:
                         if author_list.get(mid): #to be compaitable with old legacy.
+                            check_str = f"{guild.id}:Remindme:Person:{author_list.get(mid)}"
+                            if mid not in await self.redis.lrange(check_str,0,-1):
+                                utils.prRed("RM:No longer in Person, so delete....")
+                                await self.clear(guild.id,author_list.get(mid),mid)
+                                continue #Somehow if it cant delete old one we might do it here.
                             chan = guild.get_channel(int(channel[mid]))
                             author = guild.get_member(int(author_list[mid]))
                         #Once Legacy will be gone, there might be some leftover
