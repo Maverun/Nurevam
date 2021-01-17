@@ -57,7 +57,8 @@ async def run_command(cmd,o,ctx,*args:str):
     msg = ctx.message
     name = ""
     mention = ""
-    cmd.content = cmd.content.replace("\\t","\t").replace("\\n","\n") #a bad way to fix it, way i know, sorry.
+    #a bad way to fix it, way i know, sorry.
+    cmd.content = cmd.content.replace("\\t","\t").replace("\\n","\n")
     if msg.mentions: #putting mention in
         ment = msg.mentions
         for i in range(len(ment)):
@@ -151,7 +152,8 @@ class Custom_Commands(commands.Cog, name = "Custom Commands"):
                             cmd = self.bot.get_command(name)
                             print(cmd)
                             if cmd:
-                                cmd._entries.pop(guild.id)
+                                #Set None.. for some reason doesn't exist?
+                                cmd._entries.pop(guild.id,None)
                         await self.redis.delete("{}:Customcmd:update_delete".format(guild.id))
                     if await self.redis.get("{}:Customcmd:update".format(guild.id)) or list_name or self.starter is True: #Which mean there is update
                         log.debug("adding commands")
