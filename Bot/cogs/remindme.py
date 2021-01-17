@@ -1,8 +1,9 @@
-from discord.ext import commands
 from datetime import datetime, timedelta
+from discord.ext import commands
 from .utils import utils
 import traceback
 import asyncio
+import discord
 import pytz
 
 loop_list = {}
@@ -121,7 +122,7 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
     @commands.command(hidden=True,pass_context=True,aliases=["rt"])
     async def remindtime(self,ctx,get_time,*,message=""):
         #Split them and check if  they are valid.
-        time = await self.split_time(ctx,get_time)
+        time = await self.split_time(ctx, get_time)
         if time is None: return
 
         if len(time) == 1:
@@ -199,12 +200,6 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
                                                     message, remind_time,
                                                     ctx.guild.id, str(ctx.message.id)))
         loop_list[str(ctx.message.id)] = task
-        # await asyncio.sleep(remind_time)
-        # await self.send_msg(ctx,ctx.author,message)
-#         if remind_time >= 60: #cleaning them up
-#             guild = ctx.guild.id
-#             mid = ctx.message.id
-#             await self.clear(guild,ctx.author.id,mid)
 
     @commands.command(aliases = ["rl"], hidden = True)
     async def remindlist(self, ctx ):
@@ -216,8 +211,8 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
         id_list   = await self.redis.lrange(f"{gid}:Remindme:Person:{uid}",0,-1)
         data_list = await self.redis.hgetall(f"{gid}:Remindme:data")
         time_list = await self.redis.hgetall(f"{gid}:Remindme:time")
-        result = ""
         if not any(id_list): return await ctx.send("You haven't set any reminder!")
+        id_col = time_col = msg_col = ""
         for i, rid in enumerate(id_list,start = 1):
             remain_time = int(time_list[rid]) - current_time
             hold = [-1,-1,-1]
@@ -233,8 +228,16 @@ class Remindme(commands.Cog): #This is to remind user about task they set.
             #Cast int to cut off decimal
             rtmsg = " ".join(f"{int(hold[i])}{ft[i]}" for i in range(3) if hold[i] != -1 )
             #now we will set message, with 30 char of "data" to remind user
-            result += f"ID: {i} | {rtmsg} left | {data_list[rid][:30]}\n"
-        await ctx.send(result)
+            msg = data_list[rid]
+            id_col += f"{i}\n"
+            time_col += f"{rtmsg}\n"
+            msg_col += f"{msg[:30]}\n"
+        #set up embeds and add each to each field then send
+        e = discord.Embed()
+        e.add_field(name = "ID",value = id_col)
+        e.add_field(name = "Time Remain",value = time_col)
+        e.add_field(name = "Message",value = msg_col)
+        await ctx.send(embed = e)
 
     @commands.command(aliases = ["rc"], hidden = True)
     async def remindcancel(self, ctx, raw_rid:commands.Greedy[int],
