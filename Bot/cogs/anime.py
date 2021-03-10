@@ -154,7 +154,7 @@ class Anime(commands.Cog):
             reaction_list = [["\U0001f1fc", self.watching_anilist]]
         else: #manga
             value = [str(x).lower() for x in [data["meanScore"], data["status"], data["format"], date]]
-            text += "**Chapter:** {0[chapters]}\n**Volumes:**: {0[volumes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**ID:** {0[id]}\n**Synopsis:** {1}"
+            text += "**Chapter:** {0[chapters]}\n**Volumes:** {0[volumes]}\n**Score:** {2}\n**Status:** {3}\n**Type:** {4}\n**Published:** {5}\n**ID:** {0[id]}\n**Synopsis:** {1}"
 
             footer = "[R]eading | [P]lan to | [C]ompleted | \U0001f5d1 Remove | \U00002753 Seen this?"
             reaction_list = [["\U0001f1f7", self.watching_anilist]]
