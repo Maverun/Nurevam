@@ -20,6 +20,24 @@ def synopis(term):
 
 ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n / 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])  # credit to Gareth from codegof. I like this so.
 
+def query_format(data):
+    """
+    Function: query format
+
+    Params:
+    data: dict of that media entry
+    big: length of biggest char
+    
+    """
+    title = data["title"]["romaji"]
+    start_year = data["startDate"]["year"] or "????" #if unknown some reason
+    end_year = data["endDate"]["year"] or "????" #if still airing 
+    type_data = data["format"].lower() #Replace _, eg ONE_SHOT
+    fmt = f"{title} | {type_data} ({start_year}-{end_year})"
+    return fmt
+
+    
+#end of the function query format
 
 class Anime(commands.Cog):
     """
@@ -50,16 +68,24 @@ class Anime(commands.Cog):
             if len(obj_data) == 1:
                 return obj_data[0]
             elif bool(obj_data) is True:
-                data = ["{}. {}".format(index,name) for index,name in enumerate([x["title"]["romaji"] for x in obj_data],start = 1) if index <= 25]#wew lad
-                answer = await utils.input(self.bot,ctx,"```{}```\nWhich number? (0 for cancel)".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user
-                if answer is None: return None
-                if int(answer.content) <= len(data): #checking if it below range, so don't split out error
-                    if int(answer.content) == 0:
-                        await self.bot.say(ctx,content = "Cancel query")
+                obj_data = obj_data[:25] #Getting only within 25 list
+                obj_data = sorted(obj_data, key = lambda x:len(x["title"]["romaji"]))
+                # data = ["{}. {}".format(index,name for index,name in enumerate([x["title"]["romaji"] + "|" + x["format"] +"|" for x in obj_data],start = 1) if index <= 25]#wew lad
+                data = [f"{index:2}. {query_format(raw)}" for index,raw in enumerate(obj_data,start=1)]
+                try:
+                    answer = await utils.input(self.bot,ctx,"```{}```\nWhich number? (0 for cancel)".format("\n".join(data)),lambda msg: msg.content.isdigit() and ctx.message.author == msg.author)#getting input from user
+                    if answer is None: return None
+                    if int(answer.content) <= len(data): #checking if it below range, so don't split out error
+                        if int(answer.content) == 0:
+                            await self.bot.say(ctx,content = "Cancel query")
+                            return None
+                        return obj_data[int(answer.content) - 1 ]
+                    else:
+                        await self.bot.say(ctx,content = "You entered a number that is out of range!")
                         return None
-                    return obj_data[int(answer.content) - 1 ]
-                else:
-                    await self.bot.say(ctx,content = "You entered a number that is out of range!")
+                except discord.NotFound as e: 
+                    print("HUH",e)
+                    return None
             await self.bot.say(ctx, content = "I cannot find what you are asking for.")
             return None
 
@@ -94,7 +120,14 @@ class Anime(commands.Cog):
         embed = discord.Embed(title = data["title"]["romaji"],url = url)
         embed.set_image(url = data["coverImage"]["large"])
         text = "[AniList]({}) [MAL]({})\n".format(data["siteUrl"],mal_url)
-        date = "{0[startDate][year]}-{0[startDate][month]}-{0[startDate][day]} to {0[endDate][year]}-{0[endDate][month]}-{0[endDate][day]}".format(data)
+        if data["startDate"]["year"] == None:
+            date = "????"
+        else:
+            date ="{0[startDate][year]}-{0[startDate][month]}-{0[startDate][day]}".format(data)
+        if data["endDate"]["year"] == None:
+            date += " to ????"
+        else:
+            date += " to {0[endDate][year]}-{0[endDate][month]}-{0[endDate][day]}".format(data)
         footer = ""
         #i am making most of values to lower case instead of FINISHED, should be finished etc, doing this way is due to season. lazy sorry i know.
         if category == 0: #anime
