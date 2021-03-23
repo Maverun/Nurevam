@@ -51,9 +51,10 @@ async def on_ready():
         bot.owner = (await bot.application_info()).owner
         bot.background = {}
         bot.id_discourse = 0
+        bot.error_channel = bot.get_channel(823997727977111582)
         # bot.eng_lang = utils.read_lang("English")
         load_cogs()
-    await bot.change_presence(activity = discord.Game("http://nurevam.site/"))
+    await bot.change_presence(activity = discord.Game("https://nurevam.site/"))
 
 async def command_checker(msg):
     try:
@@ -91,8 +92,8 @@ async def on_message_edit(before,msg): #get command from edit message with same 
     await bot.process_commands(msg)
 
 def load_cogs():
-    cogs = list_cogs()
-    for cogs in cogs:
+    raw_cogs = list_cogs()
+    for cogs in raw_cogs:
         try:
             bot.load_extension(cogs)
             print (f"Load {cogs}")
@@ -121,11 +122,10 @@ async def on_error(event,*args,**kwargs):
     utils.prRed(traceback.format_exc())
     error =  '```py\n{}\n```'.format(traceback.format_exc())
     try:
-        # await bot.owner.send("```py\n{}```".format(Current_Time + "\n"+ "ERROR!") + "\n" + error)
-        await bot.owner.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
         # await bot.owner.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
+        await bot.error_channel.send(f"```py\n{Current_Time}\nERROR!\n{error}```")
     except:
-        utils.prRed("Unable to send to owner!")
+        utils.prRed("Unable to send to owner/channel!")
 
 if __name__ == '__main__':
     bot.run(utils.secret["nurevam_token"])

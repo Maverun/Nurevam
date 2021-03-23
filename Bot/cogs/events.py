@@ -171,7 +171,8 @@ class Events(commands.Cog):
             msg ="```py\n{}```\n{}\n```py\n{}\n```".format(Current_Time + "\n"+ "ERROR!",cog_error,"".join(errors).replace("`",""))
             if len(msg) >= 1900:
                 msg = await utils.send_hastebin(msg)
-            await self.bot.owner.send(msg or "There is no message but error...")
+            # await self.bot.owner.send(msg or "There is no message but error...")
+            await self.bot.error_channel.send(msg or "There is no message but error...")
             await ctx.send("You either used the command incorrectly or an unexpected error occurred. A report has been sent to the creator so you can hope for a fix soon.")
 
     @commands.command(hidden = True)
