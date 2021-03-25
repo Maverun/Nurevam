@@ -214,7 +214,9 @@ class Remind(commands.Cog): #This is to remind user about task they set.
         if not any(id_list): return await ctx.send("You haven't set any reminder!")
         id_col = time_col = msg_col = ""
         for i, rid in enumerate(id_list,start = 1):
-            remain_time = int(time_list[rid]) - current_time
+            old_time = time_list.get(rid,None)
+            if old_time is None: continue #TODO TEMP FIX
+            remain_time = int(old_time) - current_time
             hold = [-1,-1,-1]
             if remain_time >= 3600:
                 hold[0] = remain_time/3600 #hours
