@@ -32,7 +32,8 @@ def query_format(data):
     title = data["title"]["romaji"]
     start_year = data["startDate"]["year"] or "????" #if unknown some reason
     end_year = data["endDate"]["year"] or "????" #if still airing 
-    type_data = data["format"].lower() #Replace _, eg ONE_SHOT
+    type_data = data["format"]
+    type_data = type_data.lower() if type_data else "????"
     fmt = f"{title} | {type_data} ({start_year}-{end_year})"
     return fmt
 
