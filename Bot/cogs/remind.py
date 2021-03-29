@@ -106,7 +106,7 @@ class Remind(commands.Cog): #This is to remind user about task they set.
             #I will make this command more sense or pretty 
             #when I get a chance to rewrite them.... #TODO
             tz = pytz.timezone(timez)
-            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),tz)
+            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),timez)
             return await ctx.send("Timezone set for your remind only!",delete_after = 30)
         except pytz.UnknownTimeZoneError:
             await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
