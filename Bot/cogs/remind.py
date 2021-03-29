@@ -106,7 +106,7 @@ class Remind(commands.Cog): #This is to remind user about task they set.
             #I will make this command more sense or pretty 
             #when I get a chance to rewrite them.... #TODO
             if timez.lower() == "none":
-                await self.redis.delelte("Profile:{}:Remind_Timezone".format(ctx.author.id))
+                await self.redis.delete("Profile:{}:Remind_Timezone".format(ctx.author.id))
                 return await ctx.send("I have removed timezone in your profile!")
             tz = pytz.timezone(timez)
             await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),tz.zone)
