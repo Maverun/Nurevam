@@ -105,6 +105,9 @@ class Remind(commands.Cog): #This is to remind user about task they set.
             #if no error, we are clear.
             #I will make this command more sense or pretty 
             #when I get a chance to rewrite them.... #TODO
+            if timez.lower() == "none":
+                await self.redis.del("Profile:{}:Remind_Timezone".format(ctx.author.id))
+                return await ctx.send("I have removed timezone in your profile!")
             tz = pytz.timezone(timez)
             await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),tz.zone)
             return await ctx.send("Timezone set for your remind only!",delete_after = 30)
@@ -116,6 +119,9 @@ class Remind(commands.Cog): #This is to remind user about task they set.
     async def setServerTimezoneRemind(self,ctx,timez):
         try:
             #Similar as setTimezoneRemind ^^^
+            if timez.lower() == "none":
+                await self.redis.del("{}:Remindme:zone".format(ctx.guild.id))
+                return await ctx.send("I have removed timezone in the server overall!")
             tz = pytz.timezone(timez)
             await self.redis.set(f"{ctx.guild.id}:Remindme:zone",tz.zone)
             return await ctx.send("Timezone set for your server!",delete_after = 30)
