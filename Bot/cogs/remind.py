@@ -8,6 +8,11 @@ import pytz
 
 loop_list = {}
 
+def check_roles(ctx):
+    if ctx.message.author.id == 105853969175212032:
+        return True
+    return utils.check_roles(ctx, "Mod", "admin_roles")
+
 class Remind(commands.Cog): #This is to remind user about task they set.
     def __init__(self,bot):
         self.bot = bot
@@ -106,8 +111,18 @@ class Remind(commands.Cog): #This is to remind user about task they set.
             #I will make this command more sense or pretty 
             #when I get a chance to rewrite them.... #TODO
             tz = pytz.timezone(timez)
-            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),timez)
+            await self.redis.set("Profile:{}:Remind_Timezone".format(ctx.author.id),tz.zone)
             return await ctx.send("Timezone set for your remind only!",delete_after = 30)
+        except pytz.UnknownTimeZoneError:
+            await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
+
+    @commands.command(hidden = True)
+    @commands.check(check_roles)
+    async def setServerTimezoneRemind(self,ctx,timez):
+        try:
+            #Similar as setTimezoneRemind ^^^
+            tz = pytz.timezone(timez)
+            await self.redis.set(f"{ctx.guild.id}:Remindme:zone",tz.zone)
         except pytz.UnknownTimeZoneError:
             await ctx.send("There is no such a timezone, please check a list from there <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones> under **TZ database Name**",delete_after = 30)
 
@@ -138,6 +153,8 @@ class Remind(commands.Cog): #This is to remind user about task they set.
         #it will return None, and when we  create timezone,
         #it will auto select UTC format.
         tz = await self.redis.get(f"Profile:{ctx.author.id}:Remind_Timezone")
+        if tz is None:
+            tz = await self.redis.get(f"{ctx.guild.id}:Remindme:zone")
         timez = pytz.timezone(tz or "UTC") #if none, then UTC default.
 
         time_set = datetime.now(timez).replace(hour   = time[0],
